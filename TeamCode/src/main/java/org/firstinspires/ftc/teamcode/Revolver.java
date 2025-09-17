@@ -5,9 +5,12 @@ import android.graphics.Color;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.SwitchableLight;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @TeleOp
 public class Revolver extends OpMode{
@@ -21,19 +24,23 @@ public class Revolver extends OpMode{
         }
         return 0;
     }
-    void detectColor() {
+    String detectColor() {
         colors = colorSens.getNormalizedColors();
         Color.colorToHSV(colors.toColor(), hsvValues);
         hue = hsvValues[0];
-        if (hue > purpleMin && hue < purpleMax){
-            curColor = "purple";
+        if (((DistanceSensor) colorSens).getDistance(DistanceUnit.CM) < 3){
+            curColor = "white";
         }
         else if (hue > greenMin && hue < greenMax){
             curColor = "green";
         }
-        else {
+        else if (hue > purpleMin && hue < purpleMax){
+            curColor = "purple";
+        }
+        else{
             curColor = "white";
         }
+        return curColor;
     }
     void shiftTarget(double times){
         double ticks = fullCircle * times;
@@ -49,6 +56,11 @@ public class Revolver extends OpMode{
             return Math.ceil(curPos / fullCircle);
         }
         return 0;
+    }
+    void updateColors(){
+        if (pid.velo <= stopDev){
+            slotColor[pointer] = detectColor();
+        }
     }
     //---------------------Define stuff------------------
     DcMotor revSpin;
@@ -67,6 +79,8 @@ public class Revolver extends OpMode{
     String curColor = "white";
     final float[] hsvValues = new float[3];
     double[] slotTarget = {0, 120, 240};
+    double stopDev = 0.15;
+    String[] slotColor = {"white", "white", "white"};
     //-----------define colors--------------
     float greenMin = 0;
     float greenMax = 0;
@@ -132,13 +146,14 @@ public class Revolver extends OpMode{
         UPPRESSED = gamepad1.dpad_up;
         DOWNPRESSED = gamepad1.dpad_down;
 
-        detectColor();
+        updateColors();
 
         telemetry.addData("gain", gain);
         telemetry.addData("hue", hue);
         telemetry.addData("color", curColor);
         telemetry.addData("pointer", pointer);
         telemetry.addData("target", target);
+        telemetry.addData("Distance (cm)", ((DistanceSensor) colorSens).getDistance(DistanceUnit.CM));
         telemetry.update();
     }
 }
