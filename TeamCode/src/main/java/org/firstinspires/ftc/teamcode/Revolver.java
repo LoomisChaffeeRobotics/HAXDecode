@@ -58,7 +58,7 @@ public class Revolver extends OpMode{
         return 0;
     }
     void updateColors(){
-        if (pid.velo <= stopDev){
+        if (pid.velo <= stopDev && pid.errorCur < stopError){
             slotColor[pointer] = detectColor();
         }
     }
@@ -80,6 +80,7 @@ public class Revolver extends OpMode{
     final float[] hsvValues = new float[3];
     double[] slotTarget = {0, 120, 240};
     double stopDev = 0.15;
+    double stopError = 5;
     String[] slotColor = {"white", "white", "white"};
     //-----------define colors--------------
     float greenMin = 0;
@@ -147,6 +148,7 @@ public class Revolver extends OpMode{
         DOWNPRESSED = gamepad1.dpad_down;
 
         updateColors();
+        detectColor();
 
         telemetry.addData("gain", gain);
         telemetry.addData("hue", hue);
