@@ -28,7 +28,7 @@ public class Revolver extends OpMode{
         colors = colorSens.getNormalizedColors();
         Color.colorToHSV(colors.toColor(), hsvValues);
         hue = hsvValues[0];
-        if (((DistanceSensor) colorSens).getDistance(DistanceUnit.CM) < 3){
+        if (((DistanceSensor) colorSens).getDistance(DistanceUnit.CM) > 8){
             curColor = "white";
         }
         else if (hue > greenMin && hue < greenMax){
@@ -58,7 +58,7 @@ public class Revolver extends OpMode{
         return 0;
     }
     void updateColors(){
-        if (pid.velo <= stopDev && pid.errorCur < stopError){
+        if ((pid.velo < 0.2) && pid.arrived && (slotColor[pointer].equals("white"))){
             slotColor[pointer] = detectColor();
         }
     }
@@ -68,10 +68,12 @@ public class Revolver extends OpMode{
     NormalizedRGBA colors;
     PID pid = new PID();
     //--------------------------variables------------------
-    float gain = 1;
+    float gain = 2;
     boolean UPPRESSED = false;
     boolean DOWNPRESSED = false;
     boolean APRESSED = false;
+    boolean LEFTPRESSED = false;
+    boolean RIGHTPRESSED = false;
     double hue;
     int pointer = 0;
     double curPos = 0;
@@ -79,24 +81,22 @@ public class Revolver extends OpMode{
     String curColor = "white";
     final float[] hsvValues = new float[3];
     double[] slotTarget = {0, 120, 240};
-    double stopDev = 0.15;
-    double stopError = 5;
     String[] slotColor = {"white", "white", "white"};
     //-----------define colors--------------
-    float greenMin = 0;
-    float greenMax = 0;
-    float purpleMin = 0;
-    float purpleMax = 0;
-    float target = 0;
+    float greenMin = 100;
+    float greenMax = 180;
+    float purpleMin = 200;
+    float purpleMax = 299;
     //------------------------------init---------------------------------
     @Override
     public void init() {
         pid.init();
-        pid.setCoefficients(0, 0, 0);
+        pid.setCoefficients(1, 0, 0);
         pid.iMax = 0.3;
         pid.iRange = 0.5;
         pid.errorTol = 4;
-        pid.target = target;
+        pid.dTol = 2;
+        pid.target = 0;
         colorSens = hardwareMap.get(NormalizedColorSensor.class, "color");
         revSpin = hardwareMap.get(DcMotor.class, "Spin");
         revSpin.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -129,11 +129,11 @@ public class Revolver extends OpMode{
             }
         }
         //---------------------spin revolver---------------------------
-        if (gamepad1.dpad_left){
+        if (gamepad1.dpad_right && !RIGHTPRESSED){
             pointer = (pointer + 1) % 3;
         }
-        else if (gamepad1.dpad_right){
-            pointer = (pointer - 1) % 3;
+        else if (gamepad1.dpad_left && !LEFTPRESSED){
+            pointer = (pointer - 1 + 3) % 3;;
         }
         //-------------------------------end cycle---------------------
         if ( Math.abs(curPos - slotTarget[pointer]) > (fullCircle / 2) ) {
@@ -142,10 +142,13 @@ public class Revolver extends OpMode{
 
         pid.update(curPos);
         revSpin.setPower(pid.velo);
+        pid.target = slotTarget[pointer];
 
         APRESSED = gamepad1.a;
         UPPRESSED = gamepad1.dpad_up;
         DOWNPRESSED = gamepad1.dpad_down;
+        LEFTPRESSED = gamepad1.dpad_left;
+        RIGHTPRESSED = gamepad1.dpad_right;
 
         updateColors();
         detectColor();
@@ -154,7 +157,16 @@ public class Revolver extends OpMode{
         telemetry.addData("hue", hue);
         telemetry.addData("color", curColor);
         telemetry.addData("pointer", pointer);
-        telemetry.addData("target", target);
+        telemetry.addData("target", pid.target);
+        telemetry.addData("curPos", curPos);
+        telemetry.addData("slot1", slotColor[0]);
+        telemetry.addData("slot2", slotColor[1]);
+        telemetry.addData("slot3", slotColor[2]);
+        telemetry.addData("P", pid.PID_P);
+        telemetry.addData("I", pid.PID_I);
+        telemetry.addData("D", pid.PID_D);
+        telemetry.addData("kP", pid.Kp);
+        telemetry.addData("speed", pid.velo);
         telemetry.addData("Distance (cm)", ((DistanceSensor) colorSens).getDistance(DistanceUnit.CM));
         telemetry.update();
     }

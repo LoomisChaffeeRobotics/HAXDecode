@@ -1,9 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
 public class PID {
-        public static double PID_P = 0;
-        public static double PID_I = 0;
-        public static double PID_D = 0;
+        public double PID_P = 1;
+        public double PID_I = 0;
+        public double PID_D = 0;
         public double velo = 0;
         public double pidInt = 0;
         public double pidDev = 0;
@@ -17,6 +17,7 @@ public class PID {
         public double target;
         public boolean arrived;
         public double errorTol;
+        public double dTol;
 
         public void PID(){
 
@@ -52,6 +53,12 @@ public class PID {
             }
             if ((Math.signum(errorCur) != Math.signum(pidInt)) || (Math.abs(errorCur) < errorTol)) {
                 pidInt = 0;
+            }
+            if (Math.abs(errorCur) <= errorTol && Math.abs(pidDev) <= dTol) {
+                arrived = true;
+            }
+            else{
+                arrived = false;
             }
             PID_I = pidInt * Ki;
 
