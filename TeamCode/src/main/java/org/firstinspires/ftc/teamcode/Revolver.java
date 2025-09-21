@@ -29,6 +29,9 @@ public class Revolver extends OpMode{
         colorSens2.setGain(gain);
         colorSens3.setGain(gain);
     }
+    void pull_trigger(){
+        //codeforpulltrigger
+    }
     void readColor(NormalizedColorSensor colorS, int slot){
         colors = colorSens1.getNormalizedColors();
 
@@ -54,8 +57,48 @@ public class Revolver extends OpMode{
             readColor(colorSens3, 2);
         }
     }
+    void waitForPid(){
+        while (!pid.arrived){
+            continue;
+        }
+    }
     double findNearest360(double num) {
         return Math.round(num / 360.0) * 360;
+    }
+    int findNearestWhite(){
+        if (slotColor[(pointer + 1) % 3].equals("white")){
+            return (pointer + 1) % 3;
+        }
+        else if (slotColor[(pointer + 2) % 3].equals("white")){
+            return (pointer + 2) % 3;
+        }
+        return pointer;
+    }
+    int findNearestColor(String Col){
+        if (slotColor[(pointer + 1) % 3].equals(Col)){
+            return (pointer + 1) % 3;
+        }
+        else if (slotColor[(pointer + 2) % 3].equals(Col)){
+            return (pointer + 2) % 3;
+        }
+        return pointer;
+    }
+    int findNearestBall(){
+        if (slotColor[(pointer + 1) % 3].equals("green") || slotColor[(pointer + 1) % 3].equals("purple")){
+            return (pointer + 1) % 3;
+        }
+        else if (slotColor[(pointer + 2) % 3].equals("green") || slotColor[(pointer + 2) % 3].equals("purple")){
+            return (pointer + 2) % 3;
+        }
+        return pointer;
+    }
+    boolean emptyAvailble(){
+        if (slotColor[0].equals("white") || slotColor[1].equals("white") || slotColor[2].equals("white")){
+            return true;
+        }
+        else{
+            return false;
+        }
     }
     void updateTelemetry(){
         telemetry.addData("gain", gain);
@@ -78,6 +121,7 @@ public class Revolver extends OpMode{
     }
     //---------------------Define stuff------------------
     DcMotor revSpin;
+    DcMotor trigger;
     NormalizedColorSensor colorSens1;
     NormalizedColorSensor colorSens2;
     NormalizedColorSensor colorSens3;
@@ -90,12 +134,21 @@ public class Revolver extends OpMode{
     boolean APRESSED = false;
     boolean LEFTPRESSED = false;
     boolean RIGHTPRESSED = false;
+    int Manual = 1;
     double hue;
     int pointer = 0;
     double curPos = 0;
+    String tarColor = "green";
     final float[] hsvValues = new float[3];
     double[] slotTarget = {0, 120, -120};
     String[] slotColor = {"white", "white", "white"};
+    public enum revMode {
+        CONTFIRE,
+        AUTOIN,
+        FIRECOLOR,
+        HP
+    }
+    private revMode curMode = revMode.AUTOIN;
     //-----------define colors--------------
     float greenMin = 100;
     float greenMax = 180;
@@ -115,6 +168,7 @@ public class Revolver extends OpMode{
         colorSens2 = hardwareMap.get(NormalizedColorSensor.class, "color2");
         colorSens3 = hardwareMap.get(NormalizedColorSensor.class, "color3");
         revSpin = hardwareMap.get(DcMotor.class, "Spin");
+        trigger = hardwareMap.get(DcMotor.class, "trig");
         revSpin.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         revSpin.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         setGain();
@@ -138,7 +192,47 @@ public class Revolver extends OpMode{
             pointer = (pointer + 1) % 3;
         }
         else if (gamepad1.dpad_left && !LEFTPRESSED){
-            pointer = (pointer - 1 + 3) % 3;;
+            pointer = (pointer + 2) % 3;;
+        }
+        //--------------------REVOVLER CONTROL------------------------
+        //Run this part as a task in a whiletrue(hopefully)
+        if (Manual == 1){
+            //manually control everything -> incase stuff breaks
+        }
+        else{
+            if (curMode == revMode.AUTOIN){
+                //intake code
+                pointer = findNearestWhite();
+            }
+            else if (curMode == revMode.CONTFIRE){
+                if (pid.arrived) {
+                    if (slotColor[pointer].equals("white")) {
+                        pointer = findNearestBall();
+                    }
+                    else{
+                        pull_trigger();
+                    }
+                }
+            }
+            else if (curMode == revMode.FIRECOLOR){
+                if (slotColor[pointer].equals(tarColor)){
+                    pull_trigger();
+                }
+                else{
+                    pointer = findNearestColor(tarColor);
+                    waitForPid();
+                    pull_trigger();
+                }
+                curMode = revMode.AUTOIN;
+            }
+            else if (curMode == revMode.HP){
+                if (emptyAvailble()) {
+                    pointer = (findNearestWhite() + 1) % 3;
+                }
+                else{
+                    curMode = revMode.AUTOIN;
+                }
+            }
         }
         //-------------------------------set target---------------------
         pid.target = findNearest360(curPos) + slotTarget[pointer];
