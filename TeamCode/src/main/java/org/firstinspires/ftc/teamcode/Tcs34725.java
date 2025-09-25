@@ -1,13 +1,15 @@
-package org.firstinspires.ftc.teamcode.sensors;
+// Corrected package to match the file's location in the 'teamcode' directory
+package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch.ReadWindow;
-import com.qualcomm.robotcore.hardware.I2cDeviceSynch.ReadWindow.Mode;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynch.ReadMode;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchDevice;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+// The class name 'Tcs34725' now matches the filename 'Tcs34725.java'
 public class Tcs34725 extends I2cDeviceSynchDevice<I2cDeviceSynch> implements HardwareDevice {
 
     // 7-bit I2C address for TCS34725
@@ -56,7 +58,7 @@ public class Tcs34725 extends I2cDeviceSynchDevice<I2cDeviceSynch> implements Ha
         this.deviceClient.setI2cAddress(I2C_ADDRESS);
 
         // Set a read window that covers STATUS through BDATAH (0x13..0x1B)
-        ReadWindow window = new ReadWindow(CMD | STATUS, (0x1B - 0x13) + 1, Mode.REPEAT);
+        ReadWindow window = new ReadWindow(CMD | STATUS, (0x1B - 0x13) + 1, ReadMode.REPEAT);
         this.deviceClient.setReadWindow(window);
         this.deviceClient.engage();
     }
@@ -158,4 +160,3 @@ public class Tcs34725 extends I2cDeviceSynchDevice<I2cDeviceSynch> implements Ha
         super.close();
     }
 }
-
