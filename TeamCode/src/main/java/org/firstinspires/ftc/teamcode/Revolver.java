@@ -196,6 +196,7 @@ public class Revolver extends OpMode{
         }
         //--------------------REVOVLER CONTROL------------------------
         //Run this part as a task in a whiletrue(hopefully)
+        /*
         if (Manual == 1){
             //manually control everything -> incase stuff breaks
         }
@@ -234,6 +235,7 @@ public class Revolver extends OpMode{
                 }
             }
         }
+        */
         //-------------------------------set target---------------------
         pid.target = findNearest360(curPos) + slotTarget[pointer];
         //-----------------------loop actions-------------------------
