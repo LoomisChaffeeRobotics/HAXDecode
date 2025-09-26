@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchImplOnSimple;
 
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "TCS3472 Color Sensor Test")
-public class TCS3472ColorDetection extends LinearOpMode {
+public class TCS3472ColorDetectionCopilot extends LinearOpMode {
 
     // TCS3472 I2C address (7-bit, typically 0x29)
     private static final I2cAddr SENSOR_ADDRESS = I2cAddr.create7bit(0x29);
@@ -23,7 +23,7 @@ public class TCS3472ColorDetection extends LinearOpMode {
     @Override
     public void runOpMode() {
         // Initialize the I2C device
-        sensor = new I2cDeviceSynchImpl(hardwareMap.i2cDevice.get("colorSensor"), SENSOR_ADDRESS, false);
+        sensor = new I2cDeviceSynchImplOnSimple(hardwareMap.i2cDeviceSynch.get("colorSensor"), false);
         sensor.engage();
 
         // Power on and enable RGBC
