@@ -1,3 +1,4 @@
+
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.HardwareDevice;
@@ -8,6 +9,7 @@ import com.qualcomm.robotcore.hardware.I2cDeviceSynch.ReadMode;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchDevice;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+// The class name 'Tcs34725' now matches the filename 'Tcs34725.java'
 public class Tcs34725 extends I2cDeviceSynchDevice<I2cDeviceSynch> implements HardwareDevice {
 
     // 7-bit I2C address for TCS34725
@@ -158,4 +160,3 @@ public class Tcs34725 extends I2cDeviceSynchDevice<I2cDeviceSynch> implements Ha
         super.close();
     }
 }
-
