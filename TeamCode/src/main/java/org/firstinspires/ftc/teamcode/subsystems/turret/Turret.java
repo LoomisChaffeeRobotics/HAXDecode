@@ -11,8 +11,12 @@ public class Turret extends OpMode {
     DcMotorEx Front;
     DcMotorEx Back;
 
-    boolean Currenttick;
-    boolean Lasttick;
+    boolean CurrenttickX;
+    boolean LasttickX;
+
+    boolean CurrenttickY;
+    boolean LasttickY;
+
 
     double power;
 
@@ -21,47 +25,43 @@ public class Turret extends OpMode {
         Front = hardwareMap.get(DcMotorEx.class,"inner_turret" );
         Back = hardwareMap.get(DcMotorEx.class,"outer_turret" );
 
-        Front.setDirection(DcMotorSimple.Direction.REVERSE);
-        Back.setDirection(DcMotorSimple.Direction.REVERSE);
+//        Front.setDirection(DcMotorSimple.Direction.REVERSE);
+//        Back.setDirection(DcMotorSimple.Direction.REVERSE);
 
         Front.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         Back.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        Currenttick = false;
-        Lasttick = false;
+        CurrenttickX = false;
+        LasttickX = false;
+        CurrenttickY = false;
+        LasttickY = false;
 
     }
 
     @Override
     public void loop() {
-        if (gamepad1.x){
-            Currenttick = true;
 
+        CurrenttickX = gamepad1.x;
+        CurrenttickY = gamepad1.y;
+
+        if(!(CurrenttickX && CurrenttickY)){
+            if (!LasttickX && CurrenttickX){
+                power = Math.min(power+0.1, 1);
+            }
+            else if (!LasttickY && CurrenttickY){
+                power = Math.max(power-0.1, 0);
+            }
         }
-        if (!Lasttick & Currenttick){
-            power += 0.1;
-        }
-        if (gamepad1.aWasPressed()){
-            Front.setPower(1);
-            Back.setPower(1);
-        }
-        else
-        if(gamepad1.b){
-            Front.setPower(0.6);
-            Back.setPower(1);
-        }
-        else
-        if(gamepad1.a){
-            Front.setPower(1);
-            Back.setPower(0.6);
-        }
-        else{
-            Front.setPower(0);
-            Back.setPower(0);
-        }
-        Lasttick = Currenttick;
+
+        Front.setPower(power);
+        Back.setPower(power);
+
+        LasttickX = CurrenttickX;
+        LasttickY = CurrenttickY;
 
         telemetry.addData("power", power);
+        telemetry.addData("X", CurrenttickX);
+        telemetry.addData("Y", CurrenttickY);
         telemetry.update();
     }
 
