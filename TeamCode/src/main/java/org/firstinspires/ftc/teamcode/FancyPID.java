@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-public class PID {
+public class FancyPID {
         public double PID_P = 1;
         public double PID_I = 0;
         public double PID_D = 0;
