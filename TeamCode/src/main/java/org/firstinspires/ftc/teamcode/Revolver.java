@@ -16,7 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.ColorTrackAndPointerDesignator;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.PointerControl;
 
-//@TeleOp
+@TeleOp
 public class Revolver {
     ColorTrackAndPointerDesignator pointerDesignator = new ColorTrackAndPointerDesignator();
     PointerControl controller = new PointerControl();
@@ -30,23 +30,23 @@ public class Revolver {
     private revMode curMode = revMode.AUTOIN;
 
     //------------------------------init---------------------------------
-//    @Override
+// @Override
     public void init(HardwareMap hardwareMap) {
         pointerDesignator.init(hardwareMap);
     }
     //-------------------------------loop--------------------------------
 //    @Override
     public void loop(Gamepad gamepad1, Telemetry t) {
-        pointerDesignator.loop();
-        controller.loop(pointer);
+        //pointerDesignator.loop();
+        //controller.loop(pointer);
         //--------------------change gain per loop-------------------------
         if (gamepad1.dpad_up && !gamepad1.dpadUpWasPressed()){
-            pointerDesignator.gain += 0.05;
-            pointerDesignator.setGain();
+            //pointerDesignator.gain += 0.05;
+            //pointerDesignator.setGain();
         }
         else if (gamepad1.dpad_down && !gamepad1.dpadDownWasPressed()){
-            pointerDesignator.gain -= 0.05;
-            pointerDesignator.setGain();
+            //pointerDesignator.gain -= 0.05;
+            //pointerDesignator.setGain();
         }
         //---------------------spin revolver---------------------------
 

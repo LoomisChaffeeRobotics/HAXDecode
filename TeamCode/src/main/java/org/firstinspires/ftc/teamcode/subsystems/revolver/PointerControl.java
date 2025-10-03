@@ -11,15 +11,17 @@ import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.FancyPID;
+import org.firstinspires.ftc.teamcode.Main;
 import org.firstinspires.ftc.teamcode.Revolver;
 
 public class PointerControl {
+    ColorTrackAndPointerDesignator colTrack = new ColorTrackAndPointerDesignator();
     DcMotor revSpin;
     DcMotor trigger;
     FancyPID pid = new FancyPID();
     double curPos = 0;
     double[] slotTarget = {0, 120, -120};
-
+    String tarColor = "white";
     public enum revMode {
         CONTFIRE,
         AUTOIN,
@@ -32,6 +34,10 @@ public class PointerControl {
     void pull_trigger(){
         //codeforpulltrigger
     }
+    public void setGain(float gain){
+        colTrack.setGain(gain);
+    }
+
     public double findNearest360(double num) {
         return Math.round(num / 360.0) * 360;
     }
@@ -45,6 +51,8 @@ public class PointerControl {
         telemetry.addData("speed", pid.velo);
         telemetry.update();
     }
+
+    //----------------------------------------------------------------------------------
     public void init(HardwareMap hardwareMap) {
         pid.init();
         pid.setCoefficients(1, 0, 0);
@@ -58,12 +66,46 @@ public class PointerControl {
         revSpin.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         revSpin.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
-    public void loop(int pointer) {
+    public void update() {
         curPos = revSpin.getCurrentPosition();
-
         //-------------------------------set target---------------------
-        pid.target = findNearest360(curPos) + slotTarget[pointer];
+        pid.target = findNearest360(curPos) + slotTarget[colTrack.pointer];
+        //actions
+        if (curMode == revMode.AUTOIN){
+            //intake code
+            colTrack.pointer = colTrack.findNearestWhite();
+        }
+        else if (curMode == revMode.CONTFIRE){
+            if (pid.arrived) {
+                if (colTrack.slotColor[colTrack.pointer].equals("white")) {
+                    colTrack.pointer = colTrack.findNearestBall();
+                }
+                else{
+                    pull_trigger();
+                }
+            }
+        }
+        else if (curMode == revMode.FIRECOLOR){
+            if (colTrack.slotColor[colTrack.pointer].equals(tarColor)){
+                pull_trigger();
+            }
+            else{
+                colTrack.pointer = colTrack.findNearestColor(tarColor);
+                //waitForPid();
+                pull_trigger();
+            }
+            curMode = revMode.AUTOIN;
+        }
+        else if (curMode == revMode.HP){
+            if (colTrack.emptyAvailble()) {
+                colTrack.pointer = (colTrack.findNearestWhite() + 1) % 3;
+            }
+            else{
+                curMode = revMode.AUTOIN;
+            }
+        }
         //-----------------------loop actions-------------------------
+        colTrack.loop(pid.arrived);
         pid.update(curPos);
         revSpin.setPower(pid.velo);
     }
