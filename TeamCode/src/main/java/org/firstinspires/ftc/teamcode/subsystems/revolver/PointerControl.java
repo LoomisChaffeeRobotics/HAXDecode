@@ -1,18 +1,10 @@
 package org.firstinspires.ftc.teamcode.subsystems.revolver;
 
-import android.graphics.Color;
-import android.graphics.Point;
-
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.FancyPID;
-import org.firstinspires.ftc.teamcode.Main;
-import org.firstinspires.ftc.teamcode.Revolver;
+import org.firstinspires.ftc.teamcode.subsystems.FancyPID;
 
 public class PointerControl {
     ColorTrackAndPointerDesignator colTrack = new ColorTrackAndPointerDesignator();

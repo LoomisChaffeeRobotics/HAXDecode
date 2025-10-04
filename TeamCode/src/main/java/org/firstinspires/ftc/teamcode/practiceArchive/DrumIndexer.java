@@ -1,11 +1,13 @@
-package org.firstinspires.ftc.teamcode.subsystems.drum;
+package org.firstinspires.ftc.teamcode.practiceArchive;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 @TeleOp
+@Disabled
 public class DrumIndexer extends OpMode{
         DcMotor encoder;
         int groundIntakeSlot;

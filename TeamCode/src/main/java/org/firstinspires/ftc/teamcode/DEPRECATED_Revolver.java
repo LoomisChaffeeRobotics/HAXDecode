@@ -1,23 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.graphics.Color;
-
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
-import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.ColorTrackAndPointerDesignator;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.PointerControl;
 
-@TeleOp
-public class Revolver {
+public class DEPRECATED_Revolver {
     ColorTrackAndPointerDesignator pointerDesignator = new ColorTrackAndPointerDesignator();
     PointerControl controller = new PointerControl();
     int pointer = pointerDesignator.pointer;
