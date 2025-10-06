@@ -39,8 +39,10 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.teamcode.FancyPID;
 
 import java.util.List;
 
@@ -67,15 +69,27 @@ import java.util.List;
  *   below the name of the Limelight on the top level configuration screen.
  */
 @TeleOp(name = "Sensor: Limelight3A", group = "Sensor")
-@Disabled
 public class SensorLimelight3A extends LinearOpMode {
 
     private Limelight3A limelight;
 
+    CRServo sTur;
+
+    FancyPID tpid = new FancyPID();
     @Override
     public void runOpMode() throws InterruptedException
     {
+        tpid.init();
+        tpid.setCoefficients(0, 0, 0);
+        tpid.iMax = 0;
+        tpid.iRange = 0;
+        tpid.errorTol = 0;
+        tpid.dTol = 0;
+        tpid.target = 0;
+
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
+
+        sTur = hardwareMap.get(CRServo.class, "servoTurret");
 
         telemetry.setMsTransmissionInterval(11);
 

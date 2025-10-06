@@ -1,19 +1,23 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.ColorTrackAndPointerDesignator;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.PointerControl;
 
 @TeleOp
 public class Main extends OpMode {
-    PointerControl pController = new PointerControl();
     //public static int pointer = 0;
     public static float gain = 1;
+    FtcDashboard dash = FtcDashboard.getInstance();
+    Telemetry t2 = dash.getTelemetry();
+    PointerControl pController = new PointerControl();
     @Override
     public void init() {
         pController.init(hardwareMap);
@@ -31,5 +35,8 @@ public class Main extends OpMode {
         //---------------------spin revolver---------------------------
         //loopActions
         pController.update();
+        pController.updateTelemetry(t2);
+        pController.updateTelemetry(telemetry);
+
     }
 }

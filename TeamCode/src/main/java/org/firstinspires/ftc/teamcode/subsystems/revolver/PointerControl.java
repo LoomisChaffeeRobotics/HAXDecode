@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.subsystems.revolver;
 import android.graphics.Color;
 import android.graphics.Point;
 
+import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -14,13 +16,23 @@ import org.firstinspires.ftc.teamcode.FancyPID;
 import org.firstinspires.ftc.teamcode.Main;
 import org.firstinspires.ftc.teamcode.Revolver;
 
-public class PointerControl {
+@Config
+public class PointerControl{
     ColorTrackAndPointerDesignator colTrack = new ColorTrackAndPointerDesignator();
-    DcMotor revSpin;
-    DcMotor trigger;
+    DcMotor revEnc;
+    CRServo revSpin;
+    //DcMotor trigger;
     FancyPID pid = new FancyPID();
+    public static double kP = 0;
+    public static double kI = 0;
+    public static double kD = 0;
+    public static double iMax = 0;
+    public static double iRange = 0;
+    public static double errorTol = 0;
+    public static double derivTol = 0;
+    public static double TARGET = 0;
     double curPos = 0;
-    double[] slotTarget = {0, 120, -120};
+    double[] slotTarget = {0, 2371, -2371};
     String tarColor = "white";
     public enum revMode {
         CONTFIRE,
@@ -39,37 +51,48 @@ public class PointerControl {
     }
 
     public double findNearest360(double num) {
-        return Math.round(num / 360.0) * 360;
+        return Math.round(num / 8192.0) * 8192;
     }
     public void updateTelemetry(Telemetry telemetry){
         telemetry.addData("target", pid.target);
         telemetry.addData("curPos", curPos);
-        telemetry.addData("P", pid.PID_P);
-        telemetry.addData("I", pid.PID_I);
-        telemetry.addData("D", pid.PID_D);
-        telemetry.addData("kP", pid.Kp);
+        //telemetry.addData("P", pid.PID_P);
+        //telemetry.addData("I", pid.PID_I);
+        //telemetry.addData("D", pid.PID_D);
+        //telemetry.addData("kP", pid.Kp);
         telemetry.addData("speed", pid.velo);
+        telemetry.addData("arrived", pid.arrived);
+        colTrack.updateTelemetry(telemetry);
         telemetry.update();
     }
 
     //----------------------------------------------------------------------------------
     public void init(HardwareMap hardwareMap) {
+        colTrack.init(hardwareMap);
         pid.init();
-        pid.setCoefficients(1, 0, 0);
-        pid.iMax = 0.3;
-        pid.iRange = 0.5;
-        pid.errorTol = 4;
-        pid.dTol = 2;
+        pid.setCoefficients(kP, kI, kD);
+        pid.iMax = iMax;
+        pid.iRange = iRange;
+        pid.errorTol = errorTol;
+        pid.dTol = derivTol;
         pid.target = 0;
-        revSpin = hardwareMap.get(DcMotor.class, "Spin");
-        trigger = hardwareMap.get(DcMotor.class, "trig");
-        revSpin.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        revSpin.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        revEnc = hardwareMap.get(DcMotor.class, "Enc");
+        revSpin = hardwareMap.get(CRServo.class, "Spin");
+        //trigger = hardwareMap.get(DcMotor.class, "trig");
+        revEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        revEnc.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
     public void update() {
-        curPos = revSpin.getCurrentPosition();
+        pid.setCoefficients(kP, kI, kD);
+        pid.iMax = iMax;
+        pid.iRange = iRange;
+        pid.errorTol = errorTol;
+        pid.dTol = derivTol;
+
+        curPos = revEnc.getCurrentPosition();
         //-------------------------------set target---------------------
-        pid.target = findNearest360(curPos) + slotTarget[colTrack.pointer];
+        //pid.target = findNearest360(curPos) + slotTarget[colTrack.pointer];
+        pid.target = TARGET;
         //actions
         if (curMode == revMode.AUTOIN){
             //intake code

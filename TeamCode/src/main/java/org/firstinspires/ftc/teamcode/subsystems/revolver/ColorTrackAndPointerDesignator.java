@@ -29,7 +29,7 @@ public class ColorTrackAndPointerDesignator {
     float greenMin = 100;
     float greenMax = 180;
     float purpleMin = 200;
-    float purpleMax = 299;
+    float purpleMax = 310;
 
     // functions
     public void setGain(float gain) {
@@ -53,10 +53,14 @@ public class ColorTrackAndPointerDesignator {
     }
 
     void updateColors() {
-        String seenCol = readColor();
+        String curColor = readColor();
+        slotColor[pointer] = curColor;
     }
     static int findNearestWhite() {
-        if (slotColor[(pointer + 1) % 3].equals("white")) {
+        if (slotColor[pointer].equals("white")) {
+            return pointer;
+        }
+        else if (slotColor[(pointer + 1) % 3].equals("white")) {
             return (pointer + 1) % 3;
         } else if (slotColor[(pointer + 2) % 3].equals("white")) {
             return (pointer + 2) % 3;
@@ -65,7 +69,10 @@ public class ColorTrackAndPointerDesignator {
     }
 
     int findNearestColor(String Col) {
-        if (slotColor[(pointer + 1) % 3].equals(Col)) {
+        if (slotColor[pointer % 3].equals(Col)) {
+            return pointer;
+        }
+        else if (slotColor[(pointer + 1) % 3].equals(Col)) {
             return (pointer + 1) % 3;
         } else if (slotColor[(pointer + 2) % 3].equals(Col)) {
             return (pointer + 2) % 3;
@@ -74,7 +81,10 @@ public class ColorTrackAndPointerDesignator {
     }
 
     int findNearestBall() {
-        if (slotColor[(pointer + 1) % 3].equals("green") || slotColor[(pointer + 1) % 3].equals("purple")) {
+        if (slotColor[pointer].equals("green") || slotColor[pointer].equals("purple")) {
+            return pointer;
+        }
+        else if (slotColor[(pointer + 1) % 3].equals("green") || slotColor[(pointer + 1) % 3].equals("purple")) {
             return (pointer + 1) % 3;
         } else if (slotColor[(pointer + 2) % 3].equals("green") || slotColor[(pointer + 2) % 3].equals("purple")) {
             return (pointer + 2) % 3;
@@ -102,7 +112,7 @@ public class ColorTrackAndPointerDesignator {
     }
 
     public void init(HardwareMap hardwareMap) {
-        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "color");
+        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
         setGain(1);
     }
 

@@ -16,7 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.ColorTrackAndPointerDesignator;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.PointerControl;
 
-@TeleOp
+
 public class Revolver {
     ColorTrackAndPointerDesignator pointerDesignator = new ColorTrackAndPointerDesignator();
     PointerControl controller = new PointerControl();
