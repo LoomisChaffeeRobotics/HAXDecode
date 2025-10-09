@@ -18,12 +18,15 @@ public class Main extends OpMode {
     FtcDashboard dash = FtcDashboard.getInstance();
     Telemetry t2 = dash.getTelemetry();
     PointerControl pController = new PointerControl();
+    roller rollerControl = new roller();
     @Override
     public void init() {
         pController.init(hardwareMap);
+        rollerControl.init();
     }
     @Override
     public void loop() {
+        //-------------------gamepad actions--------------------------
         if (gamepad1.dpad_up && !gamepad1.dpadUpWasPressed()){
             gain += 0.05;
             pController.setGain(gain);
@@ -32,11 +35,19 @@ public class Main extends OpMode {
             gain -= 0.05;
             pController.setGain(gain);
         }
-        //---------------------spin revolver---------------------------
-        //loopActions
+        if(gamepad1.a){
+            rollerControl.rollerMode = roller.RM.INTAKE;
+        }
+        else if(gamepad1.b){
+            rollerControl.rollerMode = roller.RM.OUTTAKE;
+        }
+        else{
+            rollerControl.rollerMode = roller.RM.IDLE;
+        }
+        //--------------------------loopActions------------------------
         pController.update();
         pController.updateTelemetry(t2);
         pController.updateTelemetry(telemetry);
-
+        rollerControl.update();
     }
 }
