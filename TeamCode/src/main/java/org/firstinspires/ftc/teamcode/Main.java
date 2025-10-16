@@ -27,6 +27,7 @@ public class Main extends OpMode {
     @Override
     public void loop() {
         //-------------------gamepad actions--------------------------
+        //changing the gain
         if (gamepad1.dpad_up && !gamepad1.dpadUpWasPressed()){
             gain += 0.05;
             pController.setGain(gain);
@@ -35,6 +36,7 @@ public class Main extends OpMode {
             gain -= 0.05;
             pController.setGain(gain);
         }
+        //intake
         if(gamepad1.a){
             rollerControl.rollerMode = roller.RM.INTAKE;
         }
@@ -43,6 +45,21 @@ public class Main extends OpMode {
         }
         else{
             rollerControl.rollerMode = roller.RM.IDLE;
+        }
+        //shooting&revolver
+        if (gamepad1.cross){
+            pController.curMode = PointerControl.revMode.CONTFIRE;
+        }
+        else if (gamepad1.left_bumper && !gamepad1.leftBumperWasPressed()){
+            pController.tarColor = "green";
+            pController.curMode = PointerControl.revMode.FIRECOLOR;
+        }
+        else if (gamepad1.right_bumper && !gamepad1.rightBumperWasPressed()){
+            pController.tarColor = "purple";
+            pController.curMode = PointerControl.revMode.FIRECOLOR;
+        }
+        else if(pController.curMode == PointerControl.revMode.CONTFIRE){
+            pController.curMode = PointerControl.revMode.AUTOIN;
         }
         //--------------------------loopActions------------------------
         pController.update();

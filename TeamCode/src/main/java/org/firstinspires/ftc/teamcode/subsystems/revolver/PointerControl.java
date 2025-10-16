@@ -26,9 +26,10 @@ public class PointerControl{
     public static double errorTol = 0;
     public static double derivTol = 0;
     public static double TARGET = 0;
+    boolean isFiring = false;
     double curPos = 0;
     double[] slotTarget = {0, 2371, -2371};
-    String tarColor = "white";
+    public String tarColor = "white";
     public enum revMode {
         CONTFIRE,
         AUTOIN,
@@ -36,7 +37,7 @@ public class PointerControl{
         HP
     }
 
-    private revMode curMode = revMode.AUTOIN;
+    public revMode curMode = revMode.AUTOIN;
     // functions
     void pull_trigger(){
         //codeforpulltrigger
@@ -86,41 +87,40 @@ public class PointerControl{
 
         curPos = revEnc.getCurrentPosition();
         //-------------------------------set target---------------------
-        //pid.target = findNearest360(curPos) + slotTarget[colTrack.pointer];
-        pid.target = TARGET;
         //actions
         if (curMode == revMode.AUTOIN){
             //intake code
+            isFiring = false;
             colTrack.pointer = colTrack.findNearestWhite();
+            pid.target = findNearest360(curPos) + slotTarget[colTrack.pointer];
         }
         else if (curMode == revMode.CONTFIRE){
-            if (pid.arrived) {
-                if (colTrack.slotColor[colTrack.pointer].equals("white")) {
-                    colTrack.pointer = colTrack.findNearestBall();
-                }
-                else{
-                    pull_trigger();
-                }
+            if (pid.arrived && colTrack.emptyAvailble() && !isFiring) {
+                colTrack.pointer = colTrack.findNearestBall();
+                pid.target = findNearest360(curPos) + slotTarget[colTrack.pointer] + 180;
+                isFiring = true;
+            }
+            else if (isFiring && pid.arrived){
+                isFiring = false;
+                pull_trigger();
             }
         }
         else if (curMode == revMode.FIRECOLOR){
-            if (colTrack.slotColor[colTrack.pointer].equals(tarColor)){
-                pull_trigger();
-            }
-            else{
-                colTrack.pointer = colTrack.findNearestColor(tarColor);
-                //waitForPid();
-                pull_trigger();
-            }
-            curMode = revMode.AUTOIN;
-        }
-        else if (curMode == revMode.HP){
-            if (colTrack.emptyAvailble()) {
-                colTrack.pointer = (colTrack.findNearestWhite() + 1) % 3;
-            }
-            else{
+            if (!colTrack.colorAvailble(tarColor)){
                 curMode = revMode.AUTOIN;
             }
+            else if (pid.arrived && !isFiring) {
+                colTrack.pointer = colTrack.findNearestColor(tarColor);
+                pid.target = findNearest360(curPos) + slotTarget[colTrack.pointer] + 180;
+                isFiring = true;
+            }
+            else if (isFiring && pid.arrived){
+                isFiring = false;
+                pull_trigger();
+                curMode = revMode.AUTOIN;
+            }
+        }
+        else if (curMode == revMode.HP){
         }
         //-----------------------loop actions-------------------------
         colTrack.loop(pid.arrived);

@@ -69,22 +69,22 @@ public class ColorTrackAndPointerDesignator {
     }
 
     int findNearestColor(String Col) {
-        if (slotColor[pointer % 3].equals(Col)) {
-            return pointer;
-        }
-        else if (slotColor[(pointer + 1) % 3].equals(Col)) {
+        if (slotColor[(pointer + 1) % 3].equals(Col)) {
             return (pointer + 1) % 3;
         } else if (slotColor[(pointer + 2) % 3].equals(Col)) {
             return (pointer + 2) % 3;
         }
         return pointer;
     }
-
-    int findNearestBall() {
-        if (slotColor[pointer].equals("green") || slotColor[pointer].equals("purple")) {
-            return pointer;
+    boolean colorAvailble(String Col) {
+        if (slotColor[0].equals(Col) || slotColor[1].equals(Col) || slotColor[2].equals(Col)) {
+            return true;
+        } else {
+            return false;
         }
-        else if (slotColor[(pointer + 1) % 3].equals("green") || slotColor[(pointer + 1) % 3].equals("purple")) {
+    }
+    int findNearestBall() {
+        if (slotColor[(pointer + 1) % 3].equals("green") || slotColor[(pointer + 1) % 3].equals("purple")) {
             return (pointer + 1) % 3;
         } else if (slotColor[(pointer + 2) % 3].equals("green") || slotColor[(pointer + 2) % 3].equals("purple")) {
             return (pointer + 2) % 3;
