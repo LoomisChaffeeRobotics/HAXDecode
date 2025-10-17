@@ -14,6 +14,10 @@ public class TurretExperiment extends OpMode {
     DcMotorEx outerTurret;
     FtcDashboard Dash=FtcDashboard.getInstance();
     Telemetry t2=Dash.getTelemetry();
+    double inner = 0;
+    double outer = 0;
+    boolean prevA = false;
+    boolean prevB = false;
 
     @Override
     public void init() {
@@ -21,41 +25,31 @@ public class TurretExperiment extends OpMode {
         outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
         innerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         outerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-
-    }
+        }
     @Override
     public void loop() {
-        if(gamepad1.a) {
-            innerTurret.setPower(-0.3);
-            outerTurret.setPower(-0.3);
+        // Gamepad1.A increases the power of inner turret by 0.25 and wraps back to 0 after 1.
+        // Gamepad1.B increases the power of outer turret by 0.25 and wraps back to 0 after 1.
+        if(gamepad1.a && !prevA){
+            inner++;
+            prevA=true;
         }
-        else if(gamepad1.b) {
-            innerTurret.setPower(-0.5);
-            outerTurret.setPower(-0.5);
+        if(!gamepad1.a){
+            prevA=false;
         }
-        else if(gamepad1.x) {
-            innerTurret.setPower(-1);
-            outerTurret.setPower(-1);
+        if(gamepad1.b && !prevB){
+            outer++;
+            prevB=true;
         }
-        else if(gamepad1.y) {
-            innerTurret.setPower(-1);
-            outerTurret.setPower(-0.75);
+        if(!gamepad1.b){
+            prevB=false;
         }
-        else if(gamepad1.dpad_down) {
-            innerTurret.setPower(-0.75);
-            outerTurret.setPower(-1);
-        }
-        else if (gamepad1.dpad_up) {
-            innerTurret.setVelocity(-500);
-            outerTurret.setVelocity(-2400);
-        }
-        else{
-            innerTurret.setPower(0);
-            outerTurret.setPower(0);
-        }
-        t2.addData("innervelocity:", innerTurret.getVelocity());
-        t2.addData("outervelocity:", outerTurret.getVelocity());
+
+        innerTurret.setPower((inner%5)*0.25);
+        outerTurret.setPower((outer%5)*0.25);
+
+        t2.addData("innerTurret Speed:", innerTurret.getPower());
+        t2.addData("outerTurret Speed:", outerTurret.getPower());
         t2.update();
     }
 }
