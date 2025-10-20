@@ -23,6 +23,13 @@ public class TurretExperiment extends OpMode {
     public void init() {
         innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
         outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
+
+        innerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        outerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        innerTurret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        outerTurret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         innerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         outerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
@@ -45,11 +52,23 @@ public class TurretExperiment extends OpMode {
             prevB=false;
         }
 
-        innerTurret.setPower((inner%5)*0.25);
-        outerTurret.setPower((outer%5)*0.25);
+        innerTurret.setPower((inner%21)*(0.05));
+        outerTurret.setPower((outer%21)*(0.05));
 
-        t2.addData("innerTurret Speed:", innerTurret.getPower());
-        t2.addData("outerTurret Speed:", outerTurret.getPower());
-        t2.update();
+        double tpr = 28.0;
+        double innerTps = innerTurret.getVelocity();
+        double innerRpm = (innerTps / tpr) * 60.0;
+
+        double outerTps = outerTurret.getVelocity();
+        double outerRpm = (outerTps / tpr) * 60.0;
+
+
+        telemetry.addData("innerTurret Speed", innerTurret.getPower());
+        telemetry.addData("innerTurret Velocity from encoder (tps)", innerTps);
+        telemetry.addData("innerTurret Velocity from encoder (rpm)", innerRpm);
+        telemetry.addData("outerTurret Speed", outerTurret.getPower());
+        telemetry.addData("outerTurret Velocity from encoder (tps)", outerTps);
+        telemetry.addData("outerTurret Velocity from encoder (rpm)", outerRpm);
+        telemetry.update();
     }
 }
