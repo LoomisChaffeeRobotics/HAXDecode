@@ -14,10 +14,12 @@ public class TurretExperiment extends OpMode {
     DcMotorEx outerTurret;
     FtcDashboard Dash=FtcDashboard.getInstance();
     Telemetry t2=Dash.getTelemetry();
-    double inner = 0;
-    double outer = 0;
+    double inner = 80;
+    double outer = 40;
     boolean prevA = false;
     boolean prevB = false;
+    boolean prevX = false;
+    boolean prevY = false;
 
     @Override
     public void init() {
@@ -51,24 +53,40 @@ public class TurretExperiment extends OpMode {
         if(!gamepad1.b){
             prevB=false;
         }
+        if(gamepad1.x && !prevX){
+            inner--;
+            prevX=true;
+        }
+        if(!gamepad1.x){
+            prevX=false;
+        }
+        if(gamepad1.y && !prevY){
+            outer--;
+            prevY=true;
+        }
+        if(!gamepad1.y){
+            prevY=false;
+        }
 
-        innerTurret.setPower((inner%21)*(0.05));
-        outerTurret.setPower((outer%21)*(0.05));
+        double innerRPM = (inner%201)*(25);
+        double innerTicks = (innerRPM / 60) * 28 ;
+        double outerRPM = (outer%101)*(50);
+        double outerTicks = (outerRPM / 60) * 28;
 
-        double tpr = 28.0;
-        double innerTps = innerTurret.getVelocity();
-        double innerRpm = (innerTps / tpr) * 60.0;
+        innerTurret.setVelocity(-innerTicks);
+        outerTurret.setVelocity(outerTicks);
 
-        double outerTps = outerTurret.getVelocity();
-        double outerRpm = (outerTps / tpr) * 60.0;
+        double actualInnerTicks = innerTurret.getVelocity();
+        double actualInnerRPM = (actualInnerTicks / 28) * 60;
+        double actualOuterTicks = outerTurret.getVelocity();
+        double actualOuterRPM = (actualOuterTicks / 28) * 60;
 
+        telemetry.addData("innerTurret expected rpm (motor x 2)", innerRPM * 2);
+        telemetry.addData("innerTurret Velocity from encoder (rpm)", actualInnerRPM);
+        telemetry.addData("innerTurret Velocity after gearbox (x2)", actualInnerRPM * 2);
 
-        telemetry.addData("innerTurret Speed", innerTurret.getPower());
-        telemetry.addData("innerTurret Velocity from encoder (tps)", innerTps);
-        telemetry.addData("innerTurret Velocity from encoder (rpm)", innerRpm);
-        telemetry.addData("outerTurret Speed", outerTurret.getPower());
-        telemetry.addData("outerTurret Velocity from encoder (tps)", outerTps);
-        telemetry.addData("outerTurret Velocity from encoder (rpm)", outerRpm);
+        telemetry.addData("outerTurret Speed", outerRPM);
+        telemetry.addData("outerTurret Velocity from encoder (rpm)", actualOuterRPM);
         telemetry.update();
     }
 }
