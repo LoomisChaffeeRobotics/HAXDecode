@@ -14,7 +14,7 @@ public class TurretExperiment extends OpMode {
     DcMotorEx outerTurret;
     FtcDashboard Dash=FtcDashboard.getInstance();
     Telemetry t2=Dash.getTelemetry();
-    double inner = 80;
+    double inner = 40;
     double outer = 40;
     boolean prevA = false;
     boolean prevB = false;
