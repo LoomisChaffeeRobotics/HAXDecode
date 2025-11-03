@@ -1,17 +1,15 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.subsystems;
 
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.teamcode.subsystems.revolver.PointerControl;
-
 public class roller {
     DcMotor roller;
 
     double intakeSpeed = 1;
-    int lastDir = 1;
+    int lastDir = 0;
     public enum RM {
         INTAKE,
         OUTTAKE,
@@ -31,7 +29,7 @@ public class roller {
         }
         else if(rollerMode == RM.OUTTAKE){
             roller.setPower(-intakeSpeed);
-            lastDir = -1;
+            lastDir = 0;
         }
         else if(rollerMode == RM.HOLD){
             roller.setPower(0.2);

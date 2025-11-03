@@ -87,7 +87,7 @@ public class DEPRECATED_Revolver {
             }
         }
         */
-        pointerDesignator.updateTelemetry(t);
-        controller.updateTelemetry(t);
+        //pointerDesignator.updateTelemetry(t);
+        //controller.updateTelemetry(t);
     }
 }
