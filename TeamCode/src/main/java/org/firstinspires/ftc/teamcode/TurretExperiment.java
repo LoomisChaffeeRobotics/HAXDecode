@@ -14,48 +14,79 @@ public class TurretExperiment extends OpMode {
     DcMotorEx outerTurret;
     FtcDashboard Dash=FtcDashboard.getInstance();
     Telemetry t2=Dash.getTelemetry();
+    double inner = 40;
+    double outer = 40;
+    boolean prevA = false;
+    boolean prevB = false;
+    boolean prevX = false;
+    boolean prevY = false;
 
     @Override
     public void init() {
         innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
         outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
+
+        innerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        outerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        innerTurret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        outerTurret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         innerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         outerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-
-    }
+        }
     @Override
     public void loop() {
-        if(gamepad1.a) {
-            innerTurret.setPower(-0.3);
-            outerTurret.setPower(-0.3);
+        // Gamepad1.A increases the power of inner turret by 0.25 and wraps back to 0 after 1.
+        // Gamepad1.B increases the power of outer turret by 0.25 and wraps back to 0 after 1.
+        if(gamepad1.a && !prevA){
+            inner++;
+            prevA=true;
         }
-        else if(gamepad1.b) {
-            innerTurret.setPower(-0.5);
-            outerTurret.setPower(-0.5);
+        if(!gamepad1.a){
+            prevA=false;
         }
-        else if(gamepad1.x) {
-            innerTurret.setPower(-1);
-            outerTurret.setPower(-1);
+        if(gamepad1.b && !prevB){
+            outer++;
+            prevB=true;
         }
-        else if(gamepad1.y) {
-            innerTurret.setPower(-1);
-            outerTurret.setPower(-0.75);
+        if(!gamepad1.b){
+            prevB=false;
         }
-        else if(gamepad1.dpad_down) {
-            innerTurret.setPower(-0.75);
-            outerTurret.setPower(-1);
+        if(gamepad1.x && !prevX){
+            inner--;
+            prevX=true;
         }
-        else if (gamepad1.dpad_up) {
-            innerTurret.setVelocity(-500);
-            outerTurret.setVelocity(-2400);
+        if(!gamepad1.x){
+            prevX=false;
         }
-        else{
-            innerTurret.setPower(0);
-            outerTurret.setPower(0);
+        if(gamepad1.y && !prevY){
+            outer--;
+            prevY=true;
         }
-        t2.addData("innervelocity:", innerTurret.getVelocity());
-        t2.addData("outervelocity:", outerTurret.getVelocity());
-        t2.update();
+        if(!gamepad1.y){
+            prevY=false;
+        }
+
+        double innerRPM = (inner%201)*(25);
+        double innerTicks = (innerRPM / 60) * 28 ;
+        double outerRPM = (outer%101)*(50);
+        double outerTicks = (outerRPM / 60) * 28;
+
+        innerTurret.setVelocity(-innerTicks);
+        outerTurret.setVelocity(outerTicks);
+
+        double actualInnerTicks = innerTurret.getVelocity();
+        double actualInnerRPM = (actualInnerTicks / 28) * 60;
+        double actualOuterTicks = outerTurret.getVelocity();
+        double actualOuterRPM = (actualOuterTicks / 28) * 60;
+
+        telemetry.addData("innerTurret expected rpm (motor x 2)", innerRPM * 2);
+        telemetry.addData("innerTurret Velocity from encoder (rpm)", actualInnerRPM);
+        telemetry.addData("innerTurret Velocity after gearbox (x2)", actualInnerRPM * 2);
+
+        telemetry.addData("outerTurret Speed", outerRPM);
+        telemetry.addData("outerTurret Velocity from encoder (rpm)", actualOuterRPM);
+        telemetry.update();
     }
 }
