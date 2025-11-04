@@ -15,11 +15,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class ColorTrackAndPointerDesignator {
     NormalizedColorSensor colorSensor;
     NormalizedRGBA colors;
-    boolean UPPRESSED = false;
-    boolean DOWNPRESSED = false;
-    boolean APRESSED = false;
-    boolean LEFTPRESSED = false;
-    boolean RIGHTPRESSED = false;
+    Gamepad gamepad1;
+    Telemetry telemetry;
     double hue;
     public static int pointer = 0;
     final float[] hsvValues = new float[3];
@@ -30,7 +27,6 @@ public class ColorTrackAndPointerDesignator {
     float greenMax = 180;
     float purpleMin = 200;
     float purpleMax = 310;
-
     // functions
     public void setGain(float gain) {
         colorSensor.setGain(gain);
@@ -99,14 +95,17 @@ public class ColorTrackAndPointerDesignator {
             return false;
         }
     }
+    boolean ballAvailble() {
+        if (!slotColor[0].equals("white") || !slotColor[1].equals("white") || !slotColor[2].equals("white")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     public void updateTelemetry(Telemetry telemetry) {
         telemetry.addData("hue", hue);
         telemetry.addData("curColor", curColor);
-        telemetry.addData("pointer", pointer);
-        telemetry.addData("slot1", slotColor[0]);
-        telemetry.addData("slot2", slotColor[1]);
-        telemetry.addData("slot3", slotColor[2]);
         telemetry.addData("Distance1 (cm)", ((DistanceSensor) colorSensor).getDistance(DistanceUnit.CM));
         telemetry.update();
     }

@@ -23,10 +23,9 @@ public class pidTune extends OpMode {
     void updateTelemetry() {
         telemetry.addData("target", pid.target);
         telemetry.addData("curPos", curPos);
-        //telemetry.addData("P", pid.PID_P);
-        //telemetry.addData("I", pid.PID_I);
-        //telemetry.addData("D", pid.PID_D);
-        //telemetry.addData("kP", pid.Kp);
+        telemetry.addData("P", pid.PID_P);
+        telemetry.addData("I", pid.PID_I);
+        telemetry.addData("D", pid.PID_D);
         telemetry.addData("speed", pid.velo);
         telemetry.addData("arrived", pid.arrived);
         telemetry.update();
@@ -39,7 +38,7 @@ public class pidTune extends OpMode {
         pid.iRange = iRange;
         pid.errorTol = errorTol;
         pid.dTol = derivTol;
-        pid.target = 0;
+        pid.target = TARGET;
         revEnc = hardwareMap.get(DcMotor.class, "Enc");
         revSpin = hardwareMap.get(CRServo.class, "Spin");
         revEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -47,6 +46,7 @@ public class pidTune extends OpMode {
     }
     @Override
     public void loop() {
+        pid.target = TARGET;
         pid.setCoefficients(kP, kI, kD);
         pid.iMax = iMax;
         pid.iRange = iRange;

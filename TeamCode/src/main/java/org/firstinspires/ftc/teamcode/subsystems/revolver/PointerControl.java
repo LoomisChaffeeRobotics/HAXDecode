@@ -52,10 +52,6 @@ public class PointerControl{
     public void updateTelemetry(Telemetry telemetry){
         telemetry.addData("target", pid.target);
         telemetry.addData("curPos", curPos);
-        //telemetry.addData("P", pid.PID_P);
-        //telemetry.addData("I", pid.PID_I);
-        //telemetry.addData("D", pid.PID_D);
-        //telemetry.addData("kP", pid.Kp);
         telemetry.addData("speed", pid.velo);
         telemetry.addData("arrived", pid.arrived);
         colTrack.updateTelemetry(telemetry);
@@ -95,7 +91,7 @@ public class PointerControl{
             pid.target = findNearest360(curPos) + slotTarget[colTrack.pointer];
         }
         else if (curMode == revMode.CONTFIRE){
-            if (pid.arrived && colTrack.emptyAvailble() && !isFiring) {
+            if (pid.arrived && colTrack.ballAvailble() && !isFiring) {
                 colTrack.pointer = colTrack.findNearestBall();
                 pid.target = findNearest360(curPos) + slotTarget[colTrack.pointer] + 180;
                 isFiring = true;
