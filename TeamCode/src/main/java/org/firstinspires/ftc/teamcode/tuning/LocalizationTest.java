@@ -37,8 +37,8 @@ public class LocalizationTest extends LinearOpMode {
 
                 drive.setDrivePowers(new PoseVelocity2d(
                         new Vector2d(
-                                fieldX,
-                                fieldY
+                                gamepadx,
+                                gamepady
                         ),
                         -gamepad1.right_stick_x
                 ));
