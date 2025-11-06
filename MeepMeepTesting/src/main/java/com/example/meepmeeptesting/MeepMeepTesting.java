@@ -15,27 +15,9 @@ public class MeepMeepTesting {
                 .setConstraints(100, 60, Math.toRadians(180), Math.toRadians(180), 15)
                 .build();
 
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(60, 0, Math.PI))
-                .setTangent(Math.PI * 1.1)
-                .splineToLinearHeading(new Pose2d(35, 25, Math.PI / 2), Math.PI * 0.5)
-                .lineToYSplineHeading(50, Math.PI * 0.5)
-                .setTangent(-Math.PI / 2)
-                .splineToLinearHeading(new Pose2d(50, 0, Math.PI * 0.8), -Math.PI * 0.3)
-
-                .setTangent(Math.PI)
-                .splineToLinearHeading(new Pose2d(12, 32, Math.PI * 0.5), Math.PI * 0.5)
-                .lineToYSplineHeading(50, Math.PI * 0.5)
-                .setTangent(-Math.PI * 0.5)
-                .splineToLinearHeading(new Pose2d(0, 0, Math.PI * 0.76), -Math.PI * 0.4)
-
-                .setTangent(Math.PI * 0.75)
-                .splineToLinearHeading(new Pose2d(-12, 32, Math.PI * 0.5), Math.PI * 0.5)
-                //.setTangent(Math.PI * 0.5)
-                .lineToYSplineHeading(50, Math.PI * 0.5)
-                .setTangent(-Math.PI * 0.5)
-                .splineToLinearHeading(new Pose2d(0, 0, Math.PI * 0.76), -Math.PI * 0.4)
-                .setTangent(-Math.PI * 0.2)
-                .splineToLinearHeading(new Pose2d(36, 32, Math.PI), Math.PI * 0.5)
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(0, 0, 0))
+                .splineTo(new Vector2d(25, 30), Math.PI / 2)
+                .splineTo(new Vector2d(50, 60), -0)
                 .build());
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_DECODE_OFFICIAL)

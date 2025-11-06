@@ -11,16 +11,23 @@ import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+
 import java.util.List;
 
 @TeleOp
 public class limelighttesting extends OpMode {
 
+    public double tx;
+    public double ty;
+    public double ta;
+    public Pose3D botpose;
     Limelight3A limelight;
     FtcDashboard dashboard;
     IMU imu;
     @Override
     public void init() {
+
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         imu = hardwareMap.get(IMU.class, "imu");
         limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
@@ -30,9 +37,10 @@ public class limelighttesting extends OpMode {
     public void loop() {
         LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid()) {
-            double tx = result.getTx(); // How far left or right the target is (degrees)
-            double ty = result.getTy(); // How far up or down the target is (degrees)
-            double ta = result.getTa(); // How big the target looks (0%-100% of the image)
+            botpose = result.getBotpose();
+            tx = result.getTx(); // How far left or right the target is (degrees)
+            ty = result.getTy(); // How far up or down the target is (degrees)
+            ta = result.getTa(); // How big the target looks (0%-100% of the image)
             telemetry.addData("Target X", tx);
             telemetry.addData("Target Y", ty);
             telemetry.addData("Target Area", ta);
