@@ -9,6 +9,8 @@ public class roller {
     DcMotor roller;
 
     double intakeSpeed = 1;
+    double idleSpeed = 0.1;
+    double holdSpeed = 0.2;
     int lastDir = 0;
     public enum RM {
         INTAKE,
@@ -32,10 +34,10 @@ public class roller {
             lastDir = 0;
         }
         else if(rollerMode == RM.HOLD){
-            roller.setPower(0.2);
+            roller.setPower(holdSpeed);;
         }
         else if(rollerMode == RM.IDLE){
-            roller.setPower(lastDir * 0.1);
+            roller.setPower(lastDir * idleSpeed);
         }
     }
 
