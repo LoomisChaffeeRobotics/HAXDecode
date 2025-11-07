@@ -2,10 +2,13 @@ package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
@@ -17,6 +20,7 @@ public class TurretSpeedEvalutor extends OpMode {
     limelighttesting limelight;
     FtcDashboard Dash=FtcDashboard.getInstance();
     Telemetry t2=Dash.getTelemetry();
+    MecanumDrive drive;
 
     double currentlocationx = 0;
     double rawdistancex = 0;
@@ -51,6 +55,7 @@ public class TurretSpeedEvalutor extends OpMode {
 
         innerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         outerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        drive = new MecanumDrive(hardwareMap,new Pose2d(0,0,0));
     }
     public double timeOfFlight (double distance){
         abs_distance = Math.abs(distance);
@@ -93,8 +98,8 @@ public class TurretSpeedEvalutor extends OpMode {
         rawDistance_inch=Math.sqrt(rawdistancex*rawdistancex + rawdistancey*rawdistancey);
         rawDistance_meters=rawDistance_inch*2.54/100;
 
-        currentvelocity_x = //somehow get x-velocity from roadrunner
-        currentvelocity_y = //somehow get y-velocity from roadrunner
+        currentvelocity_x = drive.localizer.update().linearVel.x;
+        currentvelocity_y = drive.localizer.update().linearVel.y;
         velocitymagnitude = Math.sqrt(currentvelocity_x*currentvelocity_x + currentvelocity_y*currentvelocity_y);
 
         //get cos theta of angle between two vectors;
@@ -108,12 +113,12 @@ public class TurretSpeedEvalutor extends OpMode {
 
         distanceUpdatedAfterVector_inch = rawDistance_inch - projectionMagnitude_inch*tof;
         distanceUpdatedAfterVector_meter = distanceUpdatedAfterVector_inch*2.54/100;
+
         //evaluate turret speed
         upperTurretSpeed = findUpperSpeed(distanceUpdatedAfterVector_meter);
         lowerTurretSpeed = findLowerSpeed(distanceUpdatedAfterVector_meter);
 
         outerTurret.setVelocity(upperTurretSpeed);
         innerTurret.setVelocity(lowerTurretSpeed);
-
     }
 }
