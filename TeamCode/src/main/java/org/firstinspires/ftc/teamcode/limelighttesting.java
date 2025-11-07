@@ -1,11 +1,15 @@
 package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.PoseVelocity2d;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -21,20 +25,37 @@ public class limelighttesting extends OpMode {
     public double tx;
     public double ty;
     public double ta;
+    public double power;
     public Pose3D botpose;
     Limelight3A limelight;
+    CRServo turret;
     FtcDashboard dashboard;
     IMU imu;
+    MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
+
     @Override
     public void init() {
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         imu = hardwareMap.get(IMU.class, "imu");
+        turret = hardwareMap.get(CRServo.class, "turret");
+        dashboard = FtcDashboard.getInstance();
         limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
         limelight.start(); // This tells Limelight to start looking!
     }
     @Override
     public void loop() {
+        drive.setDrivePowers(new PoseVelocity2d(new Vector2d(gamepad1.left_stick_x, gamepad1.left_stick_y), gamepad1.right_stick_x));
+        turret.setPower(power);
+        if (gamepad1.dpad_up && gamepad1.dpadUpWasPressed()){
+            power += 0.1;
+        }
+        else if (gamepad1.dpad_down && gamepad1.dpadDownWasPressed()){
+            power -= 0.1;
+        }
+        else if(gamepad1.a){
+            power = 0;
+        }
         LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid()) {
             botpose = result.getBotpose();
