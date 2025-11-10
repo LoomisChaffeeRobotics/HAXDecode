@@ -47,7 +47,7 @@ public class PointerControl{
     }
 
     public double findNearest360(double num) {
-        return Math.round(num / 8192.0) * 8192;
+        return Math.floor(num / 8192.0) * 8192;
     }
     public void updateTelemetry(Telemetry telemetry){
         telemetry.addData("target", pid.target);
