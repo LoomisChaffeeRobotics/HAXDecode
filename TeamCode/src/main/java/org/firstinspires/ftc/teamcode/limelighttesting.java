@@ -48,10 +48,10 @@ public class limelighttesting extends OpMode {
         drive.setDrivePowers(new PoseVelocity2d(new Vector2d(gamepad1.left_stick_x, gamepad1.left_stick_y), gamepad1.right_stick_x));
         turret.setPower(power);
         if (gamepad1.right_bumper){
-            power = 0.1;
+            power = 1;
         }
         else if (gamepad1.right_trigger > 0){
-            power = 0.1;
+            power = 1;
         }
         else{
             power = 0;
