@@ -17,6 +17,7 @@ public class ColorTrackAndPointerDesignator {
     NormalizedRGBA colors;
     Gamepad gamepad1;
     Telemetry telemetry;
+    boolean arrived = false;
     double hue;
     public static int pointer = 0;
     final float[] hsvValues = new float[3];
@@ -24,7 +25,7 @@ public class ColorTrackAndPointerDesignator {
     static String[] slotColor = {"white", "white", "white"};
     //-----------define colors--------------
     float greenMin = 100;
-    float greenMax = 180;
+    float greenMax = 160;
     float purpleMin = 200;
     float purpleMax = 310;
     // functions
@@ -112,10 +113,10 @@ public class ColorTrackAndPointerDesignator {
 
     public void init(HardwareMap hardwareMap) {
         colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
-        setGain(1);
+        setGain(2.5F);
     }
 
-    public void loop(boolean arrived) {
+    public void loop() {
         curColor = readColor();
         if (arrived) {
             updateColors();

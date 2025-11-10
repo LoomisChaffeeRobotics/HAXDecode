@@ -1,7 +1,9 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.tests;
 
 import android.graphics.Color;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -12,20 +14,22 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @TeleOp
+@Config
 public class colorTesting extends OpMode {
     NormalizedColorSensor colorSensor;
+    FtcDashboard dash = FtcDashboard.getInstance();
+    Telemetry t2 = dash.getTelemetry();
     NormalizedRGBA colors;
-    Telemetry telemetry;
-    double hue;
+    double hue = 0;
     final float[] hsvValues = new float[3];
     String curColor = "white";
     static String[] slotColor = {"white", "white", "white"};
     public static int pointer = 0;
-    float greenMin = 100;
-    float greenMax = 180;
-    float purpleMin = 200;
-    float purpleMax = 310;
-    float gain = 1;
+    public static float greenMin = 100;
+    public static float greenMax = 160;
+    public static float purpleMin = 200;
+    public static float purpleMax = 310;
+    public static float gain = 2.5F;
     public void setGain(float gain) {
         colorSensor.setGain(gain);
     }
@@ -34,9 +38,7 @@ public class colorTesting extends OpMode {
 
         Color.colorToHSV(colors.toColor(), hsvValues);
         hue = hsvValues[0];
-        if (((DistanceSensor) colorSensor).getDistance(DistanceUnit.CM) > 8) {
-            return "white";
-        } else if (hue > greenMin && hue < greenMax) {
+        if (hue > greenMin && hue < greenMax) {
             return "green";
         } else if (hue > purpleMin && hue < purpleMax) {
             return "purple";
@@ -48,7 +50,7 @@ public class colorTesting extends OpMode {
         String curColor = readColor();
         slotColor[pointer] = curColor;
     }
-    public void updateTelemetry() {
+    public void updateTelemetry(Telemetry telemetry) {
         telemetry.addData("hue", hue);
         telemetry.addData("curColor", curColor);
         telemetry.addData("gain", gain);
@@ -71,5 +73,8 @@ public class colorTesting extends OpMode {
             setGain(gain);
         }
         curColor = readColor();
+        updateTelemetry(telemetry);
+
+        updateTelemetry(t2);
     }
 }

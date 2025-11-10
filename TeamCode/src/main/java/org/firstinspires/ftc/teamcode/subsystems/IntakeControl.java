@@ -1,26 +1,37 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
+@Config
 public class IntakeControl {
     DcMotorEx intake;
     double targVel;
+//    public static double testPower = 0;
 
     public void init(HardwareMap hw, String intakeName) {
         intake = hw.get(DcMotorEx.class, intakeName);
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
     }
     public void loop() {
         intake.setVelocity(targVel);
     }
     public void intakeOn() {
-
+        targVel = 1800;
     }
     public void intakeOff() {
+        targVel = 0;
+    }
+    public void intakeOut() {
+        targVel = -1000;
+    }
+    public void setManualIntakePower() {
 
     }
     public void intakeTele(Telemetry t) {

@@ -6,6 +6,7 @@ import android.graphics.Point;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -18,17 +19,18 @@ public class PointerControl{
     CRServo revSpin;
     //DcMotor trigger;
     FancyPID pid = new FancyPID();
-    public static double kP = 0;
+    public static double kP = 0.0004;
     public static double kI = 0;
-    public static double kD = 0;
+    public static double kD = 0.0005;
     public static double iMax = 0;
     public static double iRange = 0;
-    public static double errorTol = 0;
-    public static double derivTol = 0;
+    public static double errorTol = 362;
+    public static double derivTol = 0.08;
     public static double TARGET = 0;
     boolean isFiring = false;
     double curPos = 0;
-    double[] slotTarget = {0, 2371, -2371};
+    public boolean testMode = false;
+    double[] slotTarget = {0, 2700, -2700};
     public String tarColor = "white";
     public enum revMode {
         CONTFIRE,
@@ -45,9 +47,20 @@ public class PointerControl{
     public void setGain(float gain){
         colTrack.setGain(gain);
     }
-
-    public double findNearest360(double num) {
-        return Math.floor(num / 8192.0) * 8192;
+    public void nextSlot() {
+        colTrack.pointer = (colTrack.pointer +1) % 3;
+    }
+    public void lastSlot() {
+        colTrack.pointer = Math.abs((colTrack.pointer + 2)) % 3;
+    }
+    public double optimizeTarg(double targ, double cur) {
+        double floor = Math.floor(cur / 8192.0) * 8192 + (targ % 8192);
+        double ceiling = Math.ceil(cur / 8192.0) * 8192 + (targ % 8192);
+        if (Math.abs(floor-cur) > Math.abs(ceiling - cur)) {
+            return ceiling;
+        } else {
+            return floor;
+        }
     }
     public void updateTelemetry(Telemetry telemetry){
         telemetry.addData("target", pid.target);
@@ -73,6 +86,7 @@ public class PointerControl{
         //trigger = hardwareMap.get(DcMotor.class, "trig");
         revEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         revEnc.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        revEnc.setDirection(DcMotorSimple.Direction.REVERSE);
     }
     public void update() {
         pid.setCoefficients(kP, kI, kD);
@@ -84,42 +98,41 @@ public class PointerControl{
         curPos = revEnc.getCurrentPosition();
         //-------------------------------set target---------------------
         //actions
-        if (curMode == revMode.AUTOIN){
-            //intake code
-            isFiring = false;
-            colTrack.pointer = colTrack.findNearestWhite();
-            pid.target = findNearest360(curPos) + slotTarget[colTrack.pointer];
-        }
-        else if (curMode == revMode.CONTFIRE){
-            if (pid.arrived && colTrack.ballAvailble() && !isFiring) {
-                colTrack.pointer = colTrack.findNearestBall();
-                pid.target = findNearest360(curPos) + slotTarget[colTrack.pointer] + 180;
-                isFiring = true;
-            }
-            else if (isFiring && pid.arrived){
+        if (!testMode) {
+            if (curMode == revMode.AUTOIN) {
+                //intake code
                 isFiring = false;
-                pull_trigger();
+                colTrack.pointer = colTrack.findNearestWhite();
+                pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
+            } else if (curMode == revMode.CONTFIRE) {
+                if (pid.arrived && colTrack.ballAvailble() && !isFiring) {
+                    colTrack.pointer = colTrack.findNearestBall();
+                    pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 180, curPos);
+                    isFiring = true;
+                } else if (isFiring && pid.arrived) {
+                    isFiring = false;
+                    pull_trigger();
+                }
+            } else if (curMode == revMode.FIRECOLOR) {
+                if (!colTrack.colorAvailble(tarColor)) {
+                    curMode = revMode.AUTOIN;
+                } else if (pid.arrived && !isFiring) {
+                    colTrack.pointer = colTrack.findNearestColor(tarColor);
+                    pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 180, curPos);
+                    isFiring = true;
+                } else if (isFiring && pid.arrived) {
+                    isFiring = false;
+                    pull_trigger();
+                    curMode = revMode.AUTOIN;
+                }
+            } else if (curMode == revMode.HP) {
             }
-        }
-        else if (curMode == revMode.FIRECOLOR){
-            if (!colTrack.colorAvailble(tarColor)){
-                curMode = revMode.AUTOIN;
-            }
-            else if (pid.arrived && !isFiring) {
-                colTrack.pointer = colTrack.findNearestColor(tarColor);
-                pid.target = findNearest360(curPos) + slotTarget[colTrack.pointer] + 180;
-                isFiring = true;
-            }
-            else if (isFiring && pid.arrived){
-                isFiring = false;
-                pull_trigger();
-                curMode = revMode.AUTOIN;
-            }
-        }
-        else if (curMode == revMode.HP){
+        } else {
+            pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
         }
         //-----------------------loop actions-------------------------
-        colTrack.loop(pid.arrived);
+        colTrack.arrived = pid.arrived;
+        colTrack.loop();
         pid.update(curPos);
         revSpin.setPower(pid.velo);
     }
