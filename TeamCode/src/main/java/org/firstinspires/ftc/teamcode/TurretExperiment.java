@@ -22,10 +22,14 @@ public class TurretExperiment extends OpMode {
     double outer = 40;
     public static double innerRPM = 0;
     public static double outerRPM = 0;
+    public static double flickPos1 = 0.45;
+    public static double flickPos2 = 0.97;
     boolean prevA = false;
     boolean prevB = false;
     boolean prevX = false;
     boolean prevY = false;
+    boolean dUpPressed = false;
+    boolean dDownPressed = false;
 
     @Override
     public void init() {
@@ -45,11 +49,11 @@ public class TurretExperiment extends OpMode {
         }
     @Override
     public void loop() {
-        if(gamepad1.a){
-            flicker.setPosition(1);
+        if(gamepad1.dpad_up && !dUpPressed){
+            flickPos1 = 0.97;
         }
-        if(gamepad1.b){
-            flicker.setPosition(-1);
+        if(gamepad1.dpad_down && !dDownPressed){
+            flickPos1 = 0.45;
         }
 
         double innerTicks = (innerRPM / 60) * 28 ;
@@ -63,19 +67,27 @@ public class TurretExperiment extends OpMode {
         double actualOuterTicks = outerTurret.getVelocity();
         double actualOuterRPM = (actualOuterTicks / 28) * 60;
 
+        dUpPressed = gamepad1.dpad_up;
+        dDownPressed = gamepad1.dpad_down;
+
+        flicker.setPosition(flickPos1);
+
+
+
         telemetry.addData("innerTurret expected rpm (input)", innerRPM);
         telemetry.addData("innerTurret expected rpm (input)", outerRPM);
 
         t2.addData("innerTurret expected rpm (input)", innerRPM);
         t2.addData("innerTurret expected rpm (input)", outerRPM);
 
-
-
         telemetry.addData("innerTurret expected rpm (from encoder)", actualInnerRPM);
         telemetry.addData("outerTurret expected rpm (from encoder)", actualOuterRPM);
 
         t2.addData("innerTurret expected rpm (from encoder)", actualInnerRPM);
         t2.addData("outerTurret expected rpm (from encoder)", actualOuterRPM);
+
+        telemetry.addData("flicker location", flicker.getPosition());
+        t2.addData("flicker location", flicker.getPosition());
 
         telemetry.update();
         t2.update();
