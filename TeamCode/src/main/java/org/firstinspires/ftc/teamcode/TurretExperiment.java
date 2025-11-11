@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
@@ -14,6 +15,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class TurretExperiment extends OpMode {
     DcMotorEx innerTurret;
     DcMotorEx outerTurret;
+    Servo flicker;
     FtcDashboard Dash=FtcDashboard.getInstance();
     Telemetry t2=Dash.getTelemetry();
     double inner = 40;
@@ -30,6 +32,8 @@ public class TurretExperiment extends OpMode {
         innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
         outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
 
+        flicker=hardwareMap.get(Servo.class, "flicker");
+
         innerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         outerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
@@ -41,40 +45,14 @@ public class TurretExperiment extends OpMode {
         }
     @Override
     public void loop() {
-        // Gamepad1.A increases the power of inner turret by 0.25 and wraps back to 0 after 1.
-        // Gamepad1.B increases the power of outer turret by 0.25 and wraps back to 0 after 1.
-//        if(gamepad1.a && !prevA){
-//            inner++;
-//            prevA=true;
-//        }
-//        if(!gamepad1.a){
-//            prevA=false;
-//        }
-//        if(gamepad1.b && !prevB){
-//            outer++;
-//            prevB=true;
-//        }
-//        if(!gamepad1.b){
-//            prevB=false;
-//        }
-//        if(gamepad1.x && !prevX){
-//            inner--;
-//            prevX=true;
-//        }
-//        if(!gamepad1.x){
-//            prevX=false;
-//        }
-//        if(gamepad1.y && !prevY){
-//            outer--;
-//            prevY=true;
-//        }
-//        if(!gamepad1.y){
-//            prevY=false;
-//        }
+        if(gamepad1.a){
+            flicker.setPosition(1);
+        }
+        if(gamepad1.b){
+            flicker.setPosition(-1);
+        }
 
-//        innerRPM = (inner%201)*(25);
         double innerTicks = (innerRPM / 60) * 28 ;
-//        outerRPM = (outer%101)*(50);
         double outerTicks = (outerRPM / 60) * 28;
 
         innerTurret.setVelocity(-innerTicks);
