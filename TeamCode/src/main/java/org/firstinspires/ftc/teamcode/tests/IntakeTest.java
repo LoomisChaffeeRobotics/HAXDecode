@@ -60,6 +60,11 @@ public class IntakeTest extends OpMode {
         if (gamepad1.bWasPressed()) {
             drum.lastSlot();
         }
+        if (gamepad1.xWasPressed()) {
+            drum.toggleManualShoot();
+        }
+
+
         drum.update();
         drum.updateTelemetry(t2);
         intake.intakeTele(telemetry);

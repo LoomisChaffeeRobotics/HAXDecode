@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.subsystems.revolver.PointerControl;
 
 @TeleOp
 @Config
@@ -16,6 +17,7 @@ public class TurretExperiment extends OpMode {
     DcMotorEx innerTurret;
     DcMotorEx outerTurret;
     Servo flicker;
+    PointerControl drum;
     FtcDashboard Dash=FtcDashboard.getInstance();
     Telemetry t2=Dash.getTelemetry();
     double inner = 40;
@@ -46,7 +48,12 @@ public class TurretExperiment extends OpMode {
 
         innerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         outerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        }
+
+        drum = new PointerControl();
+        drum.init(hardwareMap);
+        drum.testMode = true;
+
+    }
     @Override
     public void loop() {
         if(gamepad1.dpad_up && !dUpPressed){
@@ -56,7 +63,17 @@ public class TurretExperiment extends OpMode {
             flickPos1 = 0.45;
         }
 
+
+        if (gamepad1.aWasPressed()) {
+            drum.lastSlot();
+        } else if (gamepad1.bWasPressed()) {
+            drum.nextSlot();
+        }
+        drum.update();
+        drum.updateTelemetry(t2);
+//        innerRPM = (inner%201)*(25);
         double innerTicks = (innerRPM / 60) * 28 ;
+//        outerRPM = (outer%101)*(50);
         double outerTicks = (outerRPM / 60) * 28;
 
         innerTurret.setVelocity(-innerTicks);

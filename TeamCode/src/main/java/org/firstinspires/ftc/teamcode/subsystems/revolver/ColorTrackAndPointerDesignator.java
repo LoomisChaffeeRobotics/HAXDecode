@@ -108,7 +108,6 @@ public class ColorTrackAndPointerDesignator {
         telemetry.addData("hue", hue);
         telemetry.addData("curColor", curColor);
         telemetry.addData("Distance1 (cm)", ((DistanceSensor) colorSensor).getDistance(DistanceUnit.CM));
-        telemetry.update();
     }
 
     public void init(HardwareMap hardwareMap) {

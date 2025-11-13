@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.FancyPID;
@@ -17,7 +18,7 @@ public class PointerControl{
     ColorTrackAndPointerDesignator colTrack = new ColorTrackAndPointerDesignator();
     DcMotor revEnc;
     CRServo revSpin;
-    //DcMotor trigger;
+    Servo trigger;
     FancyPID pid = new FancyPID();
     public static double kP = 0.0004;
     public static double kI = 0;
@@ -30,6 +31,7 @@ public class PointerControl{
     boolean isFiring = false;
     double curPos = 0;
     public boolean testMode = false;
+    public boolean testShoot = false;
     double[] slotTarget = {0, 2700, -2700};
     public String tarColor = "white";
     public enum revMode {
@@ -53,6 +55,13 @@ public class PointerControl{
     public void lastSlot() {
         colTrack.pointer = Math.abs((colTrack.pointer + 2)) % 3;
     }
+    public void toggleManualShoot() {
+        if (testShoot) {
+            testShoot = false;
+        } else {
+            testShoot = true;
+        }
+    }
     public double optimizeTarg(double targ, double cur) {
         double floor = Math.floor(cur / 8192.0) * 8192 + (targ % 8192);
         double ceiling = Math.ceil(cur / 8192.0) * 8192 + (targ % 8192);
@@ -68,7 +77,6 @@ public class PointerControl{
         telemetry.addData("speed", pid.velo);
         telemetry.addData("arrived", pid.arrived);
         colTrack.updateTelemetry(telemetry);
-        telemetry.update();
     }
 
     //----------------------------------------------------------------------------------
@@ -83,7 +91,7 @@ public class PointerControl{
         pid.target = 0;
         revEnc = hardwareMap.get(DcMotor.class, "Enc");
         revSpin = hardwareMap.get(CRServo.class, "Spin");
-        //trigger = hardwareMap.get(DcMotor.class, "trig");
+        trigger = hardwareMap.get(Servo.class, "flicker");
         revEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         revEnc.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         revEnc.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -128,7 +136,11 @@ public class PointerControl{
             } else if (curMode == revMode.HP) {
             }
         } else {
-            pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
+            if (!testShoot) {
+                pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
+            } else {
+                pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 180, curPos);
+            }
         }
         //-----------------------loop actions-------------------------
         colTrack.arrived = pid.arrived;
