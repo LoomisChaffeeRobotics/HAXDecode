@@ -1,8 +1,5 @@
 package org.firstinspires.ftc.teamcode.subsystems.revolver;
 
-import android.graphics.Color;
-import android.graphics.Point;
-
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -14,11 +11,12 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.FancyPID;
 
 @Config
-public class PointerControl{
+public class DrumIntakeTurretManager {
     ColorTrackAndPointerDesignator colTrack = new ColorTrackAndPointerDesignator();
     DcMotor revEnc;
     CRServo revSpin;
     Servo trigger;
+    DcMotor intake;
     FancyPID pid = new FancyPID();
     public static double kP = 0.0004;
     public static double kI = 0;
@@ -31,17 +29,17 @@ public class PointerControl{
     boolean isFiring = false;
     double curPos = 0;
     public boolean testMode = false;
-    public boolean testShoot = false;
+//    public boolean testShoot = false;
     double[] slotTarget = {0, 2700, -2700};
     public String tarColor = "white";
     public enum revMode {
+        INTAKING,
+        FIRESTANDBY,
         CONTFIRE,
-        AUTOIN,
-        FIRECOLOR,
-        HP
+        FIRECOLOR
     }
 
-    public revMode curMode = revMode.AUTOIN;
+    public revMode curMode = revMode.INTAKING;
     // functions
     void pull_trigger(){
         //codeforpulltrigger
@@ -56,10 +54,10 @@ public class PointerControl{
         colTrack.pointer = Math.abs((colTrack.pointer + 2)) % 3;
     }
     public void toggleManualShoot() {
-        if (testShoot) {
-            testShoot = false;
+        if (curMode == revMode.FIRESTANDBY) {
+            curMode = revMode.INTAKING;
         } else {
-            testShoot = true;
+            curMode = revMode.FIRESTANDBY;
         }
     }
     public double optimizeTarg(double targ, double cur) {
@@ -107,15 +105,18 @@ public class PointerControl{
         //-------------------------------set target---------------------
         //actions
         if (!testMode) {
-            if (curMode == revMode.AUTOIN) {
+            if (curMode == revMode.INTAKING) {
                 //intake code
                 isFiring = false;
                 colTrack.pointer = colTrack.findNearestWhite();
                 pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
-            } else if (curMode == revMode.CONTFIRE) {
+            } else {
+                pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 180, curPos);
+            }
+
+            if (curMode == revMode.CONTFIRE) {
                 if (pid.arrived && colTrack.ballAvailble() && !isFiring) {
                     colTrack.pointer = colTrack.findNearestBall();
-                    pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 180, curPos);
                     isFiring = true;
                 } else if (isFiring && pid.arrived) {
                     isFiring = false;
@@ -123,7 +124,7 @@ public class PointerControl{
                 }
             } else if (curMode == revMode.FIRECOLOR) {
                 if (!colTrack.colorAvailble(tarColor)) {
-                    curMode = revMode.AUTOIN;
+                    curMode = revMode.INTAKING;
                 } else if (pid.arrived && !isFiring) {
                     colTrack.pointer = colTrack.findNearestColor(tarColor);
                     pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 180, curPos);
@@ -131,12 +132,14 @@ public class PointerControl{
                 } else if (isFiring && pid.arrived) {
                     isFiring = false;
                     pull_trigger();
-                    curMode = revMode.AUTOIN;
+                    curMode = revMode.INTAKING;
                 }
-            } else if (curMode == revMode.HP) {
             }
         } else {
-            if (!testShoot) {
+            if (curMode == revMode.INTAKING) {
+                //intake code
+                isFiring = false;
+                colTrack.pointer = colTrack.findNearestWhite();
                 pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
             } else {
                 pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 180, curPos);

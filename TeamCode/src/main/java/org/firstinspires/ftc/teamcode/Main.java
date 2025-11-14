@@ -6,10 +6,9 @@ import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.subsystems.revolver.PointerControl;
+import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
 import org.firstinspires.ftc.teamcode.subsystems.roller;
 
 @TeleOp
@@ -18,13 +17,13 @@ public class Main extends OpMode {
     public static float gain = 1;
     FtcDashboard dash = FtcDashboard.getInstance();
     Telemetry t2 = dash.getTelemetry();
-    PointerControl pController = new PointerControl();
+    DrumIntakeTurretManager pController = new DrumIntakeTurretManager();
     roller rollerControl = new roller();
     MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
     @Override
     public void init() {
         pController.init(hardwareMap);
-        pController.curMode = PointerControl.revMode.AUTOIN;
+        pController.curMode = DrumIntakeTurretManager.revMode.AUTOIN;
         rollerControl.rollerMode = roller.RM.IDLE;
         rollerControl.init();
     }
@@ -53,18 +52,18 @@ public class Main extends OpMode {
         }
         //shooting&revolver
         if (gamepad1.cross){
-            pController.curMode = PointerControl.revMode.CONTFIRE;
+            pController.curMode = DrumIntakeTurretManager.revMode.CONTFIRE;
         }
         else if (gamepad1.a){
             pController.tarColor = "green";
-            pController.curMode = PointerControl.revMode.FIRECOLOR;
+            pController.curMode = DrumIntakeTurretManager.revMode.FIRECOLOR;
         }
         else if (gamepad1.right_bumper && !gamepad1.rightBumperWasPressed()){
             pController.tarColor = "purple";
-            pController.curMode = PointerControl.revMode.FIRECOLOR;
+            pController.curMode = DrumIntakeTurretManager.revMode.FIRECOLOR;
         }
-        else if(pController.curMode == PointerControl.revMode.CONTFIRE ){
-            pController.curMode = PointerControl.revMode.AUTOIN;
+        else if(pController.curMode == DrumIntakeTurretManager.revMode.CONTFIRE ){
+            pController.curMode = DrumIntakeTurretManager.revMode.AUTOIN;
         }
         //--------------------------loopActions------------------------
         pController.update();
