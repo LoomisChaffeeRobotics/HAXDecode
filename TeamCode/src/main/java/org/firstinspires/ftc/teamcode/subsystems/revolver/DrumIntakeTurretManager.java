@@ -17,6 +17,7 @@ public class DrumIntakeTurretManager {
     CRServo revSpin;
     Servo trigger;
     DcMotor intake;
+    Turret turret;
     FancyPID pid = new FancyPID();
     public static double kP = 0.0004;
     public static double kI = 0;

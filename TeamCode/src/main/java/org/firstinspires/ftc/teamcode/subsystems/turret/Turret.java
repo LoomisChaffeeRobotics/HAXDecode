@@ -23,7 +23,7 @@ public class Turret {
 
         flicker=hardwareMap.get(Servo.class, "flicker");
 
-        spinner = hardwareMap.get(CRServo.class, "Spin");
+        spinner = hardwareMap.get(CRServo.class, "turret");
 
         innerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         outerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
