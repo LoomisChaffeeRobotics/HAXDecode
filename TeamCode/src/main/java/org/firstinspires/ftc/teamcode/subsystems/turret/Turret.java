@@ -3,11 +3,10 @@ package org.firstinspires.ftc.teamcode.subsystems.turret;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
-public class TurretControl {
+public class Turret {
     DcMotorEx innerTurret;
     DcMotorEx outerTurret;
     double targDist;
@@ -18,7 +17,7 @@ public class TurretControl {
     double rot;
     Servo flicker;
     CRServo spinner;
-    public TurretControl(HardwareMap hardwareMap) {
+    public Turret(HardwareMap hardwareMap) {
         innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
         outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
 
