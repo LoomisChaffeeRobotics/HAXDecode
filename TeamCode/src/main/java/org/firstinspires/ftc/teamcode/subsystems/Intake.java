@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 @Config
-public class IntakeControl {
+public class Intake {
     DcMotorEx intake;
     double targVel;
 //    public static double testPower = 0;

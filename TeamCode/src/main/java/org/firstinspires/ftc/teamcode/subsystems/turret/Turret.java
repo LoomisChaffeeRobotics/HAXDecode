@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.subsystems.FancyPID;
+
 public class Turret {
     DcMotorEx innerTurret;
     DcMotorEx outerTurret;
@@ -15,13 +17,11 @@ public class Turret {
     double veloRobotX;
     double veloRobotY;
     double rot;
-    Servo flicker;
     CRServo spinner;
+    FancyPID turPID;
     public Turret(HardwareMap hardwareMap) {
         innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
         outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
-
-        flicker=hardwareMap.get(Servo.class, "flicker");
 
         spinner = hardwareMap.get(CRServo.class, "turret");
 
@@ -33,7 +33,22 @@ public class Turret {
 
         innerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         outerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        turPID = new FancyPID();
+        turPID.setCoefficients(0.01, 0, 0.09);
     }
+    public void off () {
+        innerTurret.setVelocity(0);
+        outerTurret.setVelocity(0);
 
+    }
+    public void shoot (double dist) {
+        targDist = dist;
+    }
+    void updateVelos(double dist, double angVel, double perpVel, double axialVel) {
 
+    }
+    void updateServoFeedforwards(double angVel, double perpVel) {
+
+    }
 }

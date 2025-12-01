@@ -11,13 +11,13 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
-import org.firstinspires.ftc.teamcode.subsystems.IntakeControl;
+import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
 
 @TeleOp
 @Config
 public class IntakeTest extends OpMode {
-    IntakeControl intake;
+    Intake intake;
     DrumIntakeTurretManager drum;
     public static double testPower;
     FtcDashboard dash = FtcDashboard.getInstance();
@@ -26,7 +26,7 @@ public class IntakeTest extends OpMode {
     Rotation2d rotation = new Rotation2d(0,0);
     @Override
     public void init() {
-        intake = new IntakeControl();
+        intake = new Intake();
         drum = new DrumIntakeTurretManager();
         drum.init(hardwareMap);
         intake.init(hardwareMap, "intake");

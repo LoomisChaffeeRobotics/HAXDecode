@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.subsystems.revolver;
 
 import android.graphics.Color;
 
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -12,8 +11,9 @@ import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-public class ColorTrackAndPointerDesignator {
+public class ColorTracker {
     NormalizedColorSensor colorSensor;
+//    DistanceSensor dist;
     NormalizedRGBA colors;
     Gamepad gamepad1;
     Telemetry telemetry;
@@ -73,7 +73,7 @@ public class ColorTrackAndPointerDesignator {
         }
         return pointer;
     }
-    boolean colorAvailble(String Col) {
+    boolean colorAvailable(String Col) {
         if (slotColor[0].equals(Col) || slotColor[1].equals(Col) || slotColor[2].equals(Col)) {
             return true;
         } else {
@@ -96,7 +96,7 @@ public class ColorTrackAndPointerDesignator {
             return false;
         }
     }
-    boolean ballAvailble() {
+    boolean ballAvailable() {
         if (!slotColor[0].equals("white") || !slotColor[1].equals("white") || !slotColor[2].equals("white")) {
             return true;
         } else {
@@ -112,6 +112,7 @@ public class ColorTrackAndPointerDesignator {
 
     public void init(HardwareMap hardwareMap) {
         colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
+//        dist = hardwareMap.get(DistanceSensor.class, "dist");
         setGain(2.5F);
     }
 

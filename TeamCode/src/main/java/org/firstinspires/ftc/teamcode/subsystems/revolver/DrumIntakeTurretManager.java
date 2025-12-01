@@ -6,22 +6,24 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.FancyPID;
+import org.firstinspires.ftc.teamcode.subsystems.turret.Turret;
 
 @Config
 public class DrumIntakeTurretManager {
-    ColorTrackAndPointerDesignator colTrack = new ColorTrackAndPointerDesignator();
+    ColorTracker colTrack = new ColorTracker();
     DcMotor revEnc;
     CRServo revSpin;
-    Servo trigger;
+    Servo flicker;
     DcMotor intake;
     Turret turret;
     FancyPID pid = new FancyPID();
-    public static double kP = 0.0004;
+    public static double kP = 0.00015;
     public static double kI = 0;
-    public static double kD = 0.0005;
+    public static double kD = 0.0002;
     public static double iMax = 0;
     public static double iRange = 0;
     public static double errorTol = 362;
@@ -29,6 +31,7 @@ public class DrumIntakeTurretManager {
     public static double TARGET = 0;
     boolean isFiring = false;
     double curPos = 0;
+    ElapsedTime fireSequenceTimer = new ElapsedTime();
     public boolean testMode = false;
 //    public boolean testShoot = false;
     double[] slotTarget = {0, 2700, -2700};
@@ -42,8 +45,14 @@ public class DrumIntakeTurretManager {
 
     public revMode curMode = revMode.INTAKING;
     // functions
-    void pull_trigger(){
-        //codeforpulltrigger
+    void fireSequenceAsync(){
+        if (fireSequenceTimer.seconds() < 0.75) {
+            flicker.setPosition(0.97);
+        } else if (fireSequenceTimer.seconds() == 1.5) {
+            flicker.setPosition(0.45);
+        } else {
+            isFiring = false;
+        }
     }
     public void setGain(float gain){
         colTrack.setGain(gain);
@@ -81,6 +90,7 @@ public class DrumIntakeTurretManager {
     //----------------------------------------------------------------------------------
     public void init(HardwareMap hardwareMap) {
         colTrack.init(hardwareMap);
+
         pid.init();
         pid.setCoefficients(kP, kI, kD);
         pid.iMax = iMax;
@@ -88,12 +98,33 @@ public class DrumIntakeTurretManager {
         pid.errorTol = errorTol;
         pid.dTol = derivTol;
         pid.target = 0;
+
         revEnc = hardwareMap.get(DcMotor.class, "Enc");
         revSpin = hardwareMap.get(CRServo.class, "Spin");
-        trigger = hardwareMap.get(Servo.class, "flicker");
+        flicker = hardwareMap.get(Servo.class, "flicker");
+
         revEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         revEnc.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         revEnc.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        turret = new Turret(hardwareMap);
+    }
+    public void fire() {
+        isFiring = true;
+        if (fireSequenceTimer.seconds() == 0)
+        fireSequenceTimer.reset();
+    }
+    public void firePurple() {
+        tarColor = "purple";
+        isFiring = true;
+        if (fireSequenceTimer.seconds() == 0)
+            fireSequenceTimer.reset();
+    }
+    public void fireGreen() {
+        tarColor = "green";
+        isFiring = true;
+        if (fireSequenceTimer.seconds() == 0)
+            fireSequenceTimer.reset();
     }
     public void update() {
         pid.setCoefficients(kP, kI, kD);
@@ -112,38 +143,43 @@ public class DrumIntakeTurretManager {
                 colTrack.pointer = colTrack.findNearestWhite();
                 pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
             } else {
-                pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 180, curPos);
+                pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 1350, curPos);
             }
 
+
+
             if (curMode == revMode.CONTFIRE) {
-                if (pid.arrived && colTrack.ballAvailble() && !isFiring) {
+                if (pid.arrived && colTrack.ballAvailable() && !isFiring) {
                     colTrack.pointer = colTrack.findNearestBall();
-                    isFiring = true;
                 } else if (isFiring && pid.arrived) {
-                    isFiring = false;
-                    pull_trigger();
+                    fireSequenceAsync();
                 }
             } else if (curMode == revMode.FIRECOLOR) {
-                if (!colTrack.colorAvailble(tarColor)) {
-                    curMode = revMode.INTAKING;
+                if (!colTrack.colorAvailable(tarColor)) {
+                    if (colTrack.ballAvailable()) {
+                        colTrack.pointer = colTrack.findNearestBall();
+                    } else {
+                        curMode = revMode.FIRESTANDBY;
+                    }
                 } else if (pid.arrived && !isFiring) {
                     colTrack.pointer = colTrack.findNearestColor(tarColor);
-                    pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 180, curPos);
-                    isFiring = true;
+                    pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 1350, curPos);
                 } else if (isFiring && pid.arrived) {
-                    isFiring = false;
-                    pull_trigger();
+                    fireSequenceAsync();
                     curMode = revMode.INTAKING;
                 }
+            } else { // standby mode just runs the turret
+
             }
         } else {
+
             if (curMode == revMode.INTAKING) {
                 //intake code
                 isFiring = false;
                 colTrack.pointer = colTrack.findNearestWhite();
                 pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
             } else {
-                pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 180, curPos);
+                pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 1350, curPos);
             }
         }
         //-----------------------loop actions-------------------------

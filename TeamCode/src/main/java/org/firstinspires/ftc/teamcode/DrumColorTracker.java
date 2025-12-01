@@ -22,7 +22,7 @@ public class DrumColorTracker extends OpMode {
     @Override
     public void init() {
         pController.init(hardwareMap);
-        pController.curMode = DrumIntakeTurretManager.revMode.AUTOIN;
+        pController.curMode = DrumIntakeTurretManager.revMode.INTAKING;
 //        rollerControl.rollerMode = roller.RM.IDLE;
 //        rollerControl.init();
     }
@@ -62,7 +62,7 @@ public class DrumColorTracker extends OpMode {
             pController.curMode = DrumIntakeTurretManager.revMode.FIRECOLOR;
         }
         else if(pController.curMode == DrumIntakeTurretManager.revMode.CONTFIRE ){
-            pController.curMode = DrumIntakeTurretManager.revMode.AUTOIN;
+            pController.curMode = DrumIntakeTurretManager.revMode.INTAKING;
         }
         //--------------------------loopActions------------------------
         pController.update();

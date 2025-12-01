@@ -4,10 +4,10 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.subsystems.revolver.ColorTrackAndPointerDesignator;
+import org.firstinspires.ftc.teamcode.subsystems.revolver.ColorTracker;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
 public class DEPRECATED_Revolver {
-    ColorTrackAndPointerDesignator pointerDesignator = new ColorTrackAndPointerDesignator();
+    ColorTracker pointerDesignator = new ColorTracker();
     DrumIntakeTurretManager controller = new DrumIntakeTurretManager();
     int pointer = pointerDesignator.pointer;
     public enum revMode {
