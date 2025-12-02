@@ -19,11 +19,8 @@ public class TurretExperiment extends OpMode {
     DcMotorEx innerTurret;
     DcMotorEx outerTurret;
     Servo flicker;
-<<<<<<< Updated upstream:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/TurretExperiment.java
     Intake intake;
-=======
     CRServo turret;
->>>>>>> Stashed changes:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/TurretExperiment.java
     DrumIntakeTurretManager drum;
     FtcDashboard Dash=FtcDashboard.getInstance();
     Telemetry t2=Dash.getTelemetry();
@@ -44,15 +41,10 @@ public class TurretExperiment extends OpMode {
     public void init() {
         innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
         outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
-<<<<<<< Updated upstream:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/TurretExperiment.java
         intake = new Intake();
         intake.init(hardwareMap, "intake");
         flicker = hardwareMap.get(Servo.class, "flicker");
-=======
-
-        flicker=hardwareMap.get(Servo.class, "flicker");
         turret=hardwareMap.get(CRServo.class, "turret");
->>>>>>> Stashed changes:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/TurretExperiment.java
 
         innerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         outerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -73,12 +65,8 @@ public class TurretExperiment extends OpMode {
     }
     @Override
     public void loop() {
-<<<<<<< Updated upstream:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/TurretExperiment.java
-        if(gamepad1.dpad_up){
-=======
         turret.setPower(0);
         if(gamepad1.dpad_up && !dUpPressed){
->>>>>>> Stashed changes:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/TurretExperiment.java
             flickPos1 = 0.97;
         } else {
             flickPos1 = 0.45;
