@@ -3,8 +3,10 @@ package org.firstinspires.ftc.teamcode.practiceArchive;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+@Disabled
 public class roller {
     DcMotor roller;
 

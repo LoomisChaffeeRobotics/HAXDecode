@@ -1,43 +1,38 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.practiceArchive;
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.teamcode.subsystems.FancyPID;
+
+import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 import java.util.List;
 
 @TeleOp
-@Config
-public class ExperimentalLimelightPIDTesting extends OpMode {
-    FtcDashboard dash = FtcDashboard.getInstance();
-    Telemetry t2 = dash.getTelemetry();
+@Disabled
+public class limelighttesting extends OpMode {
+
     public double tx;
     public double ty;
     public double ta;
     public double power;
-    public static double kP = 0.01;
-    public static double kI = 0;
-    public static double kD = 0.09;
     public Pose3D botpose;
     Limelight3A limelight;
     CRServo turret;
     FtcDashboard dashboard;
     IMU imu;
-    FancyPID turPID;
-    MecanumDrive drive;
+    MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
 
     @Override
     public void init() {
@@ -48,17 +43,20 @@ public class ExperimentalLimelightPIDTesting extends OpMode {
         dashboard = FtcDashboard.getInstance();
         limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
         limelight.start(); // This tells Limelight to start looking!
-        turPID = new FancyPID();
-        turPID.setCoefficients(kP, kI, kD);
-        turPID.target = 0;
-        drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
     }
     @Override
     public void loop() {
-        drive.setDrivePowers(new PoseVelocity2d(new Vector2d(-gamepad1.left_stick_y, -gamepad1.left_stick_x), -gamepad1.right_stick_x));
-        turPID.setCoefficients(kP, kI, kD);
-
-
+        drive.setDrivePowers(new PoseVelocity2d(new Vector2d(gamepad1.left_stick_x, gamepad1.left_stick_y), gamepad1.right_stick_x));
+        turret.setPower(power);
+        if (gamepad1.right_bumper){
+            power = 1;
+        }
+        else if (gamepad1.right_trigger > 0){
+            power = 1;
+        }
+        else{
+            power = 0;
+        }
         LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid()) {
             botpose = result.getBotpose();
@@ -68,22 +66,13 @@ public class ExperimentalLimelightPIDTesting extends OpMode {
             telemetry.addData("Target X", tx);
             telemetry.addData("Target Y", ty);
             telemetry.addData("Target Area", ta);
-            t2.addData("Target X", tx);
-            t2.addData("Target Y", ty);
-            t2.addData("Target Area", ta);
-            turPID.update(tx);
-            power = turPID.velo;
         } else {
             telemetry.addData("Limelight", "No Targets");
             telemetry.addData("result", result);
-            t2.addData("Limelight", "No Targets");
-            t2.addData("result", result);
-            power = 0;
         }
         List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
         for (LLResultTypes.FiducialResult fr : fiducialResults) {
             telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
-            t2.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
         }
 
         double robotYaw = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
@@ -94,11 +83,8 @@ public class ExperimentalLimelightPIDTesting extends OpMode {
                 double x = botpose_mt2.getPosition().x;
                 double y = botpose_mt2.getPosition().y;
                 telemetry.addData("MT2 Location:", "(" + x + ", " + y + ")");
-                t2.addData("MT2 Location:", "(" + x + ", " + y + ")");
             }
         }
-        telemetry.update();
-        t2.update();
-        turret.setPower(power);
+
     }
 }

@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode.tests;
+package org.firstinspires.ftc.teamcode.practiceArchive;
 
 import android.app.Activity;
 import android.graphics.Color;

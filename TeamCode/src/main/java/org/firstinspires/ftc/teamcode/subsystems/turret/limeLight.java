@@ -24,7 +24,7 @@ public class limeLight {
     public double tx;
     public double ty;
     public double ta;
-    public double power;
+//    public double power;
     public Pose3D botpose;
     public double robotYaw;
     Limelight3A limelight;
@@ -34,7 +34,7 @@ public class limeLight {
     void init(){
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         imu = hardwareMap.get(IMU.class, "imu");
-        turret = hardwareMap.get(CRServo.class, "turret");
+//        turret = hardwareMap.get(CRServo.class, "turret");
         dashboard = FtcDashboard.getInstance();
         limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
         limelight.start(); // This tells Limelight to start looking!
@@ -57,7 +57,7 @@ public class limeLight {
             telemetry.addData("result", result);
             t2.addData("Limelight", "No Targets");
             t2.addData("result", result);
-            power = 0;
+//            power = 0;
         }
         List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
         for (LLResultTypes.FiducialResult fr : fiducialResults) {
@@ -78,6 +78,6 @@ public class limeLight {
         }
         telemetry.update();
         t2.update();
-        turret.setPower(power);
+//        turret.setPower(power);
     }
 }
