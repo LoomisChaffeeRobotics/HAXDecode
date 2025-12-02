@@ -38,17 +38,29 @@ public class Turret {
         turPID.setCoefficients(0.01, 0, 0.09);
     }
     public void off () {
-        innerTurret.setVelocity(0);
-        outerTurret.setVelocity(0);
+        veloInner = 0;
+        veloOuter = 0;
 
     }
     public void shoot (double dist) {
         targDist = dist;
+    }
+    public void setSimpleVelos(double in, double out) {
+        veloInner = in;
+        veloOuter = out;
+    }
+    public void setSimpleSpinnerPower(double power) {
+        rot = power;
     }
     void updateVelos(double dist, double angVel, double perpVel, double axialVel) {
 
     }
     void updateServoFeedforwards(double angVel, double perpVel) {
 
+    }
+    public void loop () {
+        innerTurret.setVelocity(veloInner);
+        outerTurret.setVelocity(veloOuter);
+        spinner.setPower(rot);
     }
 }

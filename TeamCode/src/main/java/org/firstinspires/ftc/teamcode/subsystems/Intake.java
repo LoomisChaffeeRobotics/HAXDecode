@@ -13,9 +13,14 @@ public class Intake {
     DcMotorEx intake;
     double targVel;
 //    public static double testPower = 0;
-
-    public void init(HardwareMap hw, String intakeName) {
-        intake = hw.get(DcMotorEx.class, intakeName);
+    HardwareMap hw;
+    String name;
+    public Intake(HardwareMap hardw, String intakeName) {
+        hw = hardw;
+        name = intakeName;
+    }
+    public void init() {
+        intake = hw.get(DcMotorEx.class, name);
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
     }

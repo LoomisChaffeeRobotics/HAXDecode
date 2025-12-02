@@ -33,7 +33,6 @@ public class DrumIntakeTurretManager {
     double curPos = 0;
     ElapsedTime fireSequenceTimer = new ElapsedTime();
     public boolean testMode = false;
-//    public boolean testShoot = false;
     double[] slotTarget = {0, 2700, -2700};
     public String tarColor = "white";
     public enum revMode {
@@ -111,20 +110,22 @@ public class DrumIntakeTurretManager {
     }
     public void fire() {
         isFiring = true;
-        if (fireSequenceTimer.seconds() == 0)
+//        if (fireSequenceTimer.seconds() == 0)
         fireSequenceTimer.reset();
     }
     public void firePurple() {
         tarColor = "purple";
         isFiring = true;
-        if (fireSequenceTimer.seconds() == 0)
+        if (fireSequenceTimer.seconds() == 0) {
             fireSequenceTimer.reset();
+        }
     }
     public void fireGreen() {
         tarColor = "green";
         isFiring = true;
-        if (fireSequenceTimer.seconds() == 0)
+        if (fireSequenceTimer.seconds() == 0) {
             fireSequenceTimer.reset();
+        }
     }
     public void update() {
         pid.setCoefficients(kP, kI, kD);

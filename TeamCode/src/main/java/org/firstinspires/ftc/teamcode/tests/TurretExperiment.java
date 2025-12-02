@@ -41,8 +41,8 @@ public class TurretExperiment extends OpMode {
     public void init() {
         innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
         outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
-        intake = new Intake();
-        intake.init(hardwareMap, "intake");
+        intake = new Intake(hardwareMap, "intake");
+        intake.init();
         flicker = hardwareMap.get(Servo.class, "flicker");
         turret=hardwareMap.get(CRServo.class, "turret");
 

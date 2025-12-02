@@ -26,10 +26,10 @@ public class IntakeTest extends OpMode {
     Rotation2d rotation = new Rotation2d(0,0);
     @Override
     public void init() {
-        intake = new Intake();
+        intake = new Intake(hardwareMap, "intake");
         drum = new DrumIntakeTurretManager();
         drum.init(hardwareMap);
-        intake.init(hardwareMap, "intake");
+        intake.init();
         drum.testMode = true;
         drive = new MecanumDrive(hardwareMap, new Pose2d(0,0,0));
 
