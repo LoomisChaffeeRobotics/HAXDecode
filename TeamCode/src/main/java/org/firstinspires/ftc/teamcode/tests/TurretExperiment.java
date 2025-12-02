@@ -65,7 +65,13 @@ public class TurretExperiment extends OpMode {
     }
     @Override
     public void loop() {
-        turret.setPower(0);
+// <<<<<<< HEAD
+// //        if (gamepad1.dpad_up) {
+// //            turret.setPower(0);
+// //        }
+// =======
+//         turret.setPower(0);
+// >>>>>>> 430389970f4dbbc3c2126ed3220b547fe5e1cf7c
         if(gamepad1.dpad_up && !dUpPressed){
             flickPos1 = 0.97;
         } else {
