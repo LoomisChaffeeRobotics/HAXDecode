@@ -46,8 +46,8 @@ public class pidTune extends OpMode {
         pid.errorTol = errorTol;
         pid.dTol = derivTol;
         pid.target = TARGET;
-        revEnc = hardwareMap.get(DcMotor.class, "Enc");
-        revSpin = hardwareMap.get(CRServo.class, "Spin");
+        revEnc = hardwareMap.get(DcMotor.class, "drumEnc");
+        revSpin = hardwareMap.get(CRServo.class, "drumServo");
         revEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         revEnc.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         revEnc.setDirection(DcMotorSimple.Direction.REVERSE);

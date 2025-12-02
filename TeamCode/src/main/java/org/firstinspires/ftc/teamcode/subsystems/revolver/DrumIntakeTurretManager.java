@@ -99,8 +99,8 @@ public class DrumIntakeTurretManager {
         pid.dTol = derivTol;
         pid.target = 0;
 
-        revEnc = hardwareMap.get(DcMotor.class, "Enc");
-        revSpin = hardwareMap.get(CRServo.class, "Spin");
+        revEnc = hardwareMap.get(DcMotor.class, "drumEnc");
+        revSpin = hardwareMap.get(CRServo.class, "drumServo");
         flicker = hardwareMap.get(Servo.class, "flicker");
 
         revEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
