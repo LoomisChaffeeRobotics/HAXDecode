@@ -18,10 +18,10 @@ public class pidTune extends OpMode {
     DcMotor revEnc;
     CRServo revSpin;
     FancyPID pid = new FancyPID();
-    public static double kP = 0.00064;
+    public static double kP = 0.00067;
     public static double kI = 0.0000009;
-    public static double kD = 0.013;
-    public static double iMax = 0.2;
+    public static double kD = 0.014;
+    public static double iMax = 0.15;
     public static double iRange = 300;
     public static double errorTol = 0;
     public static double derivTol = 0;
