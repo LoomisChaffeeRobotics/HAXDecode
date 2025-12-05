@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.FancyPID;
 
 public class Turret {
@@ -18,15 +19,19 @@ public class Turret {
     double veloRobotY;
     double rot;
     CRServo spinner;
+    DcMotorEx turEnc;
     FancyPID turPID;
+    double RPMtoTicksPerSecond = (double) 28 /60;
     public Turret(HardwareMap hardwareMap) {
         innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
         outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
 
         spinner = hardwareMap.get(CRServo.class, "turret");
+        turEnc = hardwareMap.get(DcMotorEx.class, "FL");
 
         innerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         outerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        turEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         innerTurret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         outerTurret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -36,6 +41,9 @@ public class Turret {
 
         turPID = new FancyPID();
         turPID.setCoefficients(0.01, 0, 0.09);
+    }
+    public double getTurPose() {
+        return turEnc.getCurrentPosition();
     }
     public void off () {
         veloInner = 0;
@@ -59,8 +67,8 @@ public class Turret {
 
     }
     public void loop () {
-        innerTurret.setVelocity(veloInner);
-        outerTurret.setVelocity(veloOuter);
+        innerTurret.setVelocity(veloInner*RPMtoTicksPerSecond);
+        outerTurret.setVelocity(veloOuter*RPMtoTicksPerSecond);
         spinner.setPower(rot);
     }
 }

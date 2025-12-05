@@ -22,14 +22,14 @@ public class DrumIntakeTurretManager {
     Turret turret;
     FancyPID pid = new FancyPID();
     public static double kP = 0.00015;
-    public static double kI = 0;
-    public static double kD = 0.0002;
-    public static double iMax = 0;
-    public static double iRange = 0;
+    public static double kI = 0.0000009;
+    public static double kD = 0.0013;
+    public static double iMax = 0.2;
+    public static double iRange = 300;
     public static double errorTol = 362;
     public static double derivTol = 0.08;
     public static double TARGET = 0;
-    boolean isFiring = false;
+    public boolean isFiring = false;
     double curPos = 0;
     ElapsedTime fireSequenceTimer = new ElapsedTime();
     public boolean testMode = false;
@@ -47,7 +47,7 @@ public class DrumIntakeTurretManager {
     void fireSequenceAsync(){
         if (fireSequenceTimer.seconds() < 0.75) {
             flicker.setPosition(0.97);
-        } else if (fireSequenceTimer.seconds() == 1.5) {
+        } else if (fireSequenceTimer.seconds() > 0.75 && fireSequenceTimer.seconds() < 1.5) {
             flicker.setPosition(0.45);
         } else {
             isFiring = false;
@@ -177,10 +177,18 @@ public class DrumIntakeTurretManager {
             if (curMode == revMode.INTAKING) {
                 //intake code
                 isFiring = false;
+                if (!isFiring) {
+                    flicker.setPosition(0.45);
+                }
                 colTrack.pointer = colTrack.findNearestWhite();
                 pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
             } else {
-                pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 1350, curPos);
+                pid.target = optimizeTarg(slotTarget[colTrack.pointer] + (1350.0 * 3), curPos);
+                if (isFiring) {
+                    fireSequenceAsync();
+                } else {
+                    flicker.setPosition(0.45);
+                }
             }
         }
         //-----------------------loop actions-------------------------
@@ -188,5 +196,10 @@ public class DrumIntakeTurretManager {
         colTrack.loop();
         pid.update(curPos);
         revSpin.setPower(pid.velo);
+//        try {
+//            Thread.sleep(5);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
     }
 }
