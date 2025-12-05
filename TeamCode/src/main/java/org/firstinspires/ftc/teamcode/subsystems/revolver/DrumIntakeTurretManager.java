@@ -89,6 +89,7 @@ public class DrumIntakeTurretManager {
         t.addData("D", pid.PID_D);
         t.addData("speed", pid.velo);
         t.addData("arrived", pid.arrived);
+        t.addData("pointer", colTrack.pointer);
         t.update();
     }
 
@@ -143,42 +144,42 @@ public class DrumIntakeTurretManager {
         curPos = revEnc.getCurrentPosition();
         //-------------------------------set target---------------------
         //actions
-        if (!testMode) {
-            if (curMode == revMode.INTAKING) {
-                //intake code
-                isFiring = false;
-                colTrack.pointer = colTrack.findNearestWhite();
-                pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
-            } else {
-                pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
-            }
-
-
-
-            if (curMode == revMode.CONTFIRE) {
-                if (pid.arrived && colTrack.ballAvailable() && !isFiring) {
-                    colTrack.pointer = colTrack.findNearestBall();
-                } else if (isFiring && pid.arrived) {
-                    fireSequenceAsync();
-                }
-            } else if (curMode == revMode.FIRECOLOR) {
-                if (!colTrack.colorAvailable(tarColor)) {
-                    if (colTrack.ballAvailable()) {
-                        colTrack.pointer = colTrack.findNearestBall();
-                    } else {
-                        curMode = revMode.FIRESTANDBY;
-                    }
-                } else if (pid.arrived && !isFiring) {
-                    colTrack.pointer = colTrack.findNearestColor(tarColor);
-                    pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
-                } else if (isFiring && pid.arrived) {
-                    fireSequenceAsync();
-                    curMode = revMode.INTAKING;
-                }
-            } else { // standby mode just runs the turret
-
-            }
-        } else {
+//        if (!testMode) {
+//            if (curMode == revMode.INTAKING) {
+//                //intake code
+//                isFiring = false;
+//                colTrack.pointer = colTrack.findNearestWhite();
+//                pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
+//            } else {
+//                pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
+//            }
+//
+//
+//
+//            if (curMode == revMode.CONTFIRE) {
+//                if (pid.arrived && colTrack.ballAvailable() && !isFiring) {
+//                    colTrack.pointer = colTrack.findNearestBall();
+//                } else if (isFiring && pid.arrived) {
+//                    fireSequenceAsync();
+//                }
+//            } else if (curMode == revMode.FIRECOLOR) {
+//                if (!colTrack.colorAvailable(tarColor)) {
+//                    if (colTrack.ballAvailable()) {
+//                        colTrack.pointer = colTrack.findNearestBall();
+//                    } else {
+//                        curMode = revMode.FIRESTANDBY;
+//                    }
+//                } else if (pid.arrived && !isFiring) {
+//                    colTrack.pointer = colTrack.findNearestColor(tarColor);
+//                    pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
+//                } else if (isFiring && pid.arrived) {
+//                    fireSequenceAsync();
+//                    curMode = revMode.INTAKING;
+//                }
+//            } else { // standby mode just runs the turret
+//
+//            }
+//        } else {
 
             if (curMode == revMode.INTAKING) {
                 //intake code
@@ -196,7 +197,7 @@ public class DrumIntakeTurretManager {
                     flicker.setPosition(0.45);
                 }
             }
-        }
+//        }
         //-----------------------loop actions-------------------------
         colTrack.arrived = pid.arrived;
         colTrack.loop();
