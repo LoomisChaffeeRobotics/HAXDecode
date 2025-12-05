@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems.revolver;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -14,6 +15,7 @@ import org.firstinspires.ftc.teamcode.subsystems.turret.Turret;
 
 @Config
 public class DrumIntakeTurretManager {
+
     ColorTracker colTrack = new ColorTracker();
     DcMotor revEnc;
     CRServo revSpin;
@@ -21,19 +23,20 @@ public class DrumIntakeTurretManager {
     DcMotor intake;
     Turret turret;
     FancyPID pid = new FancyPID();
-    public static double kP = 0.00015;
-    public static double kI = 0.0000009;
-    public static double kD = 0.0013;
-    public static double iMax = 0.2;
-    public static double iRange = 300;
-    public static double errorTol = 362;
-    public static double derivTol = 0.08;
+    public static double kP = 0.0012;
+    public static double kI = 0.0000001;
+    public static double kD = 0.024;
+    public static double iMax = 0.3;
+    public static double iRange = 400;
+    public static double errorTol = 50;
+    public static double derivTol = 10;
     public static double TARGET = 0;
     public boolean isFiring = false;
     double curPos = 0;
     ElapsedTime fireSequenceTimer = new ElapsedTime();
     public boolean testMode = false;
-    double[] slotTarget = {0, 2700, -2700};
+    double FCV = 8192;
+    double[] slotTarget = {0, FCV / 3, -FCV / 3};
     public String tarColor = "white";
     public enum revMode {
         INTAKING,
@@ -70,20 +73,23 @@ public class DrumIntakeTurretManager {
         }
     }
     public double optimizeTarg(double targ, double cur) {
-        double floor = Math.floor(cur / 8192.0) * 8192 + (targ % 8192);
-        double ceiling = Math.ceil(cur / 8192.0) * 8192 + (targ % 8192);
+        double floor = Math.floor(cur / FCV) * FCV + (targ % FCV);
+        double ceiling = Math.ceil(cur / FCV) * FCV + (targ % FCV);
         if (Math.abs(floor-cur) > Math.abs(ceiling - cur)) {
             return ceiling;
         } else {
             return floor;
         }
     }
-    public void updateTelemetry(Telemetry telemetry){
-        telemetry.addData("target", pid.target);
-        telemetry.addData("curPos", curPos);
-        telemetry.addData("speed", pid.velo);
-        telemetry.addData("arrived", pid.arrived);
-        colTrack.updateTelemetry(telemetry);
+    public void updateTelemetry(Telemetry t){
+        t.addData("target", pid.target);
+        t.addData("curPos", curPos);
+        t.addData("P", pid.PID_P);
+        t.addData("I", pid.PID_I);
+        t.addData("D", pid.PID_D);
+        t.addData("speed", pid.velo);
+        t.addData("arrived", pid.arrived);
+        t.update();
     }
 
     //----------------------------------------------------------------------------------
@@ -144,7 +150,7 @@ public class DrumIntakeTurretManager {
                 colTrack.pointer = colTrack.findNearestWhite();
                 pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
             } else {
-                pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 1350, curPos);
+                pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
             }
 
 
@@ -164,7 +170,7 @@ public class DrumIntakeTurretManager {
                     }
                 } else if (pid.arrived && !isFiring) {
                     colTrack.pointer = colTrack.findNearestColor(tarColor);
-                    pid.target = optimizeTarg(slotTarget[colTrack.pointer] + 1350, curPos);
+                    pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
                 } else if (isFiring && pid.arrived) {
                     fireSequenceAsync();
                     curMode = revMode.INTAKING;
@@ -183,7 +189,7 @@ public class DrumIntakeTurretManager {
                 colTrack.pointer = colTrack.findNearestWhite();
                 pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
             } else {
-                pid.target = optimizeTarg(slotTarget[colTrack.pointer] + (1350.0 * 3), curPos);
+                pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
                 if (isFiring) {
                     fireSequenceAsync();
                 } else {

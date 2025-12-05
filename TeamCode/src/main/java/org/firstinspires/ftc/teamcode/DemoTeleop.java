@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
@@ -8,6 +9,7 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.practiceArchive.DrumColorTracker;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
@@ -16,6 +18,8 @@ import org.firstinspires.ftc.teamcode.subsystems.turret.Turret;
 @TeleOp
 @Config
 public class DemoTeleop extends OpMode {
+    FtcDashboard dash = FtcDashboard.getInstance();
+    Telemetry t2 = dash.getTelemetry();
     DrumIntakeTurretManager drum;
     Intake intake;
     Turret turret;
@@ -92,6 +96,7 @@ public class DemoTeleop extends OpMode {
         turret.loop();
         drum.update();
         telemetry.addData("tur pose", turret.getTurPose());
+        drum.updateTelemetry(t2);
 //        telemetry.addData("within normal limits?");
     }
 }
