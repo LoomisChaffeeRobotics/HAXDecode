@@ -23,9 +23,9 @@ public class DrumIntakeTurretManager {
     DcMotor intake;
     Turret turret;
     FancyPID pid = new FancyPID();
-    public static double kP = 0.0012;
-    public static double kI = 0.0000001;
-    public static double kD = 0.024;
+    public static double kP = 0.00075;
+    public static double kI = 0.000001;
+    public static double kD = 0.0032;
     public static double iMax = 0.3;
     public static double iRange = 400;
     public static double errorTol = 50;
@@ -89,6 +89,7 @@ public class DrumIntakeTurretManager {
         t.addData("D", pid.PID_D);
         t.addData("speed", pid.velo);
         t.addData("arrived", pid.arrived);
+        colTrack.updateTelemetry(t);
         t.update();
     }
 
@@ -144,6 +145,7 @@ public class DrumIntakeTurretManager {
         //-------------------------------set target---------------------
         //actions
         if (!testMode) {
+            /*
             if (curMode == revMode.INTAKING) {
                 //intake code
                 isFiring = false;
@@ -178,7 +180,10 @@ public class DrumIntakeTurretManager {
             } else { // standby mode just runs the turret
 
             }
+            */
+
         } else {
+
 
             if (curMode == revMode.INTAKING) {
                 //intake code
