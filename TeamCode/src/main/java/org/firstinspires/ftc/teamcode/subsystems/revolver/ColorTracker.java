@@ -13,11 +13,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class ColorTracker {
     NormalizedColorSensor colorSensor;
-//    DistanceSensor dist;
     NormalizedRGBA colors;
-    Gamepad gamepad1;
-    Telemetry telemetry;
-    boolean arrived = false;
+    public boolean arrived = false;
     double hue;
     public static int pointer = 0;
     final float[] hsvValues = new float[3];
@@ -32,7 +29,6 @@ public class ColorTracker {
     public void setGain(float gain) {
         colorSensor.setGain(gain);
     }
-
     String readColor() {
         colors = colorSensor.getNormalizedColors();
 
@@ -47,11 +43,6 @@ public class ColorTracker {
         } else {
             return "white";
         }
-    }
-
-    void updateColors() {
-        String curColor = readColor();
-        slotColor[pointer] = curColor;
     }
     static int findNearestWhite() {
         if (slotColor[pointer].equals("white")) {
@@ -88,8 +79,7 @@ public class ColorTracker {
         }
         return pointer;
     }
-
-    boolean emptyAvailble() {
+    boolean emptyAvailable() {
         if (slotColor[0].equals("white") || slotColor[1].equals("white") || slotColor[2].equals("white")) {
             return true;
         } else {
@@ -102,6 +92,13 @@ public class ColorTracker {
         } else {
             return false;
         }
+    }
+    void removeFiredBall(int pointer) {
+        slotColor[pointer] = "white";
+    }
+    void updateColors() {
+        String curColor = readColor();
+        slotColor[pointer] = curColor;
     }
 
     public void updateTelemetry(Telemetry telemetry) {
