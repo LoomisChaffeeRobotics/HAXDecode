@@ -1,16 +1,14 @@
-package org.firstinspires.ftc.teamcode.tests;
+package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
 
 @TeleOp
@@ -19,8 +17,6 @@ public class TurretExperiment extends OpMode {
     DcMotorEx innerTurret;
     DcMotorEx outerTurret;
     Servo flicker;
-    Intake intake;
-    CRServo turret;
     DrumIntakeTurretManager drum;
     FtcDashboard Dash=FtcDashboard.getInstance();
     Telemetry t2=Dash.getTelemetry();
@@ -41,10 +37,8 @@ public class TurretExperiment extends OpMode {
     public void init() {
         innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
         outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
-        intake = new Intake(hardwareMap, "intake");
-        intake.init();
-        flicker = hardwareMap.get(Servo.class, "flicker");
-        turret=hardwareMap.get(CRServo.class, "turret");
+
+        flicker=hardwareMap.get(Servo.class, "flicker");
 
         innerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         outerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -54,9 +48,6 @@ public class TurretExperiment extends OpMode {
 
         innerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         outerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        turret.setPower(0);
-
-
 
         drum = new DrumIntakeTurretManager();
         drum.init(hardwareMap);
@@ -65,34 +56,19 @@ public class TurretExperiment extends OpMode {
     }
     @Override
     public void loop() {
-// <<<<<<< HEAD
-// //        if (gamepad1.dpad_up) {
-// //            turret.setPower(0);
-// //        }
-// =======
-//         turret.setPower(0);
-// >>>>>>> 430389970f4dbbc3c2126ed3220b547fe5e1cf7c
         if(gamepad1.dpad_up && !dUpPressed){
             flickPos1 = 0.97;
-        } else {
+        }
+        if(gamepad1.dpad_down && !dDownPressed){
             flickPos1 = 0.45;
         }
 
-        if (gamepad1.xWasPressed()) {
-            intake.intakeOn();
-        } else if (gamepad1.yWasPressed()) {
-            intake.intakeOff();
-        }
 
         if (gamepad1.aWasPressed()) {
             drum.lastSlot();
         } else if (gamepad1.bWasPressed()) {
             drum.nextSlot();
         }
-        if (gamepad1.rightBumperWasPressed()) {
-            drum.toggleManualShoot();
-        }
-
         drum.update();
         drum.updateTelemetry(t2);
 //        innerRPM = (inner%201)*(25);
@@ -112,7 +88,6 @@ public class TurretExperiment extends OpMode {
         dDownPressed = gamepad1.dpad_down;
 
         flicker.setPosition(flickPos1);
-        intake.loop();
 
 
 
