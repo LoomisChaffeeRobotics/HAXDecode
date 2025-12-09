@@ -56,6 +56,9 @@ public class ColorTracker {
     }
 
     int findNearestColor(String Col) {
+        if (slotColor[pointer].equals(Col)){
+            return pointer;
+        }
         if (slotColor[(pointer + 1) % 3].equals(Col)) {
             return (pointer + 1) % 3;
         } else if (slotColor[(pointer + 2) % 3].equals(Col)) {
@@ -71,7 +74,10 @@ public class ColorTracker {
         }
     } // We get either "white", "green", "purple" as input parameter. We retur if is any slots are in that color
     int findNearestBall() {
-        if (slotColor[(pointer + 1) % 3].equals("green") || slotColor[(pointer + 1) % 3].equals("purple")) {
+        if (slotColor[pointer].equals("green") || slotColor[pointer].equals("purple")){
+            return pointer;
+        }
+        else if (slotColor[(pointer + 1) % 3].equals("green") || slotColor[(pointer + 1) % 3].equals("purple")) {
             return (pointer + 1) % 3;
         } else if (slotColor[(pointer + 2) % 3].equals("green") || slotColor[(pointer + 2) % 3].equals("purple")) {
             return (pointer + 2) % 3;
