@@ -30,30 +30,29 @@ public class ColorTracker {
         colorSensor.setGain(gain);
     }
     String readColor() {
-        colors = colorSensor.getNormalizedColors();
+        colors = colorSensor.getNormalizedColors(); // Get colors
 
         Color.colorToHSV(colors.toColor(), hsvValues);
-        hue = hsvValues[0];
-        if (((DistanceSensor) colorSensor).getDistance(DistanceUnit.CM) > 8) {
-            return "white";
-        } else if (hue > greenMin && hue < greenMax) {
-            return "green";
+        hue = hsvValues[0]; //Read current color in HSV
+
+        if (hue > greenMin && hue < greenMax) {
+            return "green"; // hue is within green range --> return current color is green
         } else if (hue > purpleMin && hue < purpleMax) {
-            return "purple";
+            return "purple"; //hue is within purple range --> return current color is purple
         } else {
-            return "white";
+            return "white"; //else return white
         }
     }
     static int findNearestWhite() {
         if (slotColor[pointer].equals("white")) {
-            return pointer;
+            return pointer; // if we are at empty slot, we return current location
         }
         else if (slotColor[(pointer + 1) % 3].equals("white")) {
-            return (pointer + 1) % 3;
+            return (pointer + 1) % 3; // if next slow is empty we return the next location
         } else if (slotColor[(pointer + 2) % 3].equals("white")) {
-            return (pointer + 2) % 3;
+            return (pointer + 2) % 3; // if next slow is empty we return the next location
         }
-        return pointer;
+        return pointer; // if nothing is white, we return current locations
     }
 
     int findNearestColor(String Col) {
@@ -65,12 +64,12 @@ public class ColorTracker {
         return pointer;
     }
     boolean colorAvailable(String Col) {
-        if (slotColor[0].equals(Col) || slotColor[1].equals(Col) || slotColor[2].equals(Col)) {
+        if(slotColor[0].equals(Col) || slotColor[1].equals(Col) || slotColor[2].equals(Col)) {
             return true;
         } else {
             return false;
         }
-    }
+    } // We get either "white", "green", "purple" as input parameter. We retur if is any slots are in that color
     int findNearestBall() {
         if (slotColor[(pointer + 1) % 3].equals("green") || slotColor[(pointer + 1) % 3].equals("purple")) {
             return (pointer + 1) % 3;
@@ -78,7 +77,7 @@ public class ColorTracker {
             return (pointer + 2) % 3;
         }
         return pointer;
-    }
+    } //Shouldn't we check if our current position has a ball too? (Depending on how this ftn is used)
     boolean emptyAvailable() {
         if (slotColor[0].equals("white") || slotColor[1].equals("white") || slotColor[2].equals("white")) {
             return true;
@@ -92,20 +91,23 @@ public class ColorTracker {
         } else {
             return false;
         }
-    }
+    }//Returns if there is a ball in the drum or not
     void removeFiredBall(int pointer) {
         slotColor[pointer] = "white";
     }
+    //resets the slot's color after shooting
     void updateColors() {
         String curColor = readColor();
         slotColor[pointer] = curColor;
     }
+    //Read the color at this moment, input the color into the array/list
 
     public void updateTelemetry(Telemetry telemetry) {
         telemetry.addData("hue", hue);
         telemetry.addData("curColor", curColor);
         telemetry.addData("Distance1 (cm)", ((DistanceSensor) colorSensor).getDistance(DistanceUnit.CM));
     }
+    //Add data to telemetry
 
     public void init(HardwareMap hardwareMap) {
         colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
@@ -113,10 +115,14 @@ public class ColorTracker {
         setGain(2.5F);
     }
 
+    //declare color sensor
+    //adjust gain
+
     public void loop() {
         curColor = readColor();
         if (arrived) {
             updateColors();
         }
     }
+    //update consistently
 }
