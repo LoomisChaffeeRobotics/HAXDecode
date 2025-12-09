@@ -53,7 +53,6 @@ public class colorTesting extends OpMode {
         }
 
         colorTracker.arrived = arrived;
-        colorTracker.loop();
         colorTracker.updateTelemetry(telemetry);
         colorTracker.updateTelemetry(t2);
     }

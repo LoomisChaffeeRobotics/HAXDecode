@@ -56,6 +56,7 @@ public class DrumIntakeTurretManager {
         } else if (fireSequenceTimer.seconds() > 0.5 && fireSequenceTimer.seconds() < 1) {
             flicker.setPosition(0.45);
         } else {
+            colTrack.removeFiredBall(colTrack.pointer);
             isFiring = false;
         }
     }
@@ -119,6 +120,7 @@ public class DrumIntakeTurretManager {
         revEnc.setDirection(DcMotorSimple.Direction.REVERSE);
 
         turret = new Turret(hardwareMap);
+        flicker.setPosition(0.45);
     }
     public void firePurple() {
         curMode = revMode.FIREPURPLE;
@@ -205,7 +207,7 @@ public class DrumIntakeTurretManager {
 
         //-----------------------loop actions-------------------------
         pid.update(curPos);
-        colTrack.loop(pid.arrived);
+        colTrack.loop(pid.arrived, (curMode == revMode.INTAKING));
         revSpin.setPower(pid.velo);
 //        try {
 //            Thread.sleep(5);

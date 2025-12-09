@@ -1,4 +1,4 @@
-tc package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode;
 
 import androidx.annotation.NonNull;
 

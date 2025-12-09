@@ -111,6 +111,7 @@ public class ColorTracker {
     public void updateTelemetry(Telemetry telemetry) {
         telemetry.addData("hue", hue);
         telemetry.addData("curColor", curColor);
+        telemetry.addData("colList", slotColor);
         telemetry.addData("Distance1 (cm)", ((DistanceSensor) colorSensor).getDistance(DistanceUnit.CM));
     }
     //Add data to telemetry
@@ -127,10 +128,10 @@ public class ColorTracker {
     //declare color sensor
     //adjust gain
 
-    public void loop(boolean AArrived) {
+    public void loop(boolean AArrived, boolean intaking) {
         arrived = AArrived;
         curColor = readColor();
-        if (AArrived) {
+        if (AArrived && intaking) {
             updateColors();
         }
     }
