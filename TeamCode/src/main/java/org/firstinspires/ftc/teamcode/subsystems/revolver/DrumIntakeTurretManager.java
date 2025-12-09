@@ -144,9 +144,9 @@ public class DrumIntakeTurretManager {
         }
     }
     public void updateLastTickArrived() {
-        if (!lastTickArrived & colTrack.arrived) {
+        if (!lastTickArrived && colTrack.arrived) {
             lastTickArrived = true;
-        } else if (lastTickArrived & colTrack.arrived) {
+        } else if (lastTickArrived && colTrack.arrived) {
             lastTickArrived = false;
         }
     }
@@ -206,7 +206,7 @@ public class DrumIntakeTurretManager {
         //-----------------------loop actions-------------------------
         pid.update(curPos);
         colTrack.arrived = pid.arrived;
-        colTrack.loop();
+        colTrack.loop(pid.arrived);
         revSpin.setPower(pid.velo);
 //        try {
 //            Thread.sleep(5);

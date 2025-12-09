@@ -113,7 +113,7 @@ public class ColorTracker {
         setGain(2.5F);
     }
 
-    public void loop() {
+    public void loop(boolean arrived) {
         curColor = readColor();
         if (arrived) {
             updateColors();
