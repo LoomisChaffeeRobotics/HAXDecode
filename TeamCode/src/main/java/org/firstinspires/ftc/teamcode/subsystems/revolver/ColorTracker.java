@@ -12,9 +12,9 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class ColorTracker {
+    public boolean arrived;
     NormalizedColorSensor colorSensor;
     NormalizedRGBA colors;
-    public boolean arrived = false;
     double hue;
     public static int pointer = 0;
     final float[] hsvValues = new float[3];
@@ -121,9 +121,10 @@ public class ColorTracker {
     //declare color sensor
     //adjust gain
 
-    public void loop() {
+    public void loop(boolean AArrived) {
+        arrived = AArrived;
         curColor = readColor();
-        if (arrived) {
+        if (AArrived) {
             updateColors();
         }
     }

@@ -205,7 +205,6 @@ public class DrumIntakeTurretManager {
 
         //-----------------------loop actions-------------------------
         pid.update(curPos);
-        colTrack.arrived = pid.arrived;
         colTrack.loop(pid.arrived);
         revSpin.setPower(pid.velo);
 //        try {
