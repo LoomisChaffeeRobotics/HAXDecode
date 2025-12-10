@@ -53,7 +53,7 @@ public class DrumIntakeTurretManager {
     void fireSequenceAsync(){
         if (fireSequenceTimer.seconds() < 0.5) {
             flicker.setPosition(0.97);
-        } else if (fireSequenceTimer.seconds() > 0.5 && fireSequenceTimer.seconds() < 1) {
+        } else if (fireSequenceTimer.seconds() >= 0.5 && fireSequenceTimer.seconds() < 1) {
             flicker.setPosition(0.45);
         } else {
             isFiring = false;
@@ -63,7 +63,7 @@ public class DrumIntakeTurretManager {
         colTrack.setGain(gain);
     }
     public void nextSlot() {
-        colTrack.pointer = (colTrack.pointer +1) % 3;
+        colTrack.pointer = Math.abs((colTrack.pointer +1)) % 3;
     }
     public void lastSlot() {
         colTrack.pointer = Math.abs((colTrack.pointer + 2)) % 3;
