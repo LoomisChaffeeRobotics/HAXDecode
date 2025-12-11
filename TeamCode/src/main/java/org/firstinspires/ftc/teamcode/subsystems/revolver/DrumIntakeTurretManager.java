@@ -24,11 +24,11 @@ public class DrumIntakeTurretManager {
     Turret turret;
     FancyPID pid = new FancyPID();
     public static double kP = 0.00075;
-    public static double kI = 0.000001;
-    public static double kD = 0.0032;
-    public static double iMax = 0.3;
-    public static double iRange = 400;
-    public static double errorTol = 500;
+    public static double kI = 0.000006;
+    public static double kD = 0.013;
+    public static double iMax = 0.23;
+    public static double iRange = 0.4;
+    public static double errorTol = 70;
     public static double derivTol = 10;
     public static double TARGET = 0;
     public boolean isFiring = false;
@@ -40,6 +40,8 @@ public class DrumIntakeTurretManager {
     double FCV = 8192;
     double[] slotTarget = {0, FCV / 3, -FCV / 3};
     public String tarColor = "white";
+    public String flickMode = "off";
+    public boolean activateAsync = false;
     public enum revMode {
         INTAKING,
         FIRESTANDBY,
@@ -51,11 +53,15 @@ public class DrumIntakeTurretManager {
     public revMode curMode = revMode.INTAKING;
     // functions
     void fireSequenceAsync(){
+        lastTickArrived = false;
         if (fireSequenceTimer.seconds() < 0.5) {
+            flickMode = "flick";
             flicker.setPosition(0.97);
         } else if (fireSequenceTimer.seconds() >= 0.5 && fireSequenceTimer.seconds() < 1) {
+            flickMode = "retract";
             flicker.setPosition(0.45);
         } else {
+            flickMode = "off";
             colTrack.removeFiredBall(colTrack.pointer);
             isFiring = false;
         }
@@ -96,6 +102,12 @@ public class DrumIntakeTurretManager {
         t.addData("arrived", pid.arrived);
         colTrack.updateTelemetry(t);
         t.addData("pointer", colTrack.pointer);
+        t.addData("timer", fireSequenceTimer.seconds());
+        t.addData("flickerMode", flickMode);
+        t.addData("asyncisRunning", activateAsync);
+        t.addData("isFiring", isFiring);
+        t.addData("curMode", curMode);
+        t.addData("lastTickArrived", lastTickArrived);
         t.update();
     }
 
@@ -134,24 +146,32 @@ public class DrumIntakeTurretManager {
     public void contFireAsync() {
         if (!colTrack.ballAvailable()) {
             curMode = revMode.INTAKING;
+            activateAsync = false;
         } else {
             colTrack.pointer = colTrack.findNearestBall();
             pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
             if (lastTickArrived) {
                 fireSequenceTimer.reset();
                 isFiring = true;
+                activateAsync = false;
             } else if (isFiring) {
+                activateAsync = true;
                 fireSequenceAsync();
+            }
+            else{
+                activateAsync = false;
             }
         }
     }
+
     public void updateLastTickArrived() {
-        if (!lastTickArrived && colTrack.arrived) {
+        if (!lastTickArrived && pid.arrived && !isFiring) {
             lastTickArrived = true;
-        } else if (lastTickArrived && colTrack.arrived) {
+        } else if (lastTickArrived && pid.arrived) {
             lastTickArrived = false;
         }
     }
+
     public void update() {
         pid.setCoefficients(kP, kI, kD);
         pid.iMax = iMax;
@@ -159,7 +179,6 @@ public class DrumIntakeTurretManager {
         pid.errorTol = errorTol;
         pid.dTol = derivTol;
 
-        updateLastTickArrived();
         curPos = revEnc.getCurrentPosition();
         //-------------------------------set target---------------------
 
@@ -207,6 +226,7 @@ public class DrumIntakeTurretManager {
 
         //-----------------------loop actions-------------------------
         pid.update(curPos);
+        updateLastTickArrived();
         colTrack.loop(pid.arrived, (curMode == revMode.INTAKING));
         revSpin.setPower(pid.velo);
 //        try {

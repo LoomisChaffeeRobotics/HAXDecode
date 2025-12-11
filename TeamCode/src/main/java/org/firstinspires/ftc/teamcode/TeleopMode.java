@@ -52,9 +52,9 @@ public class TeleopMode extends OpMode {
         }
 
 
-        if (gamepad1.right_trigger > 0 && turret.getTurPose() > maxTurLeft) {
+        if (gamepad1.dpad_right && turret.getTurPose() > maxTurLeft) {
             turret.setSimpleSpinnerPower(0.5);
-        } else if (gamepad1.right_bumper && turret.getTurPose() < maxTurRight ) {
+        } else if (gamepad1.dpad_left && turret.getTurPose() < maxTurRight ) {
             turret.setSimpleSpinnerPower(-0.5);
         } else {
             turret.setSimpleSpinnerPower(0);
@@ -62,17 +62,21 @@ public class TeleopMode extends OpMode {
 
 //        if (turret.getTurPose() )
     if(! (gamepad1.left_trigger > 0 && gamepad1.left_bumper)) {
-        if (gamepad1.left_trigger > 0) {
-            drum.curMode = DrumIntakeTurretManager.revMode.INTAKING;
-            intake.intakeOn();
-        } else if (gamepad1.left_bumper) {
-            intake.intakeOut();
-        } else {
-            drum.curMode = DrumIntakeTurretManager.revMode.INTAKING;
-            intake.intakeOff();
+        if(!drum.isFiring) {
+            if (gamepad1.left_trigger > 0) {
+                drum.curMode = DrumIntakeTurretManager.revMode.INTAKING;
+                intake.intakeOn();
+            } else if (gamepad1.left_bumper) {
+                intake.intakeOut();
+            } else {
+                drum.curMode = DrumIntakeTurretManager.revMode.INTAKING;
+                intake.intakeOff();
+            }
         }
     }
     else{
+        intake.intakeOff();
+        turret.setSimpleVelos(3000,2000);
         drum.curMode = DrumIntakeTurretManager.revMode.CONTFIRE;
     }
 /*
@@ -86,16 +90,21 @@ public class TeleopMode extends OpMode {
             drum.lastSlot();
         }
 */
-        /*
+
         if (gamepad1.right_trigger > 0.5 && !drum.isFiring) {
             drum.firePurple();
         }
-*/
+        else if(gamepad1.right_bumper && !drum.isFiring){
+            drum.fireGreen();
+        }
+
         intake.loop();
         turret.loop();
         drum.update();
         telemetry.addData("tur pose", turret.getTurPose());
+
         drum.updateTelemetry(telemetry);
+        drum.updateTelemetry(t2);
 
 //        telemetry.addData("within normal limits?");
     }

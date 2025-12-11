@@ -111,13 +111,18 @@ public class ColorTracker {
     public void updateTelemetry(Telemetry telemetry) {
         telemetry.addData("hue", hue);
         telemetry.addData("curColor", curColor);
-        telemetry.addData("colList", slotColor);
+        telemetry.addData("colList0", slotColor[0]);
+        telemetry.addData("colList1", slotColor[1]);
+        telemetry.addData("colList2", slotColor[2]);
         telemetry.addData("Distance1 (cm)", ((DistanceSensor) colorSensor).getDistance(DistanceUnit.CM));
     }
     //Add data to telemetry
 
     public void init(HardwareMap hardwareMap) {
         colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
+        slotColor[0] = "white";
+        slotColor[1] = "white";
+        slotColor[2] = "white";
 //        dist = hardwareMap.get(DistanceSensor.class, "dist");
         setGain(2.5F);
     }
