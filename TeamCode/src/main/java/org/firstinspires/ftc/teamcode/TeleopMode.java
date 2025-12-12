@@ -26,6 +26,7 @@ public class TeleopMode extends OpMode {
     Pose2d pose = new Pose2d(0,0,0);
     public static double maxTurLeft = -10000;
     public static double maxTurRight = 10000;
+    
     @Override
     public void init() {
         turret = new Turret(hardwareMap);
@@ -43,6 +44,7 @@ public class TeleopMode extends OpMode {
 
     @Override
     public void loop() {
+
         drive.setDrivePowers(new PoseVelocity2d(new Vector2d(-gamepad1.left_stick_y, -gamepad1.left_stick_x), -gamepad1.right_stick_x));
 
         if (gamepad1.x) {
@@ -61,8 +63,9 @@ public class TeleopMode extends OpMode {
         }
 
 //        if (turret.getTurPose() )
+
     if(! (gamepad1.left_trigger > 0 && gamepad1.left_bumper)) {
-        if(!drum.isFiring) {
+        if(!drum.isFiring && gamepad1.right_trigger <= 0 && !gamepad1.right_bumper) {
             if (gamepad1.left_trigger > 0) {
                 drum.curMode = DrumIntakeTurretManager.revMode.INTAKING;
                 intake.intakeOn();
@@ -79,6 +82,8 @@ public class TeleopMode extends OpMode {
         turret.setSimpleVelos(3000,2000);
         drum.curMode = DrumIntakeTurretManager.revMode.CONTFIRE;
     }
+
+
 /*
         if (gamepad1.yWasPressed()) {
             drum.toggleManualShoot();
@@ -90,8 +95,7 @@ public class TeleopMode extends OpMode {
             drum.lastSlot();
         }
 */
-
-        if (gamepad1.right_trigger > 0.5 && !drum.isFiring) {
+        if (gamepad1.right_trigger > 0 && !drum.isFiring) {
             drum.firePurple();
         }
         else if(gamepad1.right_bumper && !drum.isFiring){
