@@ -71,19 +71,33 @@ public class TeleopMode extends OpMode {
                 intake.intakeOn();
             } else if (gamepad1.left_bumper) {
                 intake.intakeOut();
-            } else {
-                drum.curMode = DrumIntakeTurretManager.revMode.INTAKING;
+            } else if (drum.curMode == DrumIntakeTurretManager.revMode.HPINTAKE) {
                 intake.intakeOff();
+                turret.setSimpleVelos(-1500,-1500);
+                if (gamepad1.dpadUpWasPressed()) {
+                    drum.nextSlot();
+                } else if (gamepad1.dpadDownWasPressed()) {
+                    drum.lastSlot();
+                }
+                if (gamepad1.aWasPressed()) {
+                    drum.setCurrentGreen();
+                } else if (gamepad1.startWasPressed()) {
+                    drum.setCurrentPurple();
+                }
+            } else {
+                intake.intakeOff();
+                turret.setSimpleVelos(0,0);
             }
         }
-    }
-    else{
+    } else {
         intake.intakeOff();
         turret.setSimpleVelos(3000,2000);
-        drum.curMode = DrumIntakeTurretManager.revMode.CONTFIRE;
+        drum.startContFire();
     }
 
-
+    if (gamepad1.yWasPressed()) {
+        drum.curMode = DrumIntakeTurretManager.revMode.HPINTAKE;
+    }
 /*
         if (gamepad1.yWasPressed()) {
             drum.toggleManualShoot();
@@ -97,9 +111,11 @@ public class TeleopMode extends OpMode {
 */
         if (gamepad1.right_trigger > 0 && !drum.isFiring) {
             drum.firePurple();
+            turret.setSimpleVelos(3000,2000);
         }
         else if(gamepad1.right_bumper && !drum.isFiring){
             drum.fireGreen();
+            turret.setSimpleVelos(3000,2000);
         }
 
         intake.loop();

@@ -30,8 +30,8 @@ public class DrumIntakeTurretManager {
     public static double kD = 0.0032;
     public static double iMax = 0.3;
     public static double iRange = 400;
-    public static double errorTol = 50;
-    public static double derivTol = 10;
+    public static double errorTol = 100;
+    public static double derivTol = 0.5;
     public static double TARGET = 0;
     public boolean isFiring = false;
     public boolean contFiring = false;
@@ -49,7 +49,8 @@ public class DrumIntakeTurretManager {
         FIRESTANDBY,
         CONTFIRE,
         FIREPURPLE,
-        FIREGREEN
+        FIREGREEN,
+        HPINTAKE
     }
 
     public revMode curMode = revMode.INTAKING;
@@ -145,6 +146,12 @@ public class DrumIntakeTurretManager {
     public void startContFire() {
         curMode = revMode.CONTFIRE;
     }
+    public void setCurrentPurple() {
+        colTrack.addPurple(colTrack.pointer);
+    }
+    public void setCurrentGreen() {
+        colTrack.addGreen(colTrack.pointer);
+    }
     public void contFireAsync() {
         if (!colTrack.ballAvailable()) {
             curMode = revMode.INTAKING;
@@ -165,7 +172,6 @@ public class DrumIntakeTurretManager {
             }
         }
     }
-
     public void updateLastTickArrived() {
         if (!lastTickArrived && pid.arrived && !isFiring) {
             lastTickArrived = true;
@@ -193,10 +199,12 @@ public class DrumIntakeTurretManager {
         } else if (curMode == revMode.FIRESTANDBY) {
             ColorTracker.pointer = colTrack.findNearestBall();
             pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
-
+        } else if (curMode == revMode.HPINTAKE) {
+            // pointer will be changed manually using next slot and last slot
+            isFiring = false;
+            pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
         } else if (curMode == revMode.CONTFIRE) {
             contFireAsync();
-
         } else if (curMode == revMode.FIREPURPLE) {
             if (colTrack.colorAvailable("purple")) {
                 colTrack.pointer = colTrack.findNearestColor("purple");
@@ -234,6 +242,7 @@ public class DrumIntakeTurretManager {
 //        } catch (InterruptedException e) {
 //            throw new RuntimeException(e);
 //        }
+
     }
 
 }

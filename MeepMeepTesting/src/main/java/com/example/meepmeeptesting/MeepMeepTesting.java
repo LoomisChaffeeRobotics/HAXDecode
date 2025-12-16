@@ -6,6 +6,8 @@ import com.noahbres.meepmeep.MeepMeep;
 import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
 import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
+import java.util.Vector;
+
 public class MeepMeepTesting {
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
@@ -37,6 +39,7 @@ public class MeepMeepTesting {
                 //to box
                 .setTangent(Math.toRadians(30))
                 .splineToLinearHeading(new Pose2d(36, 32, Math.toRadians(180)), Math.toRadians(0))
+                .strafeToSplineHeading(new Vector2d(36, 36),Math.PI)
                 .build());
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_DECODE_OFFICIAL)

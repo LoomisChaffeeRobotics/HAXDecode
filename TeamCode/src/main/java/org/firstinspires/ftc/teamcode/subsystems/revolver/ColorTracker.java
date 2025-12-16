@@ -14,6 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class ColorTracker {
     public boolean arrived;
     NormalizedColorSensor colorSensor;
+    DistanceSensor colorDist;
     NormalizedRGBA colors;
     double hue;
     public static int pointer = 0;
@@ -35,12 +36,16 @@ public class ColorTracker {
         Color.colorToHSV(colors.toColor(), hsvValues);
         hue = hsvValues[0]; //Read current color in HSV
 
-        if (hue > greenMin && hue < greenMax) {
-            return "green"; // hue is within green range --> return current color is green
-        } else if (hue > purpleMin && hue < purpleMax) {
-            return "purple"; //hue is within purple range --> return current color is purple
+        if (colorDist.getDistance(DistanceUnit.CM) < 7) {
+            if (hue > greenMin && hue < greenMax) {
+                return "green"; // hue is within green range --> return current color is green
+            } else if (hue > purpleMin && hue < purpleMax) {
+                return "purple"; //hue is within purple range --> return current color is purple
+            } else {
+                return "white"; //else return white
+            }
         } else {
-            return "white"; //else return white
+            return "white";
         }
     }
     static int findNearestWhite() {
@@ -101,6 +106,12 @@ public class ColorTracker {
     void removeFiredBall(int pointer) {
         slotColor[pointer] = "white";
     }
+    void addGreen(int pointer) {
+        slotColor[pointer] = "green";
+    }
+    void addPurple(int pointer) {
+        slotColor[pointer] = "purple";
+    }
     //resets the slot's color after shooting
     void updateColors() {
         String curColor = readColor();
@@ -122,6 +133,7 @@ public class ColorTracker {
 
     public void init(HardwareMap hardwareMap) {
         colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
+        colorDist = (DistanceSensor) colorSensor;
         slotColor[0] = "white";
         slotColor[1] = "white";
         slotColor[2] = "white";
