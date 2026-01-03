@@ -1,0 +1,72 @@
+package org.firstinspires.ftc.teamcode.practiceArchive;
+
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import org.firstinspires.ftc.teamcode.subsystems.FancyPID;
+
+public class TurretOLD {
+    DcMotorEx innerTurret;
+    DcMotorEx outerTurret;
+    double targDist;
+    double veloInner;
+    double veloOuter;
+    double veloRobotX;
+    double veloRobotY;
+    double rot;
+    CRServo spinner;
+    DcMotorEx turEnc;
+    FancyPID turPID;
+    double RPMtoTicksPerSecond = (double) 28 /60;
+    public TurretOLD(HardwareMap hardwareMap) {
+        innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
+        outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
+
+        spinner = hardwareMap.get(CRServo.class, "turret");
+        turEnc = hardwareMap.get(DcMotorEx.class, "FL");
+
+        innerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        outerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        turEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        innerTurret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        outerTurret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        innerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        outerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        turPID = new FancyPID();
+        turPID.setCoefficients(0.01, 0, 0.09);
+    }
+    public double getTurPose() {
+        return turEnc.getCurrentPosition();
+    }
+    public void off () {
+        veloInner = 0;
+        veloOuter = 0;
+
+    }
+    public void shoot (double dist) {
+        targDist = dist;
+    }
+    public void setSimpleVelos(double in, double out) {
+        veloInner = in;
+        veloOuter = out;
+    }
+    public void setSimpleSpinnerPower(double power) {
+        rot = power;
+    }
+    void updateVelos(double dist, double angVel, double perpVel, double axialVel) {
+
+    }
+    void updateServoFeedforwards(double angVel, double perpVel) {
+
+    }
+    public void loop () {
+        innerTurret.setVelocity(veloInner*RPMtoTicksPerSecond);
+        outerTurret.setVelocity(veloOuter*RPMtoTicksPerSecond);
+        spinner.setPower(rot);
+    }
+}

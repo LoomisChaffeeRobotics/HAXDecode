@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.subsystems.revolver;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -11,27 +10,26 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.FancyPID;
-import org.firstinspires.ftc.teamcode.subsystems.turret.Turret;
+import org.firstinspires.ftc.teamcode.practiceArchive.TurretOLD;
 
 @Config
 public class DrumIntakeTurretManager {
-
     ColorTracker colTrack = new ColorTracker();
     DcMotor revEnc;
     CRServo revSpin;
     Servo flicker;
     DcMotor intake;
-    Turret turret;
+    TurretOLD turretOLD;
     FancyPID pid = new FancyPID();
     double flickPosUp = 0.85;
     double flickPosDown = 0.4;
-    public static double kP = 0.00075;
-    public static double kI = 0.000001;
-    public static double kD = 0.0032;
+    public static double kP = 0.00035;
+    public static double kI = 0.00000001;
+    public static double kD = 0.0022;
     public static double iMax = 0.3;
     public static double iRange = 400;
-    public static double errorTol = 100;
-    public static double derivTol = 0.5;
+    public static double errorTol = 70;
+    public static double derivTol = 10;
     public static double TARGET = 0;
     public boolean isFiring = false;
     public boolean contFiring = false;
@@ -134,7 +132,7 @@ public class DrumIntakeTurretManager {
         revEnc.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         revEnc.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        turret = new Turret(hardwareMap);
+        turretOLD = new TurretOLD(hardwareMap);
         flicker.setPosition(flickPosDown);
     }
     public void firePurple() {

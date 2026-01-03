@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
-import org.firstinspires.ftc.teamcode.subsystems.turret.Turret;
+import org.firstinspires.ftc.teamcode.practiceArchive.TurretOLD;
 
 @TeleOp
 @Config
@@ -20,7 +20,7 @@ public class TeleopMode extends OpMode {
     Telemetry t2 = dash.getTelemetry();
     DrumIntakeTurretManager drum;
     Intake intake;
-    Turret turret;
+    TurretOLD turretOLD;
     MecanumDrive drive;
     boolean normLimits;
     Pose2d pose = new Pose2d(0,0,0);
@@ -29,7 +29,7 @@ public class TeleopMode extends OpMode {
     
     @Override
     public void init() {
-        turret = new Turret(hardwareMap);
+        turretOLD = new TurretOLD(hardwareMap);
         intake = new Intake(hardwareMap, "intake");
         drum = new DrumIntakeTurretManager();
         drive = new MecanumDrive(hardwareMap, pose);
@@ -37,7 +37,7 @@ public class TeleopMode extends OpMode {
         intake.init();
         drum.init(hardwareMap);
 
-        turret.off();
+        turretOLD.off();
         drum.testMode = true;
 
     }
@@ -48,18 +48,18 @@ public class TeleopMode extends OpMode {
         drive.setDrivePowers(new PoseVelocity2d(new Vector2d(-gamepad1.left_stick_y, -gamepad1.left_stick_x), -gamepad1.right_stick_x));
 
         if (gamepad1.x) {
-            turret.setSimpleVelos(3000,2000);
+            turretOLD.setSimpleVelos(3000,2000);
         } else if (gamepad1.b) {
-            turret.off();
+            turretOLD.off();
         }
 
 
-        if (gamepad1.dpad_right && turret.getTurPose() > maxTurLeft) {
-            turret.setSimpleSpinnerPower(0.5);
-        } else if (gamepad1.dpad_left && turret.getTurPose() < maxTurRight ) {
-            turret.setSimpleSpinnerPower(-0.5);
+        if (gamepad1.dpad_right && turretOLD.getTurPose() > maxTurLeft) {
+            turretOLD.setSimpleSpinnerPower(0.5);
+        } else if (gamepad1.dpad_left && turretOLD.getTurPose() < maxTurRight ) {
+            turretOLD.setSimpleSpinnerPower(-0.5);
         } else {
-            turret.setSimpleSpinnerPower(0);
+            turretOLD.setSimpleSpinnerPower(0);
         }
 
 //        if (turret.getTurPose() )
@@ -73,7 +73,7 @@ public class TeleopMode extends OpMode {
                 intake.intakeOut();
             } else if (drum.curMode == DrumIntakeTurretManager.revMode.HPINTAKE) {
                 intake.intakeOff();
-                turret.setSimpleVelos(-1500,-1500);
+                turretOLD.setSimpleVelos(-1500,-1500);
                 if (gamepad1.dpadUpWasPressed()) {
                     drum.nextSlot();
                 } else if (gamepad1.dpadDownWasPressed()) {
@@ -86,12 +86,12 @@ public class TeleopMode extends OpMode {
                 }
             } else {
                 intake.intakeOff();
-                turret.setSimpleVelos(0,0);
+                turretOLD.setSimpleVelos(0,0);
             }
         }
     } else {
         intake.intakeOff();
-        turret.setSimpleVelos(3000,2000);
+        turretOLD.setSimpleVelos(3000,2000);
         drum.startContFire();
     }
 
@@ -111,17 +111,17 @@ public class TeleopMode extends OpMode {
 */
         if (gamepad1.right_trigger > 0 && !drum.isFiring) {
             drum.firePurple();
-            turret.setSimpleVelos(3000,2000);
+            turretOLD.setSimpleVelos(3000,2000);
         }
         else if(gamepad1.right_bumper && !drum.isFiring){
             drum.fireGreen();
-            turret.setSimpleVelos(3000,2000);
+            turretOLD.setSimpleVelos(3000,2000);
         }
 
         intake.loop();
-        turret.loop();
+        turretOLD.loop();
         drum.update();
-        telemetry.addData("tur pose", turret.getTurPose());
+        telemetry.addData("tur pose", turretOLD.getTurPose());
 
         drum.updateTelemetry(telemetry);
         drum.updateTelemetry(t2);

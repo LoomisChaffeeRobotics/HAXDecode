@@ -4,7 +4,6 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
-import com.acmerobotics.roadrunner.Rotation2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -13,7 +12,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 //import org.firstinspires.ftc.teamcode.practiceArchive.DrumColorTracker;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
-import org.firstinspires.ftc.teamcode.subsystems.turret.Turret;
+import org.firstinspires.ftc.teamcode.practiceArchive.TurretOLD;
 
 @TeleOp
 @Config
@@ -22,7 +21,7 @@ public class DemoTeleop extends OpMode {
     Telemetry t2 = dash.getTelemetry();
     DrumIntakeTurretManager drum;
     Intake intake;
-    Turret turret;
+    TurretOLD turretOLD;
     double slowMult = 0.75;
     MecanumDrive drive;
     boolean normLimits;
@@ -31,7 +30,7 @@ public class DemoTeleop extends OpMode {
     public static double maxTurRight = 10000;
     @Override
     public void init() {
-        turret = new Turret(hardwareMap);
+        turretOLD = new TurretOLD(hardwareMap);
         intake = new Intake(hardwareMap, "intake");
         drum = new DrumIntakeTurretManager();
         drive = new MecanumDrive(hardwareMap, pose);
@@ -39,7 +38,7 @@ public class DemoTeleop extends OpMode {
         intake.init();
         drum.init(hardwareMap);
 
-        turret.off();
+        turretOLD.off();
         drum.testMode = true;
     }
 
@@ -48,18 +47,18 @@ public class DemoTeleop extends OpMode {
         drive.setDrivePowers(new PoseVelocity2d(new Vector2d(-gamepad1.left_stick_y*slowMult, -gamepad1.left_stick_x*slowMult), -gamepad1.right_stick_x*slowMult));
 
         if (gamepad1.x) {
-            turret.setSimpleVelos(3000,2000);
+            turretOLD.setSimpleVelos(3000,2000);
         } else if (gamepad1.b) {
-            turret.off();
+            turretOLD.off();
         }
 
 
-        if (gamepad1.right_bumper && turret.getTurPose() > maxTurLeft) {
-            turret.setSimpleSpinnerPower(0.5);
-        } else if (gamepad1.left_bumper && turret.getTurPose() < maxTurRight ) {
-            turret.setSimpleSpinnerPower(-0.5);
+        if (gamepad1.right_bumper && turretOLD.getTurPose() > maxTurLeft) {
+            turretOLD.setSimpleSpinnerPower(0.5);
+        } else if (gamepad1.left_bumper && turretOLD.getTurPose() < maxTurRight ) {
+            turretOLD.setSimpleSpinnerPower(-0.5);
         } else {
-            turret.setSimpleSpinnerPower(0);
+            turretOLD.setSimpleSpinnerPower(0);
         }
 
 //        if (turret.getTurPose() )
@@ -93,9 +92,9 @@ public class DemoTeleop extends OpMode {
         }
 
         intake.loop();
-        turret.loop();
+        turretOLD.loop();
         drum.update();
-        telemetry.addData("tur pose", turret.getTurPose());
+        telemetry.addData("tur pose", turretOLD.getTurPose());
         drum.updateTelemetry(t2);
 //        telemetry.addData("within normal limits?");
     }
