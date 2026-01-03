@@ -93,7 +93,9 @@ public class Turret {
     double getOrthogVel() {
         double[] velVect = getRobotVelo();
         double[] distVect = new double[] {goalPose.position.x - botpose.position.x, goalPose.position.y - botpose.position.y};
-        return (velVect[0] * distVect[1] - velVect[1] * distVect[0]) / Math.sqrt(Math.pow(distVect[0], 2) + Math.pow(distVect[1], 2)); // i sure hope copilot did the projection right!
+        double[] orthogGoalVect = new double[] {-distVect[1], distVect[0]};
+        double magVelProjOnOrthogGoalVect = (velVect[0] * orthogGoalVect[0] + velVect[1] * orthogGoalVect[1]) / Math.sqrt(Math.pow(orthogGoalVect[0], 2) + Math.pow(orthogGoalVect[1], 2));
+        return magVelProjOnOrthogGoalVect;
     }
     public void updateTelemetry(Telemetry telemetry){
         telemetry.addData("innerTurret rpm", innerRPM);
