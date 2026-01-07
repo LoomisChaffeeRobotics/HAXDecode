@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystems.turret;
 import android.os.Environment;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -20,8 +21,50 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystems.TurretPID;
 
 import java.io.File;
+
+@Config
 public class Turret {
-    double[][] LUT = new double[][]{};
+    double[][] LUT = new double[][]{
+            {0.5, 1116.1, 1690.7, 0.6},
+            {0.6, 1153.9, 1806.6, 0.7},
+            {0.7, 1218.7, 1931.4, 0.8},
+            {0.8, 1283.5, 2065.1, 0.8},
+            {0.9, 1375.3, 2180.9, 0.9},
+            {1.0, 1456.3, 2279.0, 1.0},
+            {1.1, 1553.5, 2368.1, 1.1},
+            {1.2, 1639.8, 2448.3, 1.1},
+            {1.2, 1747.8, 2492.9, 1.1},
+            {1.3, 1866.6, 2546.3, 1.2},
+            {1.4, 1996.2, 2608.7, 1.2},
+            {1.5, 2104.2, 2635.5, 1.3},
+            {1.6, 2217.6, 2662.2, 1.3},
+            {1.7, 2331.0, 2662.2, 1.3},
+            {1.8, 2460.6, 2635.5, 1.4},
+            {1.9, 2611.8, 2582.0, 1.4},
+            {1.9, 2709.0, 2519.6, 1.4},
+            {2.0, 2817.0, 2439.4, 1.4},
+            {2.1, 2935.7, 2341.4, 1.4},
+            {2.1, 3049.1, 2234.4, 1.4},
+            {2.2, 3189.5, 2118.5, 1.4},
+            {2.2, 3270.5, 2020.5, 1.4},
+            {2.3, 3389.3, 1931.4, 1.4},
+            {2.4, 3518.9, 1851.2, 1.4},
+            {2.5, 3659.3, 1744.2, 1.4},
+            {2.5, 3778.1, 1646.2, 1.3},
+            {2.6, 3923.9, 1557.0, 1.3},
+            {2.7, 4069.7, 1459.0, 1.3},
+            {2.8, 4242.4, 1369.9, 1.4},
+            {2.8, 4345.0, 1298.6, 1.3},
+            {2.9, 4469.2, 1236.2, 1.3},
+            {3.0, 4582.6, 1191.6, 1.4},
+            {3.1, 4717.6, 1129.2, 1.4},
+            {3.2, 4858.0, 1075.8, 1.4},
+            {3.3, 4993.0, 1031.2, 1.4},
+            {3.4, 5101.0, 1022.3, 1.4},
+            {3.4, 5214.4, 1031.2, 1.4},
+            {3.6, 5360.2, 1031.2, 1.4},
+            {3.6, 5360.2, 1031.2, 1.4}
+    };
     public double tx;
     public double ty;
     public double ta;
@@ -43,14 +86,13 @@ public class Turret {
     DcMotorEx outerTurret;
     MecanumDrive drive;
     Pose2d lastPoseEstimate;
-    Pose2d goalPose = new Pose2d(-70, -60, 0);
+    Pose2d goalPose = new Pose2d(0, 0, 0);
+    public static double goalPoseX;
+    public static double goalPoseY;
+    public static double goalPoseH;
     String logFilePath = String.format("%s/FIRST/lastRunPoseLog.txt", Environment.getExternalStorageDirectory().getAbsolutePath());
     File dataLog = AppUtil.getInstance().getSettingsFile(logFilePath);
-    String tableFilePath = String.format("%s/FIRST/LUT.csv", Environment.getExternalStorageDirectory().getAbsolutePath());
-    File tableCSV = AppUtil.getInstance().getSettingsFile(tableFilePath);
-    String csvDataRaw;
     String fileDataRaw;
-    String[] vals;
     TurretPID turPID;
     Telemetry t2;
     FtcDashboard dash;
@@ -123,7 +165,7 @@ public class Turret {
         limelight.start(); // This tells Limelight to start looking!
         innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
         outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
-        turEnc = hardwareMap.get(DcMotorEx.class, "Enc");
+        turEnc = hardwareMap.get(DcMotorEx.class, "FL");
         spinner = hardwareMap.get(CRServo.class, "turret");
 
         innerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -138,22 +180,11 @@ public class Turret {
         outerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         turEnc.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        fileDataRaw = ReadWriteFile.readFile(dataLog);
-        vals = fileDataRaw.split(", ");
-        lastPoseEstimate = new Pose2d(Double.parseDouble(vals[0]), Double.parseDouble(vals[1]), Double.parseDouble(vals[2]));
+//        fileDataRaw = ReadWriteFile.readFile(dataLog);
+//        vals = fileDataRaw.split(", ");
+//        lastPoseEstimate = new Pose2d(Double.parseDouble(vals[0]), Double.parseDouble(vals[1]), Double.parseDouble(vals[2]));
+        lastPoseEstimate = new Pose2d(0,0,0);
         this.drive = drive;
-
-        csvDataRaw = ReadWriteFile.readFile(tableCSV);
-        String[] rows = fileDataRaw.split("\n"); // cut the big string into rows
-        for (int i = 0; i < rows.length; i++) {
-            String[] entries = rows[i].split(", "); // cut each row into string of number entries
-            double[] doubleRow = new double[]{entries.length}; // make a temporary array to hold numbers before they get added
-            for (int j = 0; j < entries.length; j++) {
-                double curNum = Double.parseDouble(entries[j]); // iterate through the row and turn strings into doubles
-                doubleRow[j] = curNum; // add the doubles to temp array
-            }
-            LUT[i] = doubleRow; // add the full array of doubles in that row to the LUT
-        }
 
         turPID = new TurretPID();
         turPID.init();
@@ -194,11 +225,13 @@ public class Turret {
             turPID.update(turEnc.getCurrentPosition(), drive.localizer.update().angVel, getOrthogVel());
         }
 
+        // firing stuff?
         thetaDiff = getTheta();
         vGoal = getSpeed() * Math.cos(thetaDiff);
         dGoal = Math.sqrt(Math.pow(botpose.position.x - goalPose.position.x, 2) + Math.pow(botpose.position.y - goalPose.position.y, 2));
         flightTime = getToF(dGoal);
-        dGoalEstimate = dGoal - vGoal * flightTime;
+        dGoalEstimate = (dGoal - vGoal * flightTime)/39.37;
+
 
         innerRPM = getLRPM(dGoalEstimate);
         outerRPM = getURPM(dGoalEstimate);
@@ -212,6 +245,7 @@ public class Turret {
             outerTurret.setVelocity(0);
         }
 
+        goalPose = new Pose2d(goalPoseX, goalPoseY, goalPoseH);
         spinner.setPower(turPID.out);
         updateTelemetry(t2);
     }
