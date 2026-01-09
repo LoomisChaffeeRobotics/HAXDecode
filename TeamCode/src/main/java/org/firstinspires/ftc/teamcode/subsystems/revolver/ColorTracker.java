@@ -26,17 +26,19 @@ public class ColorTracker {
     float greenMax = 160;
     float purpleMin = 200;
     float purpleMax = 310;
+    double distance;
     // functions
     public void setGain(float gain) {
         colorSensor.setGain(gain);
     }
     String readColor() {
         colors = colorSensor.getNormalizedColors(); // Get colors
+        distance = colorDist.getDistance(DistanceUnit.CM);
 
         Color.colorToHSV(colors.toColor(), hsvValues);
         hue = hsvValues[0]; //Read current color in HSV
 
-        if (colorDist.getDistance(DistanceUnit.CM) < 7) {
+        if (distance < 7) {
             if (hue > greenMin && hue < greenMax) {
                 return "green"; // hue is within green range --> return current color is green
             } else if (hue > purpleMin && hue < purpleMax) {
@@ -127,7 +129,7 @@ public class ColorTracker {
         telemetry.addData("colList0", slotColor[0]);
         telemetry.addData("colList1", slotColor[1]);
         telemetry.addData("colList2", slotColor[2]);
-        telemetry.addData("Distance1 (cm)", ((DistanceSensor) colorSensor).getDistance(DistanceUnit.CM));
+        telemetry.addData("Distance1 (cm)", distance);
     }
     //Add data to telemetry
 
@@ -140,12 +142,6 @@ public class ColorTracker {
 //        dist = hardwareMap.get(DistanceSensor.class, "dist");
         setGain(2.5F);
     }
-
-
-
-
-    //declare color sensor
-    //adjust gain
 
     public void loop(boolean AArrived, boolean intaking) {
         arrived = AArrived;

@@ -36,7 +36,7 @@ public class TeleopMode extends OpMode {
         drive = new MecanumDrive(hardwareMap, pose);
 
         intake.init();
-        drum.init(hardwareMap);
+        drum.init(hardwareMap, drive);
 
         turretOLD.off();
         drum.testMode = true;

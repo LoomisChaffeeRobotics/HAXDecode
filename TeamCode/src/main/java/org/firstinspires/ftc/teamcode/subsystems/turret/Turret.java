@@ -78,6 +78,7 @@ public class Turret {
     public static double kDTag = 0;
     public static double kFRTag = 0;
     public static double kFVTag = 0;
+    public static double offset = 20;
     Pose2d botpose;
     Limelight3A limelight;
     CRServo spinner;
@@ -94,54 +95,68 @@ public class Turret {
     File dataLog = AppUtil.getInstance().getSettingsFile(logFilePath);
     String fileDataRaw;
     TurretPID turPID;
-    Telemetry t2;
-    FtcDashboard dash;
-    public static double innerRPM = 0;
-    public static double outerRPM = 0;
+    public double innerRPM = 0;
+    public double outerRPM = 0;
     public double thetaDiff = 0;
     static double turretFullLoop = (double) 8192 * 75 / 15;
     static double RPMtoTicksPerSecond = (double) 28 /60;
+    public double speed = 0;
     public double vGoal = 0;
     public double dGoal = 0;
+    public double turretAngle = 0;
+    public double[] robotVelo = new double[2];
+    public double angleToGoal = 0;
+    public double orthogVelMag = 0;
     public double dGoalEstimate = 0;
     public double flightTime = 0;
-    public boolean firing = false;
+    public double innerCurVel;
+    public double outerCurVel;
+    public enum turMode {
+        FIRING,
+        INTAKING,
+        IDLE
+    }
+    public turMode mode = turMode.IDLE;
+    public boolean bothMotorsSpunUp = false;
     double getGyro(){
         return drive.localizer.getPose().heading.toDouble();
     }
-    double getTurretAngle() {
-        return 2 * Math.PI * (turEnc.getCurrentPosition() / turretFullLoop);
+    void updateTurretAngle() {
+        turretAngle = 2 * Math.PI * (turEnc.getCurrentPosition() / turretFullLoop);
     }
-    double[] getRobotVelo(){
-        return new double[]{drive.updatePoseEstimate().linearVel.x, drive.updatePoseEstimate().linearVel.y};
+    void updateRobotVelo(){
+        robotVelo = new double[]{drive.updatePoseEstimate().linearVel.x, drive.updatePoseEstimate().linearVel.y};
     }
-    double getSpeed(){
-        double[] velos = getRobotVelo();
-        return Math.sqrt(Math.pow(velos[0], 2) + Math.pow(velos[1], 2));
+    void updateSpeed(){
+        double velos[] = new double[robotVelo.length];
+        for (int i = 0; i < robotVelo.length; i++) {
+            velos[i] = robotVelo[i]/39.37;
+        }
+        speed = Math.sqrt(Math.pow(velos[0], 2) + Math.pow(velos[1], 2));
     }
-    double getTheta() { // angle between robot velocity and vector to goal
+    void updateTheta() { // angle between robot velocity and vector to goal
         double[] distVect = new double[] {goalPose.position.x - botpose.position.x, goalPose.position.y - botpose.position.y};
-        double[] velVect = getRobotVelo();
+        double[] velVect = robotVelo;
         double dotProduct = distVect[0] * velVect[0] + distVect[1] * velVect[1];
         double prodMagDist = Math.sqrt(Math.pow(distVect[0], 2) + Math.pow(distVect[1], 2)) * Math.sqrt(Math.pow(velVect[1],2) + Math.pow(velVect[0],2));
-        return Math.acos(dotProduct / (prodMagDist + 0.000001));
+        thetaDiff = Math.acos(dotProduct / (prodMagDist + 0.000001));
     }
-    double getAngleToGoal() {
-        return Math.atan2(goalPose.position.y - botpose.position.y, goalPose.position.x - botpose.position.x);
+    void updateAngleToGoal() {
+        angleToGoal = Math.atan2(goalPose.position.y - botpose.position.y, goalPose.position.x - botpose.position.x);
     }
     double angleToTicks(double angle) {
         return (angle / (2 * Math.PI)) * turretFullLoop;
     }
-    double getOrthogVel() {
-        double[] velVect = getRobotVelo();
+    void updateOrthogVelMag() {
         double[] distVect = new double[] {goalPose.position.x - botpose.position.x, goalPose.position.y - botpose.position.y};
         double[] orthogGoalVect = new double[] {-distVect[1], distVect[0]};
-        double magVelProjOnOrthogGoalVect = (velVect[0] * orthogGoalVect[0] + velVect[1] * orthogGoalVect[1]) / Math.sqrt(Math.pow(orthogGoalVect[0], 2) + Math.pow(orthogGoalVect[1], 2));
-        return magVelProjOnOrthogGoalVect;
+        orthogVelMag = (robotVelo[0] * orthogGoalVect[0] + robotVelo[1] * orthogGoalVect[1]) / Math.sqrt(Math.pow(orthogGoalVect[0], 2) + Math.pow(orthogGoalVect[1], 2));
     }
     public void updateTelemetry(Telemetry telemetry){
-        telemetry.addData("innerTurret rpm", innerRPM);
-        telemetry.addData("outerTurret rpm)", outerRPM);
+        telemetry.addData("innerTurret targ rpm", innerRPM);
+        telemetry.addData("outerTurret targ rpm)", outerRPM);
+        telemetry.addData("innerTurret cur rpm",  innerCurVel / RPMtoTicksPerSecond);
+        telemetry.addData("outerTurret cur rpm)", outerCurVel/ RPMtoTicksPerSecond);
         telemetry.addData("thetaDiff", thetaDiff);
         telemetry.addData("vG", vGoal);
         telemetry.addData("dGoal", dGoal);
@@ -149,15 +164,13 @@ public class Turret {
         telemetry.addData("dGoalEstimate", dGoalEstimate);
         telemetry.addData("curX", botpose.position.x);
         telemetry.addData("curY", botpose.position.y);
-        telemetry.addData("turretAngle", getTurretAngle());
+        telemetry.addData("turretAngle", turretAngle);
         telemetry.addData("gyro", getGyro());
         telemetry.addData("limelightX", tx);
-        telemetry.addData("speed", getSpeed());
+        telemetry.addData("speed", speed);
         telemetry.update();
     }
     public void init(HardwareMap hardwareMap, MecanumDrive drive){
-        dash = FtcDashboard.getInstance();
-        t2 = dash.getTelemetry();
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
 //        turret = hardwareMap.get(CRServo.class, "turret");
@@ -185,14 +198,23 @@ public class Turret {
 //        lastPoseEstimate = new Pose2d(Double.parseDouble(vals[0]), Double.parseDouble(vals[1]), Double.parseDouble(vals[2]));
         lastPoseEstimate = new Pose2d(0,0,0);
         this.drive = drive;
+        mode = turMode.IDLE;
 
         turPID = new TurretPID();
         turPID.init();
     }
     public void loop(){
         LLResult result = limelight.getLatestResult();
-        double LLYaw = (getGyro() + getTurretAngle());
+        double LLYaw = (getGyro() + turretAngle);
         limelight.updateRobotOrientation(LLYaw);
+        innerCurVel = innerTurret.getVelocity();
+        outerCurVel = outerTurret.getVelocity();
+        updateTheta();
+        updateAngleToGoal();
+        updateOrthogVelMag();
+        updateRobotVelo();
+        updateSpeed();
+        updateTurretAngle();
 
         if (result != null && result.isValid()) { // if LL available, use LL botpose
             Pose3D botpose_mt2 = result.getBotpose_MT2();
@@ -211,43 +233,51 @@ public class Turret {
             if (!result.getFiducialResults().isEmpty() && result.getFiducialResults().get(0).getFiducialId() == 22) {
                 turPID.setCoefficients(kPTag, kITag, kDTag, kFRTag, kFVTag);
                 turPID.target = 0;
-                turPID.update(tx, drive.localizer.update().angVel, getOrthogVel());
+                turPID.update(tx, drive.localizer.update().angVel, orthogVelMag);
             } else {   // if it's the wrong tag, update turret PID based on encoder
                 turPID.setCoefficients(kPEnc, kIEnc, kDEnc, kFREnc, kFVEnc);
-                turPID.target = angleToTicks(getAngleToGoal());
-                turPID.update(turEnc.getCurrentPosition(), drive.localizer.update().angVel, getOrthogVel());
+                turPID.target = angleToTicks(angleToGoal);
+                turPID.update(turEnc.getCurrentPosition(), drive.localizer.update().angVel, orthogVelMag);
             }
         } else {
             // if there's no tag in sight, update turret PID based on encoder
             botpose = drive.localizer.getPose(); // I worry drive will gain error if SparkFun gets dusty
             turPID.setCoefficients(kPEnc, kIEnc, kDEnc, kFREnc, kFVEnc);
-            turPID.target = angleToTicks(getAngleToGoal());
-            turPID.update(turEnc.getCurrentPosition(), drive.localizer.update().angVel, getOrthogVel());
+            turPID.target = angleToTicks(angleToGoal);
+            turPID.update(turEnc.getCurrentPosition(), drive.localizer.update().angVel, orthogVelMag);
         }
 
         // firing stuff?
-        thetaDiff = getTheta();
-        vGoal = getSpeed() * Math.cos(thetaDiff);
+        vGoal = speed * Math.cos(thetaDiff);
         dGoal = Math.sqrt(Math.pow(botpose.position.x - goalPose.position.x, 2) + Math.pow(botpose.position.y - goalPose.position.y, 2));
         flightTime = getToF(dGoal);
-        dGoalEstimate = (dGoal - vGoal * flightTime)/39.37;
+        dGoalEstimate = (dGoal - vGoal * flightTime) + offset;
 
 
-        innerRPM = getLRPM(dGoalEstimate);
-        outerRPM = getURPM(dGoalEstimate);
+        innerRPM = getLRPM(dGoalEstimate/39.37);
+        outerRPM = getURPM(dGoalEstimate/39.37);
 
-        if (firing) {
+        if (mode == turMode.FIRING) {
             // if there is too much lag, only calc velocities when firing
             innerTurret.setVelocity(innerRPM * RPMtoTicksPerSecond);
             outerTurret.setVelocity(outerRPM * RPMtoTicksPerSecond);
+            if (Math.abs(innerRPM - innerCurVel / RPMtoTicksPerSecond) < 100 && Math.abs(outerRPM - outerCurVel / RPMtoTicksPerSecond) < 100) {
+                bothMotorsSpunUp = true;
+            } else {
+                bothMotorsSpunUp = false;
+            }
+        } else if (mode == turMode.INTAKING) {
+            innerTurret.setVelocity(-1500 * RPMtoTicksPerSecond);
+            outerTurret.setVelocity(-1500 * RPMtoTicksPerSecond);
+            bothMotorsSpunUp = false;
         } else {
             innerTurret.setVelocity(0);
             outerTurret.setVelocity(0);
+            bothMotorsSpunUp = false;
         }
 
         goalPose = new Pose2d(goalPoseX, goalPoseY, goalPoseH);
-        spinner.setPower(turPID.out);
-        updateTelemetry(t2);
+//        spinner.setPower(Math.min(1,Math.max(turPID.out,0)));
     }
     double getLRPM(double dist) {
         for (int i = 0; i < LUT.length; i++) {
@@ -262,7 +292,7 @@ public class Turret {
     }
     double getURPM(double dist) {
         for (int i = 0; i < LUT.length; i++) {
-            if (LUT[i][0] < dist && i < LUT.length - 1) {
+            if (LUT[i][0] < dist && i < (LUT.length - 1)) {
                 double slope = (LUT[i + 1][2] - LUT[i][2]) / (LUT[i + 1][0] - LUT[i][0]);
                 return LUT[i][2] + slope * (dist - LUT[i][0]);
             } else if (LUT[i][0] < dist && i == LUT.length - 1) {
