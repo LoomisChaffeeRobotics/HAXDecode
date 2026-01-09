@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -17,6 +18,7 @@ public class TurretExperiment extends OpMode {
     DcMotorEx innerTurret;
     DcMotorEx outerTurret;
     Servo flicker;
+    CRServo turret;
     DrumIntakeTurretManager drum;
     FtcDashboard Dash=FtcDashboard.getInstance();
     Telemetry t2=Dash.getTelemetry();
@@ -39,6 +41,7 @@ public class TurretExperiment extends OpMode {
         outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
 
         flicker=hardwareMap.get(Servo.class, "flicker");
+        turret=hardwareMap.get(CRServo.class, "turret");
 
         innerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         outerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -48,6 +51,7 @@ public class TurretExperiment extends OpMode {
 
         innerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         outerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        turret.setPower(0);
 
         drum = new DrumIntakeTurretManager();
         drum.init(hardwareMap);
@@ -56,6 +60,7 @@ public class TurretExperiment extends OpMode {
     }
     @Override
     public void loop() {
+        turret.setPower(0);
         if(gamepad1.dpad_up && !dUpPressed){
             flickPos1 = 0.97;
         }
