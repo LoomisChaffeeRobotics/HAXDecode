@@ -28,9 +28,9 @@ public class DrumIntakeTurretManager {
     double flickPosDown = 0.4;
     public static double kP = 0.0002;
     public static double kI = 0.00001;
-    public static double kD = 0.000075;
+    public static double kD = 0.0001;
     public static double iMax = 0.3;
-    public static double iRange = 1000;
+    public static double iRange = 0.2;
     public static double errorTol = 200;
     public static double derivTol = 10;
     public static double TARGET = 0;
