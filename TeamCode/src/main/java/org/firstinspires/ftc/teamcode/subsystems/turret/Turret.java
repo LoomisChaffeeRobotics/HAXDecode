@@ -79,7 +79,7 @@ public class Turret {
     public static double kFRTag = 0;
     public static double kFVTag = 0;
     public static double offset = 20;
-    Pose2d botpose;
+    Pose2d botpose = new Pose2d(0, 0, 0);
     Limelight3A limelight;
     CRServo spinner;
     DcMotorEx turEnc;
@@ -277,7 +277,7 @@ public class Turret {
         }
 
         goalPose = new Pose2d(goalPoseX, goalPoseY, goalPoseH);
-//        spinner.setPower(Math.min(1,Math.max(turPID.out,0)));
+        spinner.setPower(0.03);
     }
     double getLRPM(double dist) {
         for (int i = 0; i < LUT.length; i++) {

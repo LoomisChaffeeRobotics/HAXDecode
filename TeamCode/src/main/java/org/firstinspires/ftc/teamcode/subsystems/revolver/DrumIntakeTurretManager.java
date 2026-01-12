@@ -257,7 +257,7 @@ public class DrumIntakeTurretManager {
                 colTrack.pointer = colTrack.findNearestBall();
                 pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
                 turret.mode = Turret.turMode.FIRING;
-                if ((lastTickArrived || pid.arrived && lastMode != revMode.FIRESINGLE) && turret.bothMotorsSpunUp) {
+                if (((lastTickArrived || pid.arrived) && lastMode != revMode.FIRESINGLE) && turret.bothMotorsSpunUp) {
                     fireSequenceTimer.reset();
                     isFiring = true;
 
