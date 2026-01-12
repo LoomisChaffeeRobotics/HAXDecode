@@ -209,12 +209,6 @@ public class Turret {
         limelight.updateRobotOrientation(LLYaw);
         innerCurVel = innerTurret.getVelocity();
         outerCurVel = outerTurret.getVelocity();
-        updateTheta();
-        updateAngleToGoal();
-        updateOrthogVelMag();
-        updateRobotVelo();
-        updateSpeed();
-        updateTurretAngle();
 
         if (result != null && result.isValid()) { // if LL available, use LL botpose
             Pose3D botpose_mt2 = result.getBotpose_MT2();
@@ -246,6 +240,12 @@ public class Turret {
             turPID.target = angleToTicks(angleToGoal);
             turPID.update(turEnc.getCurrentPosition(), drive.localizer.update().angVel, orthogVelMag);
         }
+        updateTheta();
+        updateAngleToGoal();
+        updateOrthogVelMag();
+        updateRobotVelo();
+        updateSpeed();
+        updateTurretAngle();
 
         // firing stuff?
         vGoal = speed * Math.cos(thetaDiff);
