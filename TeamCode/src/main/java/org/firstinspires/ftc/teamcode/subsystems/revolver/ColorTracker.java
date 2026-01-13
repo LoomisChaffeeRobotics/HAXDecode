@@ -17,7 +17,7 @@ public class ColorTracker {
     DistanceSensor colorDist;
     NormalizedRGBA colors;
     double hue;
-    public static int pointer = 0;
+    public int pointer = 0;
     final float[] hsvValues = new float[3];
     String curColor = "white";
     static String[] slotColor = {"white", "white", "white"};

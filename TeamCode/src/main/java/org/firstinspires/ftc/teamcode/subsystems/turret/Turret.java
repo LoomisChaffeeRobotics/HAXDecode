@@ -78,7 +78,7 @@ public class Turret {
     public static double kDTag = 0;
     public static double kFRTag = 0;
     public static double kFVTag = 0;
-    public static double offset = 20;
+    double offset = 0;
     Pose2d botpose = new Pose2d(0, 0, 0);
     Limelight3A limelight;
     CRServo spinner;
@@ -168,6 +168,8 @@ public class Turret {
         telemetry.addData("gyro", getGyro());
         telemetry.addData("limelightX", tx);
         telemetry.addData("speed", speed);
+        telemetry.addData("spun up", bothMotorsSpunUp);
+        telemetry.addData("offset", offset);
         telemetry.update();
     }
     public void init(HardwareMap hardwareMap, MecanumDrive drive){
@@ -251,6 +253,7 @@ public class Turret {
         vGoal = speed * Math.cos(thetaDiff);
         dGoal = Math.sqrt(Math.pow(botpose.position.x - goalPose.position.x, 2) + Math.pow(botpose.position.y - goalPose.position.y, 2));
         flightTime = getToF(dGoal);
+        calcOffset(dGoal);
         dGoalEstimate = (dGoal - vGoal * flightTime) + offset;
 
 
@@ -261,7 +264,7 @@ public class Turret {
             // if there is too much lag, only calc velocities when firing
             innerTurret.setVelocity(innerRPM * RPMtoTicksPerSecond);
             outerTurret.setVelocity(outerRPM * RPMtoTicksPerSecond);
-            if (Math.abs(innerRPM - innerCurVel / RPMtoTicksPerSecond) < 100 && Math.abs(outerRPM - outerCurVel / RPMtoTicksPerSecond) < 100) {
+            if (Math.abs(innerRPM - innerCurVel / RPMtoTicksPerSecond) < 500 && Math.abs(outerRPM - outerCurVel / RPMtoTicksPerSecond) < 500) {
                 bothMotorsSpunUp = true;
             } else {
                 bothMotorsSpunUp = false;
@@ -286,30 +289,50 @@ public class Turret {
                 return LUT[i][1] + slope * (dist - LUT[i][0]);
             } else if (LUT[i][0] < dist && i == LUT.length - 1) {
                 return LUT[i][1];
+            } else {
+                double slope = (LUT[1][1]-LUT[0][1]) / (LUT[1][0] - LUT[0][0]);
+                return LUT[0][1] - slope * (LUT[i][0] - dist);
             }
         }
         return 0;
     }
     double getURPM(double dist) {
         for (int i = 0; i < LUT.length; i++) {
-            if (LUT[i][0] < dist && i < (LUT.length - 1)) {
+            if (LUT[i][0] > dist && i < (LUT.length - 1)) {
                 double slope = (LUT[i + 1][2] - LUT[i][2]) / (LUT[i + 1][0] - LUT[i][0]);
                 return LUT[i][2] + slope * (dist - LUT[i][0]);
             } else if (LUT[i][0] < dist && i == LUT.length - 1) {
                 return LUT[i][2];
+            } else {
+                double slope = (LUT[1][2]-LUT[0][2]) / (LUT[1][0] - LUT[0][0]);
+                return LUT[0][2] - slope * (LUT[i][0] - dist);
             }
         }
         return 0;
     }
     double getToF(double dist) {
         for (int i = 0; i < LUT.length; i++) {
-            if (LUT[i][0] < dist && i < LUT.length - 1) {
+            if (LUT[i][0] > dist && i < LUT.length - 1) {
                 double slope = (LUT[i + 1][3] - LUT[i][3]) / (LUT[i + 1][0] - LUT[i][0]);
                 return LUT[i][3] + slope * (dist - LUT[i][0]);
             } else if (LUT[i][0] < dist && i == LUT.length - 1) {
                 return LUT[i][3];
+            } else {
+                double slope = (LUT[1][3]-LUT[0][3]) / (LUT[1][0] - LUT[0][0]);
+                return LUT[0][3] - slope * (LUT[i][0] - dist);
             }
         }
         return 0;
+    }
+    public void calcOffset(double distanceFinal) {
+        if (distanceFinal < 24) {
+            offset = 20 + 0.111111111 * (24-distanceFinal);
+        } else if (distanceFinal < 60) {
+            offset = 20 - 0.111111111 * (distanceFinal-24);
+        } else if (distanceFinal < 115) {
+            offset = 15 - 0.090909090909 * (distanceFinal - 60);
+        } else {
+            offset = 10 - 0.0909090909 * (distanceFinal - 115);
+        }
     }
 }
