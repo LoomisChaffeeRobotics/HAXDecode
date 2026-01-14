@@ -43,7 +43,6 @@ public class DrumIntakeTurretManager {
     public boolean testMode = false;
     double FCV = 8192;
     double[] slotTarget = {0, FCV / 3, -FCV / 3};
-    public String tarColor = "white";
     public String flickMode = "off";
     public boolean activateAsync = false;
     public enum revMode {
@@ -58,15 +57,15 @@ public class DrumIntakeTurretManager {
         INTAKEIDLE
     }
 
-    public revMode curMode = revMode.INTAKING;
-    public revMode lastMode = revMode.INTAKING;
+    public revMode curMode = revMode.INTAKEIDLE;
+    public revMode lastMode = revMode.INTAKEIDLE;
     // functions
     void fireSequenceAsync(){
         lastTickArrived = false;
-        if (fireSequenceTimer.seconds() < 0.5) {
+        if (fireSequenceTimer.seconds() < 0.375) {
             flickMode = "flick";
             flicker.setPosition(flickPosUp);
-        } else if (fireSequenceTimer.seconds() >= 0.5 && fireSequenceTimer.seconds() < 1) {
+        } else if (fireSequenceTimer.seconds() >= 0.375 && fireSequenceTimer.seconds() < 0.75) {
             flickMode = "retract";
             flicker.setPosition(flickPosDown);
         } else {
@@ -170,7 +169,7 @@ public class DrumIntakeTurretManager {
     }
     public void contFireAsync() {
         if (!colTrack.ballAvailable()) {
-            curMode = revMode.INTAKING;
+            curMode = revMode.INTAKEIDLE;
             activateAsync = false;
         } else {
             colTrack.pointer = colTrack.findNearestBall();
@@ -213,7 +212,7 @@ public class DrumIntakeTurretManager {
             isFiring = false;
             colTrack.pointer = colTrack.findNearestWhite();
             pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
-            intake.setVelocity(100);
+            intake.setVelocity(-1800);
         } else if (curMode == revMode.FIRESTANDBY) {
             colTrack.pointer = colTrack.findNearestBall();
             pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
@@ -233,7 +232,7 @@ public class DrumIntakeTurretManager {
                 colTrack.pointer = colTrack.findNearestColor("purple");
                 pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
                 turret.mode = Turret.turMode.FIRING;
-                if ((lastTickArrived || pid.arrived && lastMode != revMode.FIREPURPLE) && turret.bothMotorsSpunUp) {
+                if ((lastTickArrived || (pid.arrived && lastMode != revMode.FIREPURPLE)) && turret.bothMotorsSpunUp) {
                     fireSequenceTimer.reset();
                     isFiring = true;
                 } else if (isFiring) {
@@ -301,5 +300,7 @@ public class DrumIntakeTurretManager {
         lastMode = curMode;
 
     }
-
+    public boolean isFull() {
+        return !colTrack.emptyAvailable();
+    }
 }
