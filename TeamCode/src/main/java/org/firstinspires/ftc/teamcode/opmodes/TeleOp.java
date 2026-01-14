@@ -43,12 +43,12 @@ public class TeleOp extends OpMode {
 
     @Override
     public void loop() {
-        double y = -gamepad1.left_stick_y; // Y stick value is reversed
-        double x = -gamepad1.left_stick_x;
+        double y = gamepad1.left_stick_x; // Y stick value is reversed
+        double x = -gamepad1.left_stick_y;
         botHeading = drive.localizer.getPose().heading.toDouble();
 
-        double fieldX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
-        double fieldY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
+        double fieldX = x * Math.sin(-botHeading) - y * Math.cos(-botHeading);
+        double fieldY = x * Math.cos(-botHeading) + y * Math.sin(-botHeading);
 
         if (gamepad1.left_trigger > 0.5) {
             drive.setDrivePowers(new PoseVelocity2d(

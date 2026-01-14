@@ -111,6 +111,7 @@ public class Turret {
     public double flightTime = 0;
     public double innerCurVel;
     public double outerCurVel;
+    public double turPower = 0;
     public enum turMode {
         FIRING,
         INTAKING,
@@ -150,7 +151,7 @@ public class Turret {
     void updateOrthogVelMag() {
         double[] distVect = new double[] {goalPose.position.x - botpose.position.x, goalPose.position.y - botpose.position.y};
         double[] orthogGoalVect = new double[] {-distVect[1], distVect[0]};
-        orthogVelMag = (robotVelo[0] * orthogGoalVect[0] + robotVelo[1] * orthogGoalVect[1]) / Math.sqrt(Math.pow(orthogGoalVect[0], 2) + Math.pow(orthogGoalVect[1], 2));
+        orthogVelMag = (robotVelo[0] * orthogGoalVect[0] + robotVelo[1] * orthogGoalVect[1]) / (Math.sqrt(Math.pow(orthogGoalVect[0], 2) + Math.pow(orthogGoalVect[1], 2)) +0.00000001);
     }
     public void updateTelemetry(Telemetry telemetry){
         telemetry.addData("innerTurret targ rpm", innerRPM);
@@ -167,6 +168,11 @@ public class Turret {
         telemetry.addData("turretAngle", turretAngle);
         telemetry.addData("gyro", getGyro());
         telemetry.addData("limelightX", tx);
+        telemetry.addData("turretTarget", turPID.target);
+        telemetry.addData("turretTicks", turEnc.getCurrentPosition());
+        telemetry.addData("orthogVelMag", orthogVelMag);
+        telemetry.addData("turretPower", turPID.out);
+        telemetry.addData("angVel", drive.localizer.update().angVel);
         telemetry.addData("speed", speed);
         telemetry.addData("spun up", bothMotorsSpunUp);
         telemetry.addData("offset", offset);
@@ -193,7 +199,7 @@ public class Turret {
 
         innerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         outerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        turEnc.setDirection(DcMotorSimple.Direction.REVERSE);
+        turEnc.setDirection(DcMotorSimple.Direction.FORWARD);
 
 //        fileDataRaw = ReadWriteFile.readFile(dataLog);
 //        vals = fileDataRaw.split(", ");
@@ -280,7 +286,7 @@ public class Turret {
         }
 
         goalPose = new Pose2d(goalPoseX, goalPoseY, goalPoseH);
-        spinner.setPower(0.03);
+        spinner.setPower(Math.min(Math.max(-1,turPID.out),1));
     }
     double getLRPM(double dist) {
         for (int i = 0; i < LUT.length; i++) {

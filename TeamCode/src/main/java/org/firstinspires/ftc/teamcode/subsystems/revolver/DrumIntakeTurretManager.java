@@ -28,10 +28,10 @@ public class DrumIntakeTurretManager {
     double flickPosUp = 0.85;
     double flickPosDown = 0.4;
     public static double kP = 0.0002;
-    public static double kI = 0.00001;
+    public static double kI = 0.000005;
     public static double kD = 0.0001;
     public static double iMax = 0.3;
-    public static double iRange = 0.2;
+    public static double iRange = 0.15;
     public static double errorTol = 100;
     public static double derivTol = 10;
     public boolean isFiring = false;
@@ -205,6 +205,7 @@ public class DrumIntakeTurretManager {
         pid.dTol = derivTol;
 
         curPos = revEnc.getCurrentPosition();
+        colTrack.loop(pid.arrived, (curMode == revMode.INTAKING));
         //-------------------------------set target---------------------
 
         if (curMode == revMode.INTAKING) {
@@ -293,7 +294,6 @@ public class DrumIntakeTurretManager {
 
         //-----------------------loop actions-------------------------
         updateLastTickArrived();
-        colTrack.loop(pid.arrived, (curMode == revMode.INTAKING));
         turret.loop();
         pid.update(curPos);
         revSpin.setPower(pid.velo);
