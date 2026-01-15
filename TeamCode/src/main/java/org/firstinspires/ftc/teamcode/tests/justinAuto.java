@@ -149,6 +149,8 @@ public class justinAuto extends LinearOpMode {
 
                 //Write Intake Auto
 
+
+
                 startDriveTo(SHOOT_POSE, State.SPINUP_AND_AIM);
             }
             else if (state == State.DONE) {
