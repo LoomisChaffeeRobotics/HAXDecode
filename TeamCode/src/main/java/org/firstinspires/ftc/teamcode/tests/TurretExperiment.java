@@ -1,117 +1,160 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.tests;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.Servo;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.Pose2d;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
-
-@TeleOp
+import org.firstinspires.ftc.teamcode.subsystems.turret.Turret;
+@Autonomous
 @Config
-public class TurretExperiment extends OpMode {
-    DcMotorEx innerTurret;
-    DcMotorEx outerTurret;
-    Servo flicker;
-    CRServo turret;
-    DrumIntakeTurretManager drum;
-    FtcDashboard Dash=FtcDashboard.getInstance();
-    Telemetry t2=Dash.getTelemetry();
-    double inner = 40;
-    double outer = 40;
-    public static double innerRPM = 0;
-    public static double outerRPM = 0;
-    public static double flickPos1 = 0.45;
-    public static double flickPos2 = 0.97;
-    boolean prevA = false;
-    boolean prevB = false;
-    boolean prevX = false;
-    boolean prevY = false;
-    boolean dUpPressed = false;
-    boolean dDownPressed = false;
-
-    @Override
-    public void init() {
-        innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
-        outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
-
-        flicker=hardwareMap.get(Servo.class, "flicker");
-        turret=hardwareMap.get(CRServo.class, "turret");
-
-        innerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        outerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        innerTurret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        outerTurret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        innerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        outerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        turret.setPower(0);
-
-        drum = new DrumIntakeTurretManager();
-        drum.init(hardwareMap);
-        drum.testMode = true;
-
+public class Auto extends LinearOpMode {
+    enum State {
+        DRIVE_TO_SHOT,
+        SPINUP_AND_AIM,
+        INTAKE,
+        FIRE_GREEN,
+        FIRE_PURPLE,
+        DRIVE_TO_END,
+        DONE
     }
-    @Override
-    public void loop() {
-        turret.setPower(0);
-        if(gamepad1.dpad_up && !dUpPressed){
-            flickPos1 = 0.97;
+    public static Pose2d START_POSE  = new Pose2d(-51, -52, 0); //Need to tune these values
+    public static Pose2d SHOOT_POSE  = new Pose2d(-16, -16, 0);
+    public static Pose2d INTAKE1_POSE = new Pose2d(-12, -34, 0);
+    public static Pose2d INTAKE2_POSE = new Pose2d(12, -34, 0);
+
+    public static double GOAL_X = -68;
+    public static double GOAL_Y = -53;
+    public static double GOAL_H = 0;
+
+    public static double INTAKE_SECONDS = 1.0;
+
+    MecanumDrive drive;
+    DrumIntakeTurretManager drum;
+    State state = State.DRIVE_TO_SHOT;
+    State next_state = state.SPINUP_AND_AIM;
+
+    String motif = "WWW";
+    int motifIndex = 0;
+    int cycle = 0;
+
+    Pose2d driveTarget = SHOOT_POSE;
+    Action currentAction = null;
+
+    private void go(State next) {
+        state = next;
+    }
+
+    private void startDriveTo(Pose2d target, State after) {
+        driveTarget = target;
+        next_state = after;
+
+        Pose2d cur = drive.localizer.getPose();
+
+        currentAction = drive.actionBuilder(cur)
+                .splineToLinearHeading(target, target.heading.toDouble())
+                .build();
+
+        go(State.DRIVE_TO_SHOT);
+    }
+    private boolean driveFinished() {
+        //return true once roadrunner says drive is finished
+    }
+    private boolean shotFinished() {
+        return (!drum.isFiring && drum.curMode == DrumIntakeTurretManager.revMode.FIRESTANDBY);
+    }
+
+    private void loadMotifAndResetShots() {
+        motif = drum.readMotif(); // Somehow read motif
+        if (!(motif.equals("GPP") || motif.equals("PGP") || motif.equals("PPG"))) {
+            motif = "GPP";
         }
-        if(gamepad1.dpad_down && !dDownPressed){
-            flickPos1 = 0.45;
+        motifIndex = 0;
+    }
+
+    private void requestNextShotState() {
+        if (motifIndex >= 3) {
+            handleEndOfMotif();
+            return;
         }
 
+        char c = motif.charAt(motifIndex);
+        if (c == 'G') go(State.FIRE_GREEN);
+        else go(State.FIRE_PURPLE);
+    }
 
-        if (gamepad1.aWasPressed()) {
-            drum.lastSlot();
-        } else if (gamepad1.bWasPressed()) {
-            drum.nextSlot();
+    private void handleEndOfMotif() {
+        if (cycle == 0) {
+            cycle = 1;
+            startDriveTo(INTAKE1_POSE, State.INTAKE);
+        } else if (cycle == 1) {
+            cycle = 2;
+            startDriveTo(INTAKE2_POSE, State.INTAKE);
+        } else {
+            go(State.DONE);
         }
-        drum.update();
-        drum.updateTelemetry(t2);
-//        innerRPM = (inner%201)*(25);
-        double innerTicks = (innerRPM / 60) * 28 ;
-//        outerRPM = (outer%101)*(50);
-        double outerTicks = (outerRPM / 60) * 28;
+    }
 
-        innerTurret.setVelocity(-innerTicks);
-        outerTurret.setVelocity(outerTicks);
+    public void runOpMode() {
+        drive = new MecanumDrive(hardwareMap, START_POSE);
+        drum = new DrumIntakeTurretManager();
+        drum.init(hardwareMap, drive);
 
-        double actualInnerTicks = innerTurret.getVelocity();
-        double actualInnerRPM = (actualInnerTicks / 28) * 60;
-        double actualOuterTicks = outerTurret.getVelocity();
-        double actualOuterRPM = (actualOuterTicks / 28) * 60;
-
-        dUpPressed = gamepad1.dpad_up;
-        dDownPressed = gamepad1.dpad_down;
-
-        flicker.setPosition(flickPos1);
-
-
-
-        telemetry.addData("innerTurret expected rpm (input)", innerRPM);
-        telemetry.addData("innerTurret expected rpm (input)", outerRPM);
-
-        t2.addData("innerTurret expected rpm (input)", innerRPM);
-        t2.addData("innerTurret expected rpm (input)", outerRPM);
-
-        telemetry.addData("innerTurret expected rpm (from encoder)", actualInnerRPM);
-        telemetry.addData("outerTurret expected rpm (from encoder)", actualOuterRPM);
-
-        t2.addData("innerTurret expected rpm (from encoder)", actualInnerRPM);
-        t2.addData("outerTurret expected rpm (from encoder)", actualOuterRPM);
-
-        telemetry.addData("flicker location", flicker.getPosition());
-        t2.addData("flicker location", flicker.getPosition());
+        Turret.goalPoseX = GOAL_X;
+        Turret.goalPoseY = GOAL_Y;
+        Turret.goalPoseH = GOAL_H;
 
         telemetry.update();
-        t2.update();
+        loadMotifAndResetShots();
+        startDriveTo(SHOOT_POSE, State.SPINUP_AND_AIM);
+
+        while(opModeIsActive() && state != State.DONE) {
+            drive.updatePoseEstimate();
+            drum.update();
+
+            if (state == State.DRIVE_TO_SHOT) {
+                if (driveFinished()) {
+                    go(next_state);
+                }
+            }
+            else if (state == State.SPINUP_AND_AIM) {
+                drum.curMode = DrumIntakeTurretManager.revMode.FIRESTANDBY;
+                boolean ready = drum.shooterSpunUp();
+                if (ready) {
+                    requestNextShotState();
+                }
+            }
+            else if (state == State.FIRE_PURPLE) {
+                drum.firePurple();
+                if (shotFinished()) {
+                    motifIndex++;
+                    go(State.SPINUP_AND_AIM);
+                }
+            }
+            else if (state == State.FIRE_GREEN) {
+                drum.fireGreen();
+                if (shotFinished()) {
+                    motifIndex++;
+                    go(State.SPINUP_AND_AIM);
+                }
+            }
+            else if (state == State.INTAKE) {
+
+                drum.curMode = DrumIntakeTurretManager.revMode.INTAKING;
+
+                //Write Intake Auto
+
+                startDriveTo(SHOOT_POSE, State.SPINUP_AND_AIM);
+            }
+            else if (state == State.DONE) {
+                return;
+            }
+        }
     }
 }

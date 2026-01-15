@@ -100,6 +100,10 @@ public class DrumIntakeTurretManager {
         }
     }
 
+    public boolean shooterSpunUp(){
+        return turret.bothMotorsSpunUp;
+    }
+
     public void updateTelemetry(Telemetry t){
         t.addData("target", pid.target);
         t.addData("curPos", curPos);
