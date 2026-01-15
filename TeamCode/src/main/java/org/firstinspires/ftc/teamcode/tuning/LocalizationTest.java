@@ -32,9 +32,6 @@ public class LocalizationTest extends LinearOpMode {
                 double gamepadx = -gamepad1.left_stick_y;
                 double gamepady = -gamepad1.left_stick_x;
 
-                double fieldX =  gamepadx * Math.cos(-pose.heading.toDouble()) - gamepady * Math.sin(-pose.heading.toDouble());
-                double fieldY =  gamepadx * Math.sin(-pose.heading.toDouble()) + gamepady * Math.cos(-pose.heading.toDouble());
-
                 drive.setDrivePowers(new PoseVelocity2d(
                         new Vector2d(
                                 gamepadx,

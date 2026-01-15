@@ -13,7 +13,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystems.FancyPID;
-import org.firstinspires.ftc.teamcode.practiceArchive.TurretOLD;
 import org.firstinspires.ftc.teamcode.subsystems.turret.Turret;
 
 @Config
@@ -45,6 +44,7 @@ public class DrumIntakeTurretManager {
     double[] slotTarget = {0, FCV / 3, -FCV / 3};
     public String flickMode = "off";
     public boolean activateAsync = false;
+    public static double intakeOnVelocity = -1800;
     public enum revMode {
         INTAKING,
         FIRESTANDBY,
@@ -217,7 +217,7 @@ public class DrumIntakeTurretManager {
             isFiring = false;
             colTrack.pointer = colTrack.findNearestWhite();
             pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
-            intake.setVelocity(-1800);
+            intake.setVelocity(intakeOnVelocity);
         } else if (curMode == revMode.FIRESTANDBY) {
             colTrack.pointer = colTrack.findNearestBall();
             pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
