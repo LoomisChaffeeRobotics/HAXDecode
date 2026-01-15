@@ -18,9 +18,9 @@ public class TurretPID {
         public double Kd;
         public double KFR;
         public double KFV;
-        public double target;
-        double maxLimit = 10000;
-        double minLimit = -10000;
+        public double target = 0;
+        double maxLimit = 12000;
+        double minLimit = -18000;
         public void setCoefficients(double p, double i, double d, double fr, double fv) {
             Kp = p;
             Ki = i;
@@ -33,7 +33,7 @@ public class TurretPID {
             pidDev = 0;
             errorPrev = target;
         }
-        public double update(double current, double robotRotVel, double robotOrthogVel) {
+        public void update(double current, double robotRotVel, double robotOrthogVel) {
             errorCur = target - current;
             PID_P = errorCur * Kp;
 
@@ -58,16 +58,15 @@ public class TurretPID {
             PID_FRot = robotRotVel * KFR; // rotational velocity will be in rad/sec
             PID_FVel = robotOrthogVel * KFV; // orthog velocity will be in dist/sec
 
-            out = PID_P + PID_I + PID_D + PID_FRot + PID_FVel;
 
             if (current > minLimit && current < maxLimit) {
-                return out;
+                out = PID_P + PID_I + PID_D + PID_FRot + PID_FVel;
             } else if (current <= minLimit && Math.signum(out) == 1){
-                return out;
+                out = PID_P + PID_I + PID_D + PID_FRot + PID_FVel;
             } else if (current >= maxLimit && Math.signum(out) == -1){
-                return out;
+                out = PID_P + PID_I + PID_D + PID_FRot + PID_FVel;
             } else {
-                return 0;
+                out = 0;
             }
         }
 

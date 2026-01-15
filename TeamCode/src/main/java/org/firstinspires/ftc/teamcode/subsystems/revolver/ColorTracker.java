@@ -17,10 +17,10 @@ public class ColorTracker {
     DistanceSensor colorDist;
     NormalizedRGBA colors;
     double hue;
-    public static int pointer = 0;
+    public int pointer = 0;
     final float[] hsvValues = new float[3];
     String curColor = "white";
-    static String[] slotColor = {"white", "white", "white"};
+    String[] slotColor = {"white", "white", "white"};
     //-----------define colors--------------
     float greenMin = 100;
     float greenMax = 160;
@@ -38,7 +38,7 @@ public class ColorTracker {
         Color.colorToHSV(colors.toColor(), hsvValues);
         hue = hsvValues[0]; //Read current color in HSV
 
-        if (distance < 7) {
+        if (distance < 4) {
             if (hue > greenMin && hue < greenMax) {
                 return "green"; // hue is within green range --> return current color is green
             } else if (hue > purpleMin && hue < purpleMax) {
@@ -50,7 +50,7 @@ public class ColorTracker {
             return "white";
         }
     }
-    static int findNearestWhite() {
+    int findNearestWhite() {
         if (slotColor[pointer].equals("white")) {
             return pointer; // if we are at empty slot, we return current location
         }
