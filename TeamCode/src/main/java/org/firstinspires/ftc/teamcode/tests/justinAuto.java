@@ -1,20 +1,17 @@
 package org.firstinspires.ftc.teamcode.tests;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
 import org.firstinspires.ftc.teamcode.subsystems.turret.Turret;
 @Autonomous
 @Config
-public class Auto extends LinearOpMode {
+public class justinAuto extends LinearOpMode {
     enum State {
         DRIVE_TO_SHOT,
         SPINUP_AND_AIM,
@@ -61,17 +58,18 @@ public class Auto extends LinearOpMode {
                 .splineToLinearHeading(target, target.heading.toDouble())
                 .build();
 
-        go(State.DRIVE_TO_SHOT);
+        go(next_state);
     }
     private boolean driveFinished() {
         //return true once roadrunner says drive is finished
+        return true;
     }
     private boolean shotFinished() {
         return (!drum.isFiring && drum.curMode == DrumIntakeTurretManager.revMode.FIRESTANDBY);
     }
 
     private void loadMotifAndResetShots() {
-        motif = drum.readMotif(); // Somehow read motif
+        //motif = drum.readMotif(); // Somehow read motif
         if (!(motif.equals("GPP") || motif.equals("PGP") || motif.equals("PPG"))) {
             motif = "GPP";
         }
@@ -90,6 +88,7 @@ public class Auto extends LinearOpMode {
     }
 
     private void handleEndOfMotif() {
+        motifIndex = 0;
         if (cycle == 0) {
             cycle = 1;
             startDriveTo(INTAKE1_POSE, State.INTAKE);

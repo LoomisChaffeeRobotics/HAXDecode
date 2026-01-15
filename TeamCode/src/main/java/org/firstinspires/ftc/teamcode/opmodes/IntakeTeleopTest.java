@@ -41,6 +41,7 @@ public class IntakeTeleopTest extends OpMode {
 
     @Override
     public void loop() {
+        drive.updatePoseEstimate();
         double y = -gamepad1.left_stick_x; // Y stick value is reversed
         double x = -gamepad1.left_stick_y;
         botHeading = drive.localizer.getPose().heading.toDouble();
