@@ -155,6 +155,9 @@ public class DrumIntakeTurretManager {
     public void init(HardwareMap hw) {
         this.init(hw, new MecanumDrive(hw, new Pose2d(0,0,0)));
     }
+    public boolean isArrived(){
+        return pid.arrived;
+    }
     public void firePurple() {
         curMode = revMode.FIREPURPLE;
     }
