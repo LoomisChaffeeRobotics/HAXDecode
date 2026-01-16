@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.subsystems.turret.limeLight;
 
 @Autonomous
 @Config
-public class BlueFarSide3Plus6 extends LinearOpMode {
+public class justinAuto extends LinearOpMode {
     enum State {
         DRIVE_TO_SHOT,
         SPINUP_AND_AIM,
