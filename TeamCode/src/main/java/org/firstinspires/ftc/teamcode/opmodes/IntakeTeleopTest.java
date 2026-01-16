@@ -29,7 +29,7 @@ public class IntakeTeleopTest extends OpMode {
     public void init() {
         drum = new DrumIntakeTurretManager();
         drive = new MecanumDrive(hardwareMap, new Pose2d(0,0,Math.PI/2));
-        drum.init(hardwareMap, drive);
+        drum.init(hardwareMap);
         drum.curMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
         imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(new IMU.Parameters(
@@ -41,22 +41,24 @@ public class IntakeTeleopTest extends OpMode {
 
     @Override
     public void loop() {
-        drive.updatePoseEstimate();
-        double y = -gamepad1.left_stick_x; // Y stick value is reversed
-        double x = -gamepad1.left_stick_y;
-        botHeading = drive.localizer.getPose().heading.toDouble();
+        double gamepady = -gamepad1.left_stick_x;
+        double gamepadx = -gamepad1.left_stick_y;
+//        botHeading = drive.localizer.getPose().heading.toDouble();
 
-        double fieldX = y;
-        double fieldY = x;
+        double fieldX = gamepady;
+        double fieldY = gamepadx;
 
         if (gamepad1.left_trigger > 0.5) {
             drive.setDrivePowers(new PoseVelocity2d(
-                    new Vector2d(0.3 * x, 0.3 * y),
+                    new Vector2d(0.3 * gamepadx, 0.3 * gamepady),
                     -0.3 * gamepad1.right_stick_x
             ));
         } else {
             drive.setDrivePowers(new PoseVelocity2d(
-                    new Vector2d(x, y),
+                    new Vector2d(
+                            gamepadx,
+                            gamepady
+                    ),
                     -gamepad1.right_stick_x
             ));
         }
@@ -99,11 +101,6 @@ public class IntakeTeleopTest extends OpMode {
             } else if (gamepad1.bWasPressed()) {
                 drum.setCurrentGreen();
             }
-            if (gamepad2.rightBumperWasPressed()) {
-                drum.nextSlot();
-            } else if (gamepad2.leftBumperWasPressed()) {
-                drum.lastSlot();
-            }
         }
 
         if (drum.curMode == DrumIntakeTurretManager.revMode.INTAKING) {
@@ -112,16 +109,18 @@ public class IntakeTeleopTest extends OpMode {
             } else if (gamepad1.bWasPressed()) {
                 drum.setCurrentGreen();
             }
-            if (gamepad2.rightBumperWasPressed()) {
-                drum.nextSlot();
-            } else if (gamepad2.leftBumperWasPressed()) {
-                drum.lastSlot();
-            }
         }
-
-        lastTriggerVal = gamepad1.right_trigger;
-        drum.update();
+        if (gamepad2.rightBumperWasPressed()) {
+            drum.nextSlot();
+        } else if (gamepad2.leftBumperWasPressed()) {
+            drum.lastSlot();
+        }
         t2.addData("botheading", botHeading);
+        lastTriggerVal = gamepad1.right_trigger;
+
+        drive.updatePoseEstimate();
+        drum.update(drive.localizer.getPose(), new PoseVelocity2d(new Vector2d(0,0),0));
+        drive.localizer.setPose(drum.getNewPoseFromTurret());
         drum.updateTelemetry(t2);
         TelemetryPacket packet = new TelemetryPacket();
         packet.fieldOverlay().setStroke("#3F51B5");

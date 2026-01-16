@@ -5,6 +5,8 @@ import android.os.Environment;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.PoseVelocity2d;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -17,7 +19,6 @@ import com.qualcomm.robotcore.util.ReadWriteFile;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystems.TurretPID;
 
 import java.io.File;
@@ -79,13 +80,13 @@ public class Turret {
     public static double kFRTag = 0;
     public static double kFVTag = 0;
     double offset = 0;
-    Pose2d botpose = new Pose2d(0, 0, 0);
+    Pose2d botpose;
+    Pose2d drivePose = new Pose2d(0,0,0);
     Limelight3A limelight;
     CRServo spinner;
     DcMotorEx turEnc;
     DcMotorEx innerTurret;
     DcMotorEx outerTurret;
-    MecanumDrive drive;
     Pose2d lastPoseEstimate;
     Pose2d goalPose = new Pose2d(0, 0, 0);
     public static double goalPoseX;
@@ -104,7 +105,7 @@ public class Turret {
     public double vGoal = 0;
     public double dGoal = 0;
     public double turretAngle = 0;
-    public double[] robotVelo = new double[2];
+    public PoseVelocity2d robotVelo = new PoseVelocity2d(new Vector2d(0,0),0);
     public double angleToGoal = 0;
     public double orthogVelMag = 0;
     public double dGoalEstimate = 0;
@@ -120,24 +121,17 @@ public class Turret {
     public turMode mode = turMode.IDLE;
     public boolean bothMotorsSpunUp = false;
     double getGyro(){
-        return drive.localizer.getPose().heading.toDouble();
+        return drivePose.heading.toDouble();
     }
     void updateTurretAngle() {
-        turretAngle = 2 * Math.PI * (turEnc.getCurrentPosition() / turretFullLoop);
-    }
-    void updateRobotVelo(){
-        robotVelo = new double[]{drive.updatePoseEstimate().linearVel.x, drive.updatePoseEstimate().linearVel.y};
+        turretAngle = - 2 * Math.PI * (turEnc.getCurrentPosition() / turretFullLoop);
     }
     void updateSpeed(){
-        double velos[] = new double[robotVelo.length];
-        for (int i = 0; i < robotVelo.length; i++) {
-            velos[i] = robotVelo[i]/39.37;
-        }
-        speed = Math.sqrt(Math.pow(velos[0], 2) + Math.pow(velos[1], 2));
+        speed = Math.sqrt(Math.pow(robotVelo.linearVel.x, 2) + Math.pow(robotVelo.linearVel.y, 2));
     }
     void updateTheta() { // angle between robot velocity and vector to goal
         double[] distVect = new double[] {goalPose.position.x - botpose.position.x, goalPose.position.y - botpose.position.y};
-        double[] velVect = robotVelo;
+        double[] velVect = new double[] {robotVelo.linearVel.x, robotVelo.linearVel.y};
         double dotProduct = distVect[0] * velVect[0] + distVect[1] * velVect[1];
         double prodMagDist = Math.sqrt(Math.pow(distVect[0], 2) + Math.pow(distVect[1], 2)) * Math.sqrt(Math.pow(velVect[1],2) + Math.pow(velVect[0],2));
         thetaDiff = Math.acos(dotProduct / (prodMagDist + 0.000001));
@@ -151,7 +145,7 @@ public class Turret {
     void updateOrthogVelMag() {
         double[] distVect = new double[] {goalPose.position.x - botpose.position.x, goalPose.position.y - botpose.position.y};
         double[] orthogGoalVect = new double[] {-distVect[1], distVect[0]};
-        orthogVelMag = (robotVelo[0] * orthogGoalVect[0] + robotVelo[1] * orthogGoalVect[1]) / (Math.sqrt(Math.pow(orthogGoalVect[0], 2) + Math.pow(orthogGoalVect[1], 2)) +0.00000001);
+        orthogVelMag = (robotVelo.linearVel.x * orthogGoalVect[0] + robotVelo.linearVel.y * orthogGoalVect[1]) / (Math.sqrt(Math.pow(orthogGoalVect[0], 2) + Math.pow(orthogGoalVect[1], 2)) +0.00000001);
     }
     public void updateTelemetry(Telemetry telemetry){
         telemetry.addData("innerTurret targ rpm", innerRPM);
@@ -172,16 +166,14 @@ public class Turret {
         telemetry.addData("turretTicks", turEnc.getCurrentPosition());
         telemetry.addData("orthogVelMag", orthogVelMag);
         telemetry.addData("turretPower", turPID.out);
-        telemetry.addData("angVel", drive.localizer.update().angVel);
+        telemetry.addData("angVel", robotVelo.angVel);
         telemetry.addData("speed", speed);
         telemetry.addData("spun up", bothMotorsSpunUp);
         telemetry.addData("offset", offset);
         telemetry.update();
     }
-    public void init(HardwareMap hardwareMap, MecanumDrive drive){
-
+    public void init(HardwareMap hardwareMap){
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-//        turret = hardwareMap.get(CRServo.class, "turret");
         limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
         limelight.start(); // This tells Limelight to start looking!
         innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
@@ -195,23 +187,25 @@ public class Turret {
 
         innerTurret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         outerTurret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        turEnc.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        turEnc.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         innerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         outerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        turEnc.setDirection(DcMotorSimple.Direction.FORWARD);
+        turEnc.setDirection(DcMotorSimple.Direction.REVERSE);
 
 //        fileDataRaw = ReadWriteFile.readFile(dataLog);
 //        vals = fileDataRaw.split(", ");
 //        lastPoseEstimate = new Pose2d(Double.parseDouble(vals[0]), Double.parseDouble(vals[1]), Double.parseDouble(vals[2]));
         lastPoseEstimate = new Pose2d(0,0,0);
-        this.drive = drive;
+//        this.drive = drive;
         mode = turMode.IDLE;
 
         turPID = new TurretPID();
         turPID.init();
     }
-    public void loop(){
+    public void loop(Pose2d pose, PoseVelocity2d vel){
+        drivePose = pose;
+        robotVelo = vel;
         LLResult result = limelight.getLatestResult();
         double LLYaw = (getGyro() + turretAngle);
         limelight.updateRobotOrientation(LLYaw);
@@ -221,10 +215,9 @@ public class Turret {
         if (result != null && result.isValid()) { // if LL available, use LL botpose
             Pose3D botpose_mt2 = result.getBotpose_MT2();
             if (botpose_mt2 != null) {
-                botpose = new Pose2d(botpose_mt2.getPosition().x, botpose_mt2.getPosition().y, botpose_mt2.getOrientation().getYaw());
-                drive.localizer.setPose(botpose);
+                botpose = drivePose;
             } else {
-                botpose = drive.localizer.getPose();
+                botpose = drivePose;
             }
             tx = result.getTx(); // How far left or right the target is (degrees)
             ty = result.getTy(); // How far up or down the target is (degrees)
@@ -235,23 +228,22 @@ public class Turret {
             if (!result.getFiducialResults().isEmpty() && result.getFiducialResults().get(0).getFiducialId() == 22) {
                 turPID.setCoefficients(kPTag, kITag, kDTag, kFRTag, kFVTag);
                 turPID.target = 0;
-                turPID.update(tx, drive.localizer.update().angVel, orthogVelMag);
+                turPID.update(tx, robotVelo.angVel, orthogVelMag);
             } else {   // if it's the wrong tag, update turret PID based on encoder
                 turPID.setCoefficients(kPEnc, kIEnc, kDEnc, kFREnc, kFVEnc);
                 turPID.target = angleToTicks(angleToGoal);
-                turPID.update(turEnc.getCurrentPosition(), drive.localizer.update().angVel, orthogVelMag);
+                turPID.update(turEnc.getCurrentPosition(), robotVelo.angVel, orthogVelMag);
             }
         } else {
             // if there's no tag in sight, update turret PID based on encoder
-            botpose = drive.localizer.getPose(); // I worry drive will gain error if SparkFun gets dusty
+            botpose = drivePose; // I worry drive will gain error if SparkFun gets dusty
             turPID.setCoefficients(kPEnc, kIEnc, kDEnc, kFREnc, kFVEnc);
             turPID.target = angleToTicks(angleToGoal);
-            turPID.update(turEnc.getCurrentPosition(), drive.localizer.update().angVel, orthogVelMag);
+            turPID.update(turEnc.getCurrentPosition(), robotVelo.angVel, orthogVelMag);
         }
         updateTheta();
         updateAngleToGoal();
         updateOrthogVelMag();
-        updateRobotVelo();
         updateSpeed();
         updateTurretAngle();
 
@@ -287,6 +279,9 @@ public class Turret {
 
         goalPose = new Pose2d(goalPoseX, goalPoseY, goalPoseH);
         spinner.setPower(Math.min(Math.max(-1,turPID.out),1));
+    }
+    public Pose2d getBotpose () {
+        return botpose;
     }
     double getLRPM(double dist) {
         for (int i = 0; i < LUT.length; i++) {

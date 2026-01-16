@@ -64,7 +64,7 @@ public class IntakeTest extends OpMode {
         }
 
 
-        drum.update();
+//        drum.update(drive.localizer.getPose(), drive.localizer.update());
         drum.updateTelemetry(t2);
         intake.intakeTele(telemetry);
         intake.intakeTele(t2);

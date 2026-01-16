@@ -31,7 +31,7 @@ public class TeleOp extends OpMode {
     public void init() {
         drum = new DrumIntakeTurretManager();
         drive = new MecanumDrive(hardwareMap, new Pose2d(0,0,Math.PI/2));
-        drum.init(hardwareMap, drive);
+        drum.init(hardwareMap);
         drum.curMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
         imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(new IMU.Parameters(
@@ -121,7 +121,8 @@ public class TeleOp extends OpMode {
         }
 
         lastTriggerVal = gamepad1.right_trigger;
-        drum.update();
+        drum.update(drive.localizer.getPose(), drive.localizer.update());
+        drive.localizer.setPose(drum.getNewPoseFromTurret());
         t2.addData("botheading", botHeading);
         drum.updateTelemetry(t2);
         TelemetryPacket packet = new TelemetryPacket();

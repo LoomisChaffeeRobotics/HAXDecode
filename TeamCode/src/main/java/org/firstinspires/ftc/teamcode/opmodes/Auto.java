@@ -37,7 +37,7 @@ public class Auto extends OpMode {
         drive = new MecanumDrive(hardwareMap, pose);
 
         intake.init();
-        drum.init(hardwareMap, drive);
+        drum.init(hardwareMap);
 
         turretOLD.off();
         drum.testMode = true;
@@ -122,7 +122,7 @@ public class Auto extends OpMode {
 
         intake.loop();
         turretOLD.loop();
-        drum.update();
+//        drum.update(drive.localizer.getPose(), drive.localizer.update());
         telemetry.addData("tur pose", turretOLD.getTurPose());
 
         drum.updateTelemetry(telemetry);

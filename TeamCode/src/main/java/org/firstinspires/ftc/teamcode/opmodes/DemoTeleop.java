@@ -36,7 +36,7 @@ public class DemoTeleop extends OpMode {
         drive = new MecanumDrive(hardwareMap, pose);
 
         intake.init();
-        drum.init(hardwareMap, drive);
+        drum.init(hardwareMap);
 
         turretOLD.off();
         drum.testMode = true;
@@ -93,7 +93,7 @@ public class DemoTeleop extends OpMode {
 
         intake.loop();
         turretOLD.loop();
-        drum.update();
+//        drum.update();
         telemetry.addData("tur pose", turretOLD.getTurPose());
         drum.updateTelemetry(t2);
 //        telemetry.addData("within normal limits?");

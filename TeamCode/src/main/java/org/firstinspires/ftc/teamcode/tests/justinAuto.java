@@ -103,7 +103,7 @@ public class justinAuto extends LinearOpMode {
     public void runOpMode() {
         drive = new MecanumDrive(hardwareMap, START_POSE);
         drum = new DrumIntakeTurretManager();
-        drum.init(hardwareMap, drive);
+        drum.init(hardwareMap);
 
         Turret.goalPoseX = GOAL_X;
         Turret.goalPoseY = GOAL_Y;
@@ -115,7 +115,7 @@ public class justinAuto extends LinearOpMode {
 
         while(opModeIsActive() && state != State.DONE) {
             drive.updatePoseEstimate();
-            drum.update();
+//            drum.update(drive.localizer.getPose(), drive.localizer.update());
 
             if (state == State.DRIVE_TO_SHOT) {
                 if (driveFinished()) {

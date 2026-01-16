@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.subsystems.revolver;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -31,7 +32,7 @@ public class DrumIntakeTurretManager {
     public static double kD = 0.0001;
     public static double iMax = 0.3;
     public static double iRange = 0.15;
-    public static double errorTol = 100;
+    public static double errorTol = 75;
     public static double derivTol = 10;
     public boolean isFiring = false;
     public boolean contFiring = false;
@@ -126,7 +127,7 @@ public class DrumIntakeTurretManager {
     }
 
     //----------------------------------------------------------------------------------
-    public void init(HardwareMap hardwareMap, MecanumDrive drive) {
+    public void init(HardwareMap hardwareMap) {
         colTrack.init(hardwareMap);
 
         pid.init();
@@ -149,11 +150,8 @@ public class DrumIntakeTurretManager {
 
         turret = new Turret();
 
-        turret.init(hardwareMap, drive);
+        turret.init(hardwareMap);
         flicker.setPosition(flickPosDown);
-    }
-    public void init(HardwareMap hw) {
-        this.init(hw, new MecanumDrive(hw, new Pose2d(0,0,0)));
     }
     public void firePurple() {
         curMode = revMode.FIREPURPLE;
@@ -201,7 +199,10 @@ public class DrumIntakeTurretManager {
             lastTickArrived = true;
         }
     }
-    public void update() {
+    public Pose2d getNewPoseFromTurret() {
+        return turret.getBotpose();
+    }
+    public void update(Pose2d pose, PoseVelocity2d velo) {
         pid.setCoefficients(kP, kI, kD);
         pid.iMax = iMax;
         pid.iRange = iRange;
@@ -298,7 +299,7 @@ public class DrumIntakeTurretManager {
 
         //-----------------------loop actions-------------------------
         updateLastTickArrived();
-        turret.loop();
+        turret.loop(pose, velo);
         pid.update(curPos);
         revSpin.setPower(pid.velo);
         lastMode = curMode;
