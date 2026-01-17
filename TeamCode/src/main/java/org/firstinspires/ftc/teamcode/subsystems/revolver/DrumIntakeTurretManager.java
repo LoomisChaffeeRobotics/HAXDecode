@@ -210,7 +210,7 @@ public class DrumIntakeTurretManager {
         pid.dTol = derivTol;
 
         curPos = revEnc.getCurrentPosition();
-        colTrack.loop(pid.arrived, (curMode == revMode.INTAKING));
+        colTrack.loop(pid.arrived, (curMode == revMode.INTAKING || curMode == revMode.INTAKEIDLE));
         //-------------------------------set target---------------------
 
         if (curMode == revMode.INTAKING) {
