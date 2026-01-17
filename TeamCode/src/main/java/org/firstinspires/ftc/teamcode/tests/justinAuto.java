@@ -5,13 +5,16 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
 import org.firstinspires.ftc.teamcode.subsystems.turret.Turret;
+import org.firstinspires.ftc.teamcode.subsystems.turret.limeLight;
+
 @Autonomous
 @Config
-public class justinAuto extends LinearOpMode {
+public class justinAuto extends OpMode {
     enum State {
         DRIVE_TO_SHOT,
         SPINUP_AND_AIM,
@@ -21,10 +24,14 @@ public class justinAuto extends LinearOpMode {
         DRIVE_TO_END,
         DONE
     }
-    public static Pose2d START_POSE  = new Pose2d(-51, -52, 0); //Need to tune these values
-    public static Pose2d SHOOT_POSE  = new Pose2d(-16, -16, 0);
-    public static Pose2d INTAKE1_POSE = new Pose2d(-12, -34, 0);
-    public static Pose2d INTAKE2_POSE = new Pose2d(12, -34, 0);
+    public static double intArt1 = -34;
+    public static double intArtOffset = -34;
+    public static double artGap = 3.5;
+    public static double curArtNum = 1;
+    public static Pose2d START_POSE  = new Pose2d(-40, -40, Math.toRadians(120)); //Need to tune these values
+    public static Pose2d SHOOT_POSE  = new Pose2d(-30, -30, Math.toRadians(-135));
+    public static Pose2d INTAKE1_POSE = new Pose2d(-12, intArtOffset, Math.toRadians(-90));
+    public static Pose2d INTAKE2_POSE = new Pose2d(12, intArtOffset, Math.toRadians(-90));
 
     public static double GOAL_X = -68;
     public static double GOAL_Y = -53;
@@ -40,6 +47,7 @@ public class justinAuto extends LinearOpMode {
     String motif = "WWW";
     int motifIndex = 0;
     int cycle = 0;
+    int inArtNum = 0;
 
     Pose2d driveTarget = SHOOT_POSE;
     Action currentAction = null;
@@ -69,7 +77,7 @@ public class justinAuto extends LinearOpMode {
     }
 
     private void loadMotifAndResetShots() {
-        //motif = drum.readMotif(); // Somehow read motif
+        motif = drum.readMotif(); // Somehow read motif
         if (!(motif.equals("GPP") || motif.equals("PGP") || motif.equals("PPG"))) {
             motif = "GPP";
         }
@@ -86,6 +94,13 @@ public class justinAuto extends LinearOpMode {
         if (c == 'G') go(State.FIRE_GREEN);
         else go(State.FIRE_PURPLE);
     }
+    private void waitForDrum(){
+        while (!drum.isArrived()) {
+            drum.update(drive.localizer.getPose(), drive.updatePoseEstimate());
+            telemetry.update();
+            drive.updatePoseEstimate();
+        }
+    }
 
     private void handleEndOfMotif() {
         motifIndex = 0;
@@ -99,23 +114,46 @@ public class justinAuto extends LinearOpMode {
             go(State.DONE);
         }
     }
+    private void intake3Art(int cycle) {
 
-    public void runOpMode() {
+        if (cycle == 1){
+            for (curArtNum = 0; curArtNum < 3; curArtNum++) {
+                intArtOffset = intArt1 + curArtNum * artGap;
+                startDriveTo(INTAKE1_POSE, State.INTAKE);
+                waitForDrum();
+            }
+
+        }
+        else if (cycle == 2){
+            for (curArtNum = 0; curArtNum < 3; curArtNum++) {
+                intArtOffset = intArt1 + curArtNum * artGap;
+                startDriveTo(INTAKE2_POSE, State.INTAKE);
+                waitForDrum();
+            }
+        }
+    }
+    @Override
+    public void init() {
         drive = new MecanumDrive(hardwareMap, START_POSE);
         drum = new DrumIntakeTurretManager();
+        drum.init(hardwareMap);
         drum.init(hardwareMap);
 
         Turret.goalPoseX = GOAL_X;
         Turret.goalPoseY = GOAL_Y;
         Turret.goalPoseH = GOAL_H;
-
+    }
+    @Override
+    public void init_loop () {
         telemetry.update();
         loadMotifAndResetShots();
         startDriveTo(SHOOT_POSE, State.SPINUP_AND_AIM);
-
-        while(opModeIsActive() && state != State.DONE) {
+    }
+    @Override
+    public void loop () {
+        if (state != State.DONE) {
             drive.updatePoseEstimate();
-//            drum.update(drive.localizer.getPose(), drive.localizer.update());
+            drum.update(drive.localizer.getPose(), drive.updatePoseEstimate());
 
             if (state == State.DRIVE_TO_SHOT) {
                 if (driveFinished()) {
@@ -148,13 +186,14 @@ public class justinAuto extends LinearOpMode {
                 drum.curMode = DrumIntakeTurretManager.revMode.INTAKING;
 
                 //Write Intake Auto
-
-
+                if (driveFinished()) {
+                    intake3Art(cycle);
+                }
 
                 startDriveTo(SHOOT_POSE, State.SPINUP_AND_AIM);
             }
             else if (state == State.DONE) {
-                return;
+                drum.curMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
             }
         }
     }

@@ -8,6 +8,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -22,6 +23,7 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import org.firstinspires.ftc.teamcode.subsystems.TurretPID;
 
 import java.io.File;
+import java.util.List;
 
 @Config
 public class Turret {
@@ -113,6 +115,8 @@ public class Turret {
     public double innerCurVel;
     public double outerCurVel;
     public double turPower = 0;
+    LLResultTypes.FiducialResult fIDGetter;
+    int atId;
     public enum turMode {
         FIRING,
         INTAKING,
@@ -207,6 +211,7 @@ public class Turret {
         drivePose = pose;
         robotVelo = vel;
         LLResult result = limelight.getLatestResult();
+        List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
         double LLYaw = (getGyro() + turretAngle);
         limelight.updateRobotOrientation(LLYaw);
         innerCurVel = innerTurret.getVelocity();
@@ -214,7 +219,7 @@ public class Turret {
 
         if (result != null && result.isValid()) { // if LL available, use LL botpose
             Pose3D botpose_mt2 = result.getBotpose_MT2();
-            if (botpose_mt2 != null) {
+            if (botpose_mt2 != null) { // if the botpose is available, use it
                 botpose = drivePose;
             } else {
                 botpose = drivePose;
@@ -222,10 +227,12 @@ public class Turret {
             tx = result.getTx(); // How far left or right the target is (degrees)
             ty = result.getTy(); // How far up or down the target is (degrees)
             ta = result.getTa(); // How big the target looks (0%-100% of the image)
+            fIDGetter = fiducialResults.get(0);
+            atId = fIDGetter.getFiducialId();
 
             // if there's the right tag in sight, update turret PID to focus on tag
             // means you have to change coeffs to tag mode
-            if (!result.getFiducialResults().isEmpty() && result.getFiducialResults().get(0).getFiducialId() == 22) {
+            if (!result.getFiducialResults().isEmpty() && result.getFiducialResults().get(0).getFiducialId() == 20) { // 20 or 24, change based on the side. somehow
                 turPID.setCoefficients(kPTag, kITag, kDTag, kFRTag, kFVTag);
                 turPID.target = 0;
                 turPID.update(tx, robotVelo.angVel, orthogVelMag);
@@ -335,5 +342,17 @@ public class Turret {
         } else {
             offset = 10 - 0.0909090909 * (distanceFinal - 115);
         }
+    }
+    public String getCurrentMotif(){
+        if (atId == 21){
+            return "GPP";
+        }
+        else if (atId == 22){
+            return "PGP";
+        }
+        else if (atId == 23){
+            return "PPG";
+        }
+        return "null";
     }
 }

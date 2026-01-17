@@ -32,7 +32,7 @@ public class DrumIntakeTurretManager {
     public static double kD = 0.0001;
     public static double iMax = 0.3;
     public static double iRange = 0.15;
-    public static double errorTol = 75;
+    public static double errorTol = 100;
     public static double derivTol = 10;
     public boolean isFiring = false;
     public boolean contFiring = false;
@@ -307,5 +307,11 @@ public class DrumIntakeTurretManager {
     }
     public boolean isFull() {
         return !colTrack.emptyAvailable();
+    }
+    public boolean isArrived() {
+        return pid.arrived;
+    }
+    public String readMotif() {
+        return turret.getCurrentMotif();
     }
 }

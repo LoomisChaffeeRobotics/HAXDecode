@@ -13,6 +13,9 @@ public class limeLight {
     public double tx;
     public double ty;
     public double ta;
+    LLResultTypes.FiducialResult fIDGetter;
+    int atId;
+    String motifPattern = "GPP";
     public Pose3D botpose;
     Limelight3A limelight;
     public void init(HardwareMap hardwareMap){
@@ -20,6 +23,18 @@ public class limeLight {
 //        turret = hardwareMap.get(CRServo.class, "turret");
         limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
         limelight.start(); // This tells Limelight to start looking!
+    }
+    public String getCurrentMotif(){
+        if (atId == 21){
+            motifPattern = "GPP";
+        }
+        else if (atId == 22){
+            motifPattern = "PGP";
+        }
+        else if (atId == 23){
+            motifPattern = "PPG";
+        }
+        return motifPattern;
     }
     public void update(double robotYaw, double turretYaw){
         LLResult result = limelight.getLatestResult();
@@ -36,6 +51,9 @@ public class limeLight {
             tx = result.getTx(); // How far left or right the target is (degrees)
             ty = result.getTy(); // How far up or down the target is (degrees)
             ta = result.getTa(); // How big the target looks (0%-100% of the image)
+            fIDGetter = fiducialResults.get(0);
+            atId = fIDGetter.getFiducialId();
+
         }
     }
     double calcLimelightYawRadians(double robot, double turret) {
