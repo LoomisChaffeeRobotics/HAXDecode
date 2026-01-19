@@ -124,6 +124,7 @@ public class Turret {
     }
     public turMode mode = turMode.IDLE;
     public boolean bothMotorsSpunUp = false;
+    public boolean successfulShot = false;
     double getGyro(){
         return drivePose.heading.toDouble();
     }
@@ -269,7 +270,7 @@ public class Turret {
             // if there is too much lag, only calc velocities when firing
             innerTurret.setVelocity(innerRPM * RPMtoTicksPerSecond);
             outerTurret.setVelocity(outerRPM * RPMtoTicksPerSecond);
-            if (Math.abs(innerRPM - innerCurVel / RPMtoTicksPerSecond) < 500 && Math.abs(outerRPM - outerCurVel / RPMtoTicksPerSecond) < 500) {
+            if ((Math.abs(innerRPM - innerCurVel) / RPMtoTicksPerSecond) < 500 && (Math.abs(outerRPM - outerCurVel) / RPMtoTicksPerSecond) < 500) {
                 bothMotorsSpunUp = true;
             } else {
                 bothMotorsSpunUp = false;

@@ -46,6 +46,7 @@ public class DrumIntakeTurretManager {
     public String flickMode = "off";
     public boolean activateAsync = false;
     public static double intakeOnVelocity = -1800;
+    static double RPMtoTicksPerSecond = (double) 28 /60;
     public enum revMode {
         INTAKING,
         FIRESTANDBY,
@@ -63,12 +64,19 @@ public class DrumIntakeTurretManager {
     // functions
     void fireSequenceAsync(){
         lastTickArrived = false;
+        if (((turret.innerCurVel/RPMtoTicksPerSecond) < 0.75 * turret.innerRPM) && (turret.outerCurVel / RPMtoTicksPerSecond) < 0.75 * turret.outerRPM) {
+            turret.successfulShot = true;
+        }
         if (fireSequenceTimer.seconds() < 0.375) {
             flickMode = "flick";
             flicker.setPosition(flickPosUp);
         } else if (fireSequenceTimer.seconds() >= 0.375 && fireSequenceTimer.seconds() < 0.75) {
             flickMode = "retract";
             flicker.setPosition(flickPosDown);
+        } else if (!turret.successfulShot){
+            flickMode = "off";
+            isFiring = false;
+            curMode = revMode.FIRESTANDBY;
         } else {
             flickMode = "off";
             colTrack.removeFiredBall(colTrack.pointer);
