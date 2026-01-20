@@ -91,12 +91,10 @@ public class Turret {
     DcMotorEx outerTurret;
     Pose2d lastPoseEstimate;
     Pose2d goalPose = new Pose2d(0, 0, 0);
-    public static double goalPoseX;
-    public static double goalPoseY;
-    public static double goalPoseH;
-    String logFilePath = String.format("%s/FIRST/lastRunPoseLog.txt", Environment.getExternalStorageDirectory().getAbsolutePath());
+    Pose2d goalPoseBlue = new Pose2d(-68, -53, Math.toRadians(-135));
+    Pose2d goalPoseRed = new Pose2d(-68, 53, Math.toRadians(-135));
+    String logFilePath = String.format("%s/FIRST/lastInfo.json", Environment.getExternalStorageDirectory().getAbsolutePath());
     File dataLog = AppUtil.getInstance().getSettingsFile(logFilePath);
-    String fileDataRaw;
     TurretPID turPID;
     public double innerRPM = 0;
     public double outerRPM = 0;
@@ -208,6 +206,13 @@ public class Turret {
         turPID = new TurretPID();
         turPID.init();
     }
+    public void setBlue(boolean isBlue){
+        if (isBlue) {
+            goalPose = goalPoseBlue;
+        } else {
+            goalPose = goalPoseRed;
+        }
+    }
     public void loop(Pose2d pose, PoseVelocity2d vel){
         drivePose = pose;
         robotVelo = vel;
@@ -270,7 +275,7 @@ public class Turret {
             // if there is too much lag, only calc velocities when firing
             innerTurret.setVelocity(innerRPM * RPMtoTicksPerSecond);
             outerTurret.setVelocity(outerRPM * RPMtoTicksPerSecond);
-            if ((Math.abs(innerRPM - innerCurVel) / RPMtoTicksPerSecond) < 500 && (Math.abs(outerRPM - outerCurVel) / RPMtoTicksPerSecond) < 500) {
+            if (((Math.abs(innerRPM - (innerCurVel / RPMtoTicksPerSecond)) < 500) && ((Math.abs(outerRPM - (outerCurVel / RPMtoTicksPerSecond)) < 500)))) {
                 bothMotorsSpunUp = true;
             } else {
                 bothMotorsSpunUp = false;
@@ -285,7 +290,6 @@ public class Turret {
             bothMotorsSpunUp = false;
         }
 
-        goalPose = new Pose2d(goalPoseX, goalPoseY, goalPoseH);
         spinner.setPower(Math.min(Math.max(-1,turPID.out),1));
     }
     public Pose2d getBotpose () {
@@ -356,4 +360,5 @@ public class Turret {
         }
         return "null";
     }
+
 }

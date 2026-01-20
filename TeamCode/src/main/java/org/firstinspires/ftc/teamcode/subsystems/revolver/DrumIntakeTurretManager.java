@@ -59,8 +59,9 @@ public class DrumIntakeTurretManager {
         INTAKEIDLE
     }
 
-    public revMode curMode = revMode.INTAKEIDLE;
+    public revMode curMode;
     public revMode lastMode = revMode.INTAKEIDLE;
+    public String alliance;
     // functions
     void fireSequenceAsync(){
         lastTickArrived = false;
@@ -83,6 +84,9 @@ public class DrumIntakeTurretManager {
             isFiring = false;
             curMode = revMode.FIRESTANDBY;
         }
+    }
+    public void setStartingColors(String[] colors){
+        colTrack.setStartingColors(colors);
     }
     public void setGain(float gain){
         colTrack.setGain(gain);
@@ -135,7 +139,7 @@ public class DrumIntakeTurretManager {
     }
 
     //----------------------------------------------------------------------------------
-    public void init(HardwareMap hardwareMap) {
+    public void init(HardwareMap hardwareMap, revMode mode) {
         colTrack.init(hardwareMap);
 
         pid.init();
@@ -160,7 +164,13 @@ public class DrumIntakeTurretManager {
 
         turret.init(hardwareMap);
         flicker.setPosition(flickPosDown);
+
+        curMode = mode;
     }
+    public void init(HardwareMap hw) {
+        init(hw, revMode.INTAKEIDLE);
+    }
+
     public void firePurple() {
         curMode = revMode.FIREPURPLE;
     }
@@ -190,7 +200,7 @@ public class DrumIntakeTurretManager {
                 activateAsync = false;
             } else if (isFiring) {
                 activateAsync = true;
-                fireSequenceAsync();
+                fireSequenceAsync(); // TODO: remove this line
             }
             else{
                 activateAsync = false;
@@ -267,6 +277,7 @@ public class DrumIntakeTurretManager {
 
                 } else if (isFiring) {
                     fireSequenceAsync();
+
                 }
             } else {
                 curMode = revMode.FIRESTANDBY;
@@ -321,5 +332,16 @@ public class DrumIntakeTurretManager {
     }
     public String readMotif() {
         return turret.getCurrentMotif();
+    }
+    public String[] getColors() {
+        return colTrack.slotColor;
+    }
+    public void setBlue(boolean isBlue) {
+        if (isBlue) {
+            alliance = "blue";
+        } else {
+            alliance = "red";
+        }
+        turret.setBlue(isBlue);
     }
 }

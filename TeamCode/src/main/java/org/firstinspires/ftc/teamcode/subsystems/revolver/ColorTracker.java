@@ -31,6 +31,11 @@ public class ColorTracker {
     public void setGain(float gain) {
         colorSensor.setGain(gain);
     }
+    public void setStartingColors(String[] colors) {
+        slotColor[0] = colors[0];
+        slotColor[1] = colors[1];
+        slotColor[2] = colors[2];
+    }
     String readColor() {
         colors = colorSensor.getNormalizedColors(); // Get colors
         distance = colorDist.getDistance(DistanceUnit.CM);
