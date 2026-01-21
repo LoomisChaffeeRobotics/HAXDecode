@@ -139,9 +139,6 @@ public class justinAuto extends OpMode {
         drum.init(hardwareMap);
         drum.init(hardwareMap);
 
-        Turret.goalPoseX = GOAL_X;
-        Turret.goalPoseY = GOAL_Y;
-        Turret.goalPoseH = GOAL_H;
     }
     @Override
     public void init_loop () {

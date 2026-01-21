@@ -117,6 +117,9 @@ public class DrumIntakeTurretManager {
     public boolean shooterSpunUp(){
         return turret.bothMotorsSpunUp;
     }
+    public void resetDrumEnc() {
+        revEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    }
 
     public void updateTelemetry(Telemetry t){
         t.addData("target", pid.target);
@@ -271,7 +274,7 @@ public class DrumIntakeTurretManager {
                 colTrack.pointer = colTrack.findNearestColor("green");
                 pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
                 turret.mode = Turret.turMode.FIRING;
-                if ((lastTickArrived || pid.arrived && lastMode != revMode.FIREGREEN) && turret.bothMotorsSpunUp) {
+                if ((lastTickArrived || (pid.arrived && lastMode != revMode.FIREGREEN)) && turret.bothMotorsSpunUp) {
                     fireSequenceTimer.reset();
                     isFiring = true;
 
@@ -288,7 +291,7 @@ public class DrumIntakeTurretManager {
                 colTrack.pointer = colTrack.findNearestBall();
                 pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
                 turret.mode = Turret.turMode.FIRING;
-                if (((lastTickArrived || pid.arrived) && lastMode != revMode.FIRESINGLE) && turret.bothMotorsSpunUp) {
+                if ((lastTickArrived || (pid.arrived && lastMode != revMode.FIRESINGLE)) && turret.bothMotorsSpunUp) {
                     fireSequenceTimer.reset();
                     isFiring = true;
                 } else if (isFiring) {

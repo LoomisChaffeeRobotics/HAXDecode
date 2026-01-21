@@ -9,6 +9,7 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
+import com.google.gson.JsonParser;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -23,10 +24,12 @@ import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManage
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONTokener;
+import org.json.*;
+import org.json.simple.parser.JSONParser;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
@@ -43,6 +46,7 @@ public class TeleopV2 extends OpMode {
     double botHeading;
     IMU imu;
     double lastTriggerVal;
+    JSONArray jsonArray;
     JSONObject jsonObject;
     JSONArray pose;
     JSONArray colors;
@@ -50,7 +54,8 @@ public class TeleopV2 extends OpMode {
     String mode;
     String[] colorsString;
     Pose2d startPose;
-    File dataLog = AppUtil.getInstance().getSettingsFile("/%s/FIRST/lastInfo.json");
+    String filelogPath = String.format("/%s/FIRST/lastInfo.json", Environment.getExternalStorageDirectory().getAbsolutePath());
+    File dataLog = AppUtil.getInstance().getSettingsFile(filelogPath);
     int initPointer = 0;
     @Override
     public void init() {
@@ -63,14 +68,17 @@ public class TeleopV2 extends OpMode {
                         RevHubOrientationOnRobot.UsbFacingDirection.DOWN)));
         dash = FtcDashboard.getInstance();
         t2 = dash.getTelemetry();
-
-        try (InputStream is = new FileInputStream(dataLog)) {
-            InputStreamReader reader = new InputStreamReader(is, "UTF-8");
-            jsonObject = new JSONObject(reader.toString());
+        // file read
+        try {
+            JSONParser parser = new JSONParser();
+            jsonArray = (JSONArray) parser.parse(new FileReader(dataLog));
+            jsonObject = jsonArray.getJSONObject(0);
         } catch (Exception e) {
             telemetry.addData("error", e.toString());
+            telemetry.addLine("Failed to read file");
             telemetry.update();
         }
+        // then turn jsons into usable data
         try {
             pose = jsonObject.getJSONArray("pose");
             colors = jsonObject.getJSONArray("colors");
@@ -179,13 +187,13 @@ public class TeleopV2 extends OpMode {
 
         if (drum.curMode == DrumIntakeTurretManager.revMode.FIRESTANDBY) {
             if (gamepad1.leftBumperWasPressed()) {
-                drum.curMode = DrumIntakeTurretManager.revMode.FIREPURPLE;
+                drum.firePurple();
             } else if (gamepad1.rightBumperWasPressed()) {
-                drum.curMode = DrumIntakeTurretManager.revMode.FIREGREEN;
+                drum.fireGreen();
             } else if (gamepad1.yWasPressed()) {
-                drum.curMode = DrumIntakeTurretManager.revMode.CONTFIRE;
+                drum.startContFire();
             } else if (gamepad1.aWasPressed()) {
-                drum.curMode = DrumIntakeTurretManager.revMode.FIRESINGLE;
+                drum.fireSingle();
             }
         }
 
@@ -219,8 +227,10 @@ public class TeleopV2 extends OpMode {
 
         drive.updatePoseEstimate();
         drum.update(drive.localizer.getPose(), new PoseVelocity2d(new Vector2d(0,0),0));
+
         drive.localizer.setPose(drum.getNewPoseFromTurret());
         drum.updateTelemetry(t2);
+
         TelemetryPacket packet = new TelemetryPacket();
         packet.fieldOverlay().setStroke("#3F51B5");
         Drawing.drawRobot(packet.fieldOverlay(), drive.localizer.getPose());
@@ -255,7 +265,7 @@ public class TeleopV2 extends OpMode {
                 .append("\"\n");
         String string = b.toString();
 
-        // update jsonObject with the endpoint information for next run
+        // update dataLog with the endpoint information for next run
         ReadWriteFile.writeFile(dataLog, string);
     }
 }

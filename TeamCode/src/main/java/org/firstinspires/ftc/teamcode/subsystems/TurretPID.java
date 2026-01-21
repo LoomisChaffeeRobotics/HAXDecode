@@ -19,8 +19,8 @@ public class TurretPID {
         public double KFR;
         public double KFV;
         public double target = 0;
-        double maxLimit = 18000;
-        double minLimit = -12000;
+        double maxLimit = 17000;
+        double minLimit = -11000;
         public void setCoefficients(double p, double i, double d, double fr, double fv) {
             Kp = p;
             Ki = i;
