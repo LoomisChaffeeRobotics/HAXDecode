@@ -19,8 +19,9 @@ public class TurretPID {
         public double KFR;
         public double KFV;
         public double target = 0;
-        double maxLimit = 17000;
-        double minLimit = -11000;
+        double maxLimit = 11000;
+        double minLimit = -17000;
+        public boolean outOfBoundsDisabled = false;
         public void setCoefficients(double p, double i, double d, double fr, double fv) {
             Kp = p;
             Ki = i;
@@ -61,12 +62,16 @@ public class TurretPID {
 
             if (current > minLimit && current < maxLimit) {
                 out = PID_P + PID_I + PID_D + PID_FRot + PID_FVel;
+                outOfBoundsDisabled = false;
             } else if (current <= minLimit && Math.signum(out) == 1){
                 out = PID_P + PID_I + PID_D + PID_FRot + PID_FVel;
+                outOfBoundsDisabled = false;
             } else if (current >= maxLimit && Math.signum(out) == -1){
                 out = PID_P + PID_I + PID_D + PID_FRot + PID_FVel;
+                outOfBoundsDisabled = false;
             } else {
                 out = 0;
+                outOfBoundsDisabled = true;
             }
         }
 

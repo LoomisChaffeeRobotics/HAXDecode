@@ -265,6 +265,7 @@ public class Turret {
                 turPID.setCoefficients(kPEnc, kIEnc, kDEnc, kFR, kFV);
                 turPID.target = angleToTicks(angleToGoal);
                 turPID.update(turretCurTicks, robotVelo.angVel, orthogVelMag);
+                usingLLForPose = false;
             }
         } else {
             // if there's no tag in sight, update turret PID based on encoder
