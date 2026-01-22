@@ -59,15 +59,13 @@ public class TurretPID {
             PID_FRot = robotRotVel * KFR; // rotational velocity will be in rad/sec
             PID_FVel = robotOrthogVel * KFV; // orthog velocity will be in dist/sec
 
+            out = PID_P + PID_I + PID_D + PID_FRot + PID_FVel;
 
             if (current > minLimit && current < maxLimit) {
-                out = PID_P + PID_I + PID_D + PID_FRot + PID_FVel;
                 outOfBoundsDisabled = false;
             } else if (current <= minLimit && Math.signum(out) == 1){
-                out = PID_P + PID_I + PID_D + PID_FRot + PID_FVel;
                 outOfBoundsDisabled = false;
             } else if (current >= maxLimit && Math.signum(out) == -1){
-                out = PID_P + PID_I + PID_D + PID_FRot + PID_FVel;
                 outOfBoundsDisabled = false;
             } else {
                 out = 0;

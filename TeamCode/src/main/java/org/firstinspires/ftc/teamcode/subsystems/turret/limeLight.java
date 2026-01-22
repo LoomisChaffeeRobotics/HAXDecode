@@ -53,7 +53,6 @@ public class limeLight {
             ta = result.getTa(); // How big the target looks (0%-100% of the image)
             fIDGetter = fiducialResults.get(0);
             atId = fIDGetter.getFiducialId();
-
         }
     }
     double calcLimelightYawRadians(double robot, double turret) {
