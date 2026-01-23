@@ -143,7 +143,17 @@ public class Turret {
         thetaDiff = Math.acos(dotProduct / (prodMagDist + 0.000001));
     }
     void updateAngleToGoal() {
-        angleToGoal = Math.atan2(goalPose.position.y - botpose.position.y, goalPose.position.x - botpose.position.x);
+        // need to first find difference in angle between distance vector and robot pointed vector (not turret)
+        // then need to optimize in case the difference is over 180 and normalize to robot range (-PI to PI)
+        double[] distVect = new double[] {goalPose.position.x - botpose.position.x, goalPose.position.y - botpose.position.y};
+        double[] unitDirVect = new double[] {Math.cos(getGyro()), Math.sin(getGyro())};
+        angleToGoal = Math.acos((distVect[0] * unitDirVect[0] + distVect[1] + unitDirVect[1])/
+                Math.sqrt(Math.pow(distVect[0],2) + Math.pow(unitDirVect[0],2)));
+        //acos gives 0 to PI, need to check for negative angles
+        // this seems wrong
+        if (getGyro() > Math.atan2(distVect[1], distVect[0])) {
+            angleToGoal = -angleToGoal;
+        };
     }
     double angleToTicks(double angle) {
         return (angle / (2 * Math.PI)) * turretFullLoop;

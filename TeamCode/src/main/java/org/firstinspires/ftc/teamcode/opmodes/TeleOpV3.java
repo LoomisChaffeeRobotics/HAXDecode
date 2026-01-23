@@ -92,7 +92,6 @@ public class TeleOpV3 extends OpMode {
     @Override
     public void start() {
         drum.setStartingColors(colorsString);
-        drum.curMode = DrumIntakeTurretManager.revMode.FIREIDLE;
         drum.setBlue(blue);
         drum.resetDrumEnc();
     }
@@ -102,19 +101,19 @@ public class TeleOpV3 extends OpMode {
         double gamepadx = -gamepad1.left_stick_y;
         botHeading = drive.localizer.getPose().heading.toDouble();
 
-        double fieldX = gamepady;
-        double fieldY = gamepadx;
+        double fieldX = gamepadx * Math.cos(-botHeading) - gamepady * Math.sin(-botHeading);
+        double fieldY = gamepadx * Math.sin(-botHeading) + gamepady * Math.cos(-botHeading);
 
         if (gamepad1.left_trigger > 0.5) {
             drive.setDrivePowers(new PoseVelocity2d(
-                    new Vector2d(0.3 * gamepadx, 0.3 * gamepady),
+                    new Vector2d(0.3 * fieldX, 0.3 * fieldY),
                     -0.3 * gamepad1.right_stick_x
             ));
         } else {
             drive.setDrivePowers(new PoseVelocity2d(
                     new Vector2d(
-                            gamepadx,
-                            gamepady
+                            fieldX,
+                            fieldY
                     ),
                     -gamepad1.right_stick_x
             ));
