@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ReadWriteFile;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -23,6 +24,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import org.firstinspires.ftc.teamcode.subsystems.TurretPID;
+import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
 
 import java.io.File;
 import java.util.List;
@@ -83,9 +85,9 @@ public class Turret {
     public static double kDTag = 0.001;
     double offset = 0;
     Pose2d botpose;
-    Pose2d drivePose = new Pose2d(0,0,0);
+    Pose2d drivePose;
     Limelight3A limelight;
-    CRServo spinner;
+    Servo spinner;
     DcMotorEx turEnc;
     DcMotorEx innerTurret;
     DcMotorEx outerTurret;
@@ -106,14 +108,14 @@ public class Turret {
     public double dGoal = 0;
     public double turretAngle = 0;
     public PoseVelocity2d robotVelo = new PoseVelocity2d(new Vector2d(0,0),0);
-    public double angleToGoal = 0;
+//    public double angleToGoal = 0;
     public double orthogVelMag = 0;
     public double dGoalEstimate = 0;
     public double flightTime = 0;
     public double innerCurVel;
     public double outerCurVel;
     public double turPower = 0;
-    boolean usingLLForPose = false;
+    public boolean usingLLForPose = false;
     double turretCurTicks = 0;
     Pose3D botpose_tag;
     LLResultTypes.FiducialResult fIDGetter;
@@ -142,20 +144,21 @@ public class Turret {
         double prodMagDist = Math.sqrt(Math.pow(distVect[0], 2) + Math.pow(distVect[1], 2)) * Math.sqrt(Math.pow(velVect[1],2) + Math.pow(velVect[0],2));
         thetaDiff = Math.acos(dotProduct / (prodMagDist + 0.000001));
     }
-    void updateAngleToGoal() {
-        // need to first find difference in angle between distance vector and robot pointed vector (not turret)
-        // then need to optimize in case the difference is over 180 and normalize to robot range (-PI to PI)
-        double[] distVect = new double[] {goalPose.position.x - botpose.position.x, goalPose.position.y - botpose.position.y};
-        double[] unitDirVect = new double[] {Math.cos(getGyro()), Math.sin(getGyro())};
-        angleToGoal = Math.acos((distVect[0] * unitDirVect[0] + distVect[1] + unitDirVect[1])/
-                Math.sqrt(Math.pow(distVect[0],2) + Math.pow(unitDirVect[0],2)));
-        //acos gives 0 to PI, need to check for negative angles
-        // this seems wrong
-        if (getGyro() > Math.atan2(distVect[1], distVect[0])) {
-            angleToGoal = -angleToGoal;
-        };
-    }
+//    void updateAngleToGoal() {
+//        // need to first find difference in angle between distance vector and robot pointed vector (not turret)
+//        // then need to optimize in case the difference is over 180 and normalize to robot range (-PI to PI)
+//        double[] distVect = new double[] {goalPose.position.x - botpose.position.x, goalPose.position.y - botpose.position.y};
+//        double[] unitDirVect = new double[] {Math.cos(getGyro()), Math.sin(getGyro())};
+//        angleToGoal = Math.acos((distVect[0] * unitDirVect[0] + distVect[1] + unitDirVect[1])/
+//                Math.sqrt(Math.pow(distVect[0],2) + Math.pow(unitDirVect[0],2)));
+//        //acos gives 0 to PI, need to check for negative angles
+//        // this seems wrong
+//        if (getGyro() > Math.atan2(distVect[1], distVect[0])) {
+//            angleToGoal = -angleToGoal;
+//        };
+//    }
     double angleToTicks(double angle) {
+        // # ticks = #radians  (turretFullLoop / 2PI)
         return (angle / (2 * Math.PI)) * turretFullLoop;
     }
     void updateOrthogVelMag() {
@@ -169,7 +172,7 @@ public class Turret {
         telemetry.addData("innerTurret cur rpm",  innerCurVel / RPMtoTicksPerSecond);
         telemetry.addData("outerTurret cur rpm)", outerCurVel/ RPMtoTicksPerSecond);
         telemetry.addData("thetaDiff", thetaDiff);
-        telemetry.addData("angle To Goal (deg)", angleToGoal * 180/Math.PI);
+//        telemetry.addData("angle To Goal (deg)", angleToGoal * 180/Math.PI);
         telemetry.addData("vG", vGoal);
         telemetry.addData("dGoal", dGoal);
         telemetry.addData("flightTime", flightTime);
@@ -190,6 +193,7 @@ public class Turret {
         telemetry.addData("tag?", usingLLForPose);
         telemetry.addData("ATagID", atId);
         telemetry.addData("tagX", tx);
+        telemetry.addData("SuccessShot?", successfulShot);
         if (botpose_tag != null) {
             telemetry.addData("botpose tag", botpose_tag);
         }
@@ -202,7 +206,8 @@ public class Turret {
         innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
         outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
         turEnc = hardwareMap.get(DcMotorEx.class, "FL");
-        spinner = hardwareMap.get(CRServo.class, "turret");
+//        spinner = hardwareMap.get(CRServo.class, "turret");
+        spinner = hardwareMap.get(Servo.class, "turret");
 
         innerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         outerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -219,7 +224,7 @@ public class Turret {
 //        fileDataRaw = ReadWriteFile.readFile(dataLog);
 //        vals = fileDataRaw.split(", ");
 //        lastPoseEstimate = new Pose2d(Double.parseDouble(vals[0]), Double.parseDouble(vals[1]), Double.parseDouble(vals[2]));
-        lastPoseEstimate = new Pose2d(0,0,0);
+//        lastPoseEstimate = new Pose2d(0,0,0);
 //        this.drive = drive;
         mode = turMode.IDLE;
 
@@ -273,7 +278,7 @@ public class Turret {
                 turPID.update(tx, robotVelo.angVel, orthogVelMag);
             } else {   // if it's the wrong tag, update turret PID based on encoder
                 turPID.setCoefficients(kPEnc, kIEnc, kDEnc, kFR, kFV);
-                turPID.target = angleToTicks(angleToGoal);
+//                turPID.target = angleToTicks(angleToGoal);
                 turPID.update(turretCurTicks, robotVelo.angVel, orthogVelMag);
                 usingLLForPose = false;
             }
@@ -281,12 +286,12 @@ public class Turret {
             // if there's no tag in sight, update turret PID based on encoder
             botpose = drivePose; // I worry drive will gain error if SparkFun gets dusty
             turPID.setCoefficients(kPEnc, kIEnc, kDEnc, kFR, kFV);
-            turPID.target = angleToTicks(angleToGoal);
+//            turPID.target = angleToTicks(angleToGoal);
             turPID.update(turretCurTicks, robotVelo.angVel, orthogVelMag);
             usingLLForPose = false;
         }
         updateTheta();
-        updateAngleToGoal();
+//        updateAngleToGoal();
         updateOrthogVelMag();
         updateSpeed();
         updateTurretAngle();
@@ -294,7 +299,7 @@ public class Turret {
         // firing stuff?
         vGoal = speed * Math.cos(thetaDiff);
         dGoal = Math.sqrt(Math.pow(botpose.position.x - goalPose.position.x, 2) + Math.pow(botpose.position.y - goalPose.position.y, 2));
-        flightTime = getToF(dGoal);
+        flightTime = getToF(dGoal/39.37);
         calcOffset(dGoal);
         dGoalEstimate = (dGoal - vGoal * flightTime) + offset;
 
@@ -320,8 +325,7 @@ public class Turret {
             outerTurret.setVelocity(0);
             bothMotorsSpunUp = false;
         }
-
-        spinner.setPower(Math.min(Math.max(-1,turPID.out),1));
+        spinner.setPosition(0.1);
     }
     public Pose2d getBotpose () {
         if (botpose != drivePose) {
@@ -360,7 +364,7 @@ public class Turret {
     }
     double getToF(double dist) {
         for (int i = 0; i < LUT.length; i++) {
-            if (LUT[i][0] > dist && i < LUT.length - 1) {
+            if (LUT[i][0] > dist && i < (LUT.length - 1)) {
                 double slope = (LUT[i + 1][3] - LUT[i][3]) / (LUT[i + 1][0] - LUT[i][0]);
                 return LUT[i][3] + slope * (dist - LUT[i][0]);
             } else if (LUT[i][0] < dist && i == LUT.length - 1) {

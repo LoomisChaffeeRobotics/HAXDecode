@@ -41,10 +41,11 @@ public class TeleOpV3 extends OpMode {
     String[] colorsString = {"white", "white", "white"};
     int initPointer = 0;
     boolean blue;
+    DrumIntakeTurretManager.revMode tempMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
     @Override
     public void init() {
         drum = new DrumIntakeTurretManager();
-        drive = new MecanumDrive(hardwareMap, new Pose2d(0,0,-Math.PI/2));
+        drive = new MecanumDrive(hardwareMap, new Pose2d(66,0,-Math.PI));
         drum.init(hardwareMap, DrumIntakeTurretManager.revMode.FIREIDLE);
         imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(new IMU.Parameters(
@@ -56,36 +57,36 @@ public class TeleOpV3 extends OpMode {
     }
     @Override
     public void init_loop() {
-        if (gamepad1.x) {
+        if (gamepad2.x) {
             drum.setBlue(true);
             blue = true;
-        } else if (gamepad1.b) {
+        } else if (gamepad2.b) {
             drum.setBlue(false);
             blue = false;
         }
 
-        if (gamepad1.dpadDownWasPressed()) {
+        if (gamepad2.dpadDownWasPressed()) {
             initPointer = Math.abs((initPointer + 2)) % 3;
-        } else if (gamepad1.dpadUpWasPressed()) {
+        } else if (gamepad2.dpadUpWasPressed()) {
             initPointer = Math.abs((initPointer + 1)) % 3;
         }
 
-        if (gamepad1.leftBumperWasPressed()) {
+        if (gamepad2.leftBumperWasPressed()) {
             colorsString[initPointer] = "purple";
-        } else if (gamepad1.rightBumperWasPressed()) {
+        } else if (gamepad2.rightBumperWasPressed()) {
             colorsString[initPointer] = "green";
-        } else if (gamepad1.aWasPressed()) {
+        } else if (gamepad2.aWasPressed()) {
             colorsString[initPointer] = "white";
         }
-        if (gamepad1.yWasPressed()) {
-            if (drum.curMode == DrumIntakeTurretManager.revMode.INTAKEIDLE) {
-                drum.curMode = DrumIntakeTurretManager.revMode.FIREIDLE;
+        if (gamepad2.yWasPressed()) {
+            if (tempMode == DrumIntakeTurretManager.revMode.INTAKEIDLE) {
+                tempMode = DrumIntakeTurretManager.revMode.FIREIDLE;
             } else {
-                drum.curMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
+                tempMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
             }
         }
         telemetry.addData("isBlue?", blue);
-        telemetry.addData("Mode", drum.curMode);
+        telemetry.addData("Mode", tempMode);
         telemetry.addData("colors", Arrays.toString(colorsString));
         telemetry.update();
     }
@@ -93,7 +94,14 @@ public class TeleOpV3 extends OpMode {
     public void start() {
         drum.setStartingColors(colorsString);
         drum.setBlue(blue);
-        drum.resetDrumEnc();
+        if (tempMode == DrumIntakeTurretManager.revMode.INTAKEIDLE) {
+            drum.resetDrumEnc();
+        }
+        drum.curMode = tempMode;
+        if (blue) {
+        } else {
+            drive.localizer.setPose(new Pose2d(66, 17, Math.toRadians(180)));
+        }
     }
     @Override
     public void loop() {
@@ -101,19 +109,19 @@ public class TeleOpV3 extends OpMode {
         double gamepadx = -gamepad1.left_stick_y;
         botHeading = drive.localizer.getPose().heading.toDouble();
 
-        double fieldX = gamepadx * Math.cos(-botHeading) - gamepady * Math.sin(-botHeading);
-        double fieldY = gamepadx * Math.sin(-botHeading) + gamepady * Math.cos(-botHeading);
+        double fieldX = gamepadx * Math.sin(-botHeading) - gamepady * Math.cos(-botHeading);
+        double fieldY = gamepadx * Math.cos(-botHeading) + gamepady * Math.sin(-botHeading);
 
         if (gamepad1.left_trigger > 0.5) {
             drive.setDrivePowers(new PoseVelocity2d(
-                    new Vector2d(0.3 * fieldX, 0.3 * fieldY),
+                    new Vector2d(0.3 * gamepadx, 0.3 * gamepady),
                     -0.3 * gamepad1.right_stick_x
             ));
         } else {
             drive.setDrivePowers(new PoseVelocity2d(
                     new Vector2d(
-                            fieldX,
-                            fieldY
+                            gamepadx,
+                            gamepady
                     ),
                     -gamepad1.right_stick_x
             ));
@@ -151,36 +159,35 @@ public class TeleOpV3 extends OpMode {
             }
         }
 
-        if (drum.curMode == DrumIntakeTurretManager.revMode.HPINTAKE) {
-            if (gamepad2.xWasPressed()) {
-                drum.setCurrentPurple();
-            } else if (gamepad1.bWasPressed()) {
-                drum.setCurrentGreen();
-            }
+
+        if (gamepad2.dpadUpWasPressed()) {
+            drum.nextSlot();
+        } else if (gamepad1.dpadDownWasPressed()) {
+            drum.lastSlot();
         }
 
-        if (drum.curMode == DrumIntakeTurretManager.revMode.INTAKING) {
-            if (gamepad2.xWasPressed()) {
-                drum.setCurrentPurple();
-            } else if (gamepad1.bWasPressed()) {
-                drum.setCurrentGreen();
-            }
-        }
 
         if (gamepad1.startWasPressed()) {
             drive.localizer.setPose(new Pose2d(66,0,-Math.PI));
         }
+        if (gamepad1.backWasPressed()) {
+            drum.curMode = DrumIntakeTurretManager.revMode.SIMPLEFIRE;
+        }
+        if (gamepad2.startWasPressed()) {
+            drum.setBlue(!blue);
+            blue = !blue;
+        }
 
         if (gamepad2.rightBumperWasPressed()) {
-            drum.nextSlot();
+            drum.setCurrentGreen();
         } else if (gamepad2.leftBumperWasPressed()) {
-            drum.lastSlot();
+            drum.setCurrentPurple();
         }
         t2.addData("botheading", botHeading);
         lastTriggerVal = gamepad1.right_trigger;
 
-        drive.updatePoseEstimate();
-        drum.update(drive.localizer.getPose(), new PoseVelocity2d(new Vector2d(0,0),0));
+        PoseVelocity2d vel = drive.updatePoseEstimate();
+        drum.update(drive.localizer.getPose(), vel);
         if (drum.getNewPoseFromTurret() != null) {
             drive.localizer.setPose(drum.getNewPoseFromTurret());
         }
@@ -190,5 +197,13 @@ public class TeleOpV3 extends OpMode {
         packet.fieldOverlay().setStroke("#3F51B5");
         Drawing.drawRobot(packet.fieldOverlay(), drive.localizer.getPose());
         FtcDashboard.getInstance().sendTelemetryPacket(packet);
+        telemetry.addData("colors", Arrays.toString(drum.getColors()));
+        telemetry.addData("mode", drum.curMode.toString());
+
+        if (drum.seeingTag()) {
+            telemetry.addLine("!------------TAG SEEN----------!");
+        }
+
+        telemetry.update();
     }
     }

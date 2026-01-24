@@ -123,7 +123,6 @@ public class Auto extends OpMode {
         intake.loop();
         turretOLD.loop();
 //        drum.update(drive.localizer.getPose(), drive.localizer.update());
-        telemetry.addData("tur pose", turretOLD.getTurPose());
 
         drum.updateTelemetry(telemetry);
         drum.updateTelemetry(t2);

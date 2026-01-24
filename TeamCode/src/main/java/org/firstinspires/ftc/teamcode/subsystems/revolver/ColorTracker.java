@@ -122,7 +122,7 @@ public class ColorTracker {
     //resets the slot's color after shooting
     void updateColors() {
         String curColor = readColor();
-        if (colorAvailable("white")){
+        if (colorAvailable("white") && curColor != "white"){
             slotColor[pointer] = curColor;
         }
     }
