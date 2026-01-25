@@ -19,6 +19,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ReadWriteFile;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
@@ -244,20 +245,12 @@ public class Turret {
         robotVelo = vel;
         LLResult result = limelight.getLatestResult();
         List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
-        double LLYaw = (getGyro() - turretAngle);
+        double LLYaw = (getGyro());
         limelight.updateRobotOrientation(LLYaw);
         innerCurVel = innerTurret.getVelocity();
         outerCurVel = outerTurret.getVelocity();
 
         if (result != null && result.isValid()) { // if LL available, use LL botpose
-            botpose_tag = result.getBotpose();
-            if (botpose_tag != null) { // if the botpose is available, use it
-                botpose = new Pose2d(botpose_tag.getPosition().x * 39.37, botpose_tag.getPosition().y * 39.37, drivePose.heading.toDouble());
-                usingLLForPose = true;
-            } else {
-                botpose = drivePose;
-                usingLLForPose = false;
-            }
             tx = result.getTx(); // How far left or right the target is (degrees)
             ty = result.getTy(); // How far up or down the target is (degrees)
             ta = result.getTa(); // How big the target looks (0%-100% of the image)
@@ -266,21 +259,19 @@ public class Turret {
 
             // if there's the right tag in sight, update turret PID to focus on tag
             // means you have to change coeffs to tag mode
-            int targNum = 20;
-            if (goalPose == goalPoseBlue) {
-                targNum = 20;
-            } else {
-                targNum = 24;
-            }
-            if (!result.getFiducialResults().isEmpty() && result.getFiducialResults().get(0).getFiducialId() == targNum) { // 20 or 24, change based on the side. somehow
-                turPID.setCoefficients(kPTag, kITag, kDTag, kFR, kFV);
-                turPID.target = 0;
-                turPID.update(tx, robotVelo.angVel, orthogVelMag);
-            } else {   // if it's the wrong tag, update turret PID based on encoder
-                turPID.setCoefficients(kPEnc, kIEnc, kDEnc, kFR, kFV);
-//                turPID.target = angleToTicks(angleToGoal);
-                turPID.update(turretCurTicks, robotVelo.angVel, orthogVelMag);
-                usingLLForPose = false;
+
+            if (!result.getFiducialResults().isEmpty()) {
+                if (result.getFiducialResults().get(0).getFiducialId() != 20 && result.getFiducialResults().get(0).getFiducialId() != 24) {
+                    turPID.setCoefficients(kPEnc, kIEnc, kDEnc, kFR, kFV);
+                    turPID.update(turretCurTicks, robotVelo.angVel, orthogVelMag);
+                    botpose = drivePose;
+                    usingLLForPose = false;
+                } else {
+                    botpose_tag = result.getBotpose();
+                    botpose = new Pose2d(botpose_tag.getPosition().x*39.37, botpose_tag.getPosition().y*39.37, botpose_tag.getOrientation().getYaw(AngleUnit.RADIANS));
+                    usingLLForPose = true;
+                }
+
             }
         } else {
             // if there's no tag in sight, update turret PID based on encoder
@@ -301,7 +292,7 @@ public class Turret {
         dGoal = Math.sqrt(Math.pow(botpose.position.x - goalPose.position.x, 2) + Math.pow(botpose.position.y - goalPose.position.y, 2));
         flightTime = getToF(dGoal/39.37);
         calcOffset(dGoal);
-        dGoalEstimate = (dGoal - vGoal * flightTime) + offset;
+        dGoalEstimate = (dGoal) + offset; // temporarily removed velocity compensation
 
 
         innerRPM = getLRPM(dGoalEstimate/39.37);
@@ -325,7 +316,7 @@ public class Turret {
             outerTurret.setVelocity(0);
             bothMotorsSpunUp = false;
         }
-        spinner.setPosition(0.1);
+        spinner.setPosition(0);
     }
     public Pose2d getBotpose () {
         if (botpose != drivePose) {
@@ -378,11 +369,11 @@ public class Turret {
     }
     public void calcOffset(double distanceFinal) {
         if (distanceFinal < 24) {
-            offset = 20 + 0.111111111 * (24-distanceFinal);
+            offset = 10;
         } else if (distanceFinal < 60) {
-            offset = 20 - 0.111111111 * (distanceFinal-24);
+            offset = 10;
         } else if (distanceFinal < 115) {
-            offset = 15 - 0.090909090909 * (distanceFinal - 60);
+            offset = 10;
         } else {
             offset = 10 - 0.0909090909 * (distanceFinal - 115);
         }

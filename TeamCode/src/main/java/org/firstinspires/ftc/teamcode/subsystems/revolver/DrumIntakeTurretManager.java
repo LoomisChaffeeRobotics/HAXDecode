@@ -25,7 +25,7 @@ public class DrumIntakeTurretManager {
     DcMotorEx intake;
     Turret turret;
     FancyPID pid = new FancyPID();
-    double flickPosUp = 0.85;
+    double flickPosUp = 0.95;
     double flickPosDown = 0.4;
     public static double kP = 0.0002;
     public static double kI = 0.000005;
@@ -263,7 +263,7 @@ public class DrumIntakeTurretManager {
                 colTrack.pointer = colTrack.findNearestColor("purple");
                 pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
                 turret.mode = Turret.turMode.FIRING;
-                if ((pid.arrived) && turret.bothMotorsSpunUp) {
+                if ((pid.arrived) && turret.bothMotorsSpunUp && !isFiring) {
                     fireSequenceTimer.reset();
                     isFiring = true;
                     turret.successfulShot = false;
@@ -279,7 +279,7 @@ public class DrumIntakeTurretManager {
                 colTrack.pointer = colTrack.findNearestColor("green");
                 pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
                 turret.mode = Turret.turMode.FIRING;
-                if ((pid.arrived) && turret.bothMotorsSpunUp) {
+                if ((pid.arrived) && turret.bothMotorsSpunUp && !isFiring) {
                     fireSequenceTimer.reset();
                     isFiring = true;
                     turret.successfulShot = false;
@@ -296,7 +296,7 @@ public class DrumIntakeTurretManager {
                 colTrack.pointer = colTrack.findNearestBall();
                 pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
                 turret.mode = Turret.turMode.FIRING;
-                if ((pid.arrived) && turret.bothMotorsSpunUp) {
+                if ((pid.arrived) && turret.bothMotorsSpunUp && !isFiring) {
                     fireSequenceTimer.reset();
                     isFiring = true;
                 } else if (isFiring) {

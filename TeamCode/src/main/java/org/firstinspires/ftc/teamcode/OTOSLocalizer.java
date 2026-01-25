@@ -15,7 +15,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 @Config
 public class OTOSLocalizer implements Localizer {
     public static class Params {
-        public double angularScalar = 0.992;
+        public double angularScalar = 1;
         public double linearScalar = 120/121.5; // previously -0.9375
 
         // Note: units are in inches and radians
