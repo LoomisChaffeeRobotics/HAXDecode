@@ -254,8 +254,6 @@ public class Turret {
             tx = result.getTx(); // How far left or right the target is (degrees)
             ty = result.getTy(); // How far up or down the target is (degrees)
             ta = result.getTa(); // How big the target looks (0%-100% of the image)
-            fIDGetter = fiducialResults.get(0);
-            atId = fIDGetter.getFiducialId();
 
             // if there's the right tag in sight, update turret PID to focus on tag
             // means you have to change coeffs to tag mode
