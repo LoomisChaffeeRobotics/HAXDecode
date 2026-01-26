@@ -37,9 +37,10 @@ public class limeLight {
         return motifPattern;
     }
     public void update(double robotYaw, double turretYaw){
-        LLResult result = limelight.getLatestResult();
         double LLYaw = calcLimelightYawRadians(robotYaw, turretYaw);
         limelight.updateRobotOrientation(LLYaw);
+
+        LLResult result = limelight.getLatestResult();
 
         List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
 
