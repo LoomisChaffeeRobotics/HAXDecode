@@ -170,7 +170,7 @@ public class Blue3BallAuto extends OpMode {
     public void loop () {
         if (state != State.DONE) {
             drive.updatePoseEstimate();
-            drum.update(drive.localizer.getPose(), drive.updatePoseEstimate());
+//            drum.update(drive.localizer.getPose(), drive.updatePoseEstimate());
 
             if (state == State.DRIVE_TO_SHOT) {
                 Actions.runBlocking(strafeOut);

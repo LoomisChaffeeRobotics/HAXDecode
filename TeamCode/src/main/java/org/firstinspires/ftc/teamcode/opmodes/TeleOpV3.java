@@ -99,9 +99,11 @@ public class TeleOpV3 extends OpMode {
         }
         drum.curMode = tempMode;
         if (blue) {
+            drive.localizer.setPose(new Pose2d(66, -17, Math.toRadians(180)));
         } else {
             drive.localizer.setPose(new Pose2d(66, 17, Math.toRadians(180)));
         }
+        imu.resetYaw();
     }
     @Override
     public void loop() {
@@ -169,6 +171,7 @@ public class TeleOpV3 extends OpMode {
 
         if (gamepad1.startWasPressed()) {
             drive.localizer.setPose(new Pose2d(66,0,-Math.PI));
+            imu.resetYaw();
         }
         if (gamepad1.xWasPressed()) {
             drum.curMode = DrumIntakeTurretManager.revMode.SIMPLEFIRE;
@@ -187,7 +190,7 @@ public class TeleOpV3 extends OpMode {
         lastTriggerVal = gamepad1.right_trigger;
 
         PoseVelocity2d vel = drive.updatePoseEstimate();
-        drum.update(drive.localizer.getPose(), vel);
+        drum.update(drive.localizer.getPose(), vel, imu.getRobotYawPitchRollAngles().getYaw() + 180); // degrees
         if (drum.getNewPoseFromTurret() != null) {
             drive.localizer.setPose(drum.getNewPoseFromTurret());
         }
@@ -198,6 +201,8 @@ public class TeleOpV3 extends OpMode {
         Drawing.drawRobot(packet.fieldOverlay(), drive.localizer.getPose());
         FtcDashboard.getInstance().sendTelemetryPacket(packet);
         telemetry.addData("colors", Arrays.toString(drum.getColors()));
+        t2.addData("IMU yaw", imu.getRobotYawPitchRollAngles().getYaw() + 180);
+        t2.update();
         telemetry.addData("mode", drum.curMode.toString());
 
         if (drum.seeingTag()) {

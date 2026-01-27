@@ -224,7 +224,7 @@ public class DrumIntakeTurretManager {
     public Pose2d getNewPoseFromTurret() {
         return turret.getBotpose();
     }
-    public void update(Pose2d pose, PoseVelocity2d velo) {
+    public void update(Pose2d pose, PoseVelocity2d velo, double robotYaw) {
         pid.setCoefficients(kP, kI, kD);
         pid.iMax = iMax;
         pid.iRange = iRange;
@@ -333,7 +333,7 @@ public class DrumIntakeTurretManager {
 
         //-----------------------loop actions-------------------------
         updateLastTickArrived();
-        turret.loop(pose, velo);
+        turret.loop(pose, velo, robotYaw);
         pid.update(curPos);
         revSpin.setPower(pid.velo);
         lastMode = curMode;

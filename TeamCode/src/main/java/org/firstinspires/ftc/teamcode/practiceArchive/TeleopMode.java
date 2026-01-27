@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
-import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
 
 //@TeleOp
@@ -120,7 +119,7 @@ public class TeleopMode extends OpMode {
 
         intake.loop();
         turretOLD.loop();
-        drum.update(drive.localizer.getPose(), drive.localizer.update());
+//        drum.update(drive.localizer.getPose(), drive.localizer.update());
 
         telemetry.addData("tur pose", turretOLD.getTurPose());
 

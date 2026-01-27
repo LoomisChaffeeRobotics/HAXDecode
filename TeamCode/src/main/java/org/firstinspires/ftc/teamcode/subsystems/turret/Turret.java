@@ -239,16 +239,15 @@ public class Turret {
             goalPose = goalPoseRed;
         }
     }
-    public void loop(Pose2d pose, PoseVelocity2d vel){
+    public void loop(Pose2d pose, PoseVelocity2d vel, double robotYaw){
         turretCurTicks = -turEnc.getCurrentPosition();
         drivePose = pose;
         robotVelo = vel;
-        LLResult result = limelight.getLatestResult();
-        List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
-        double LLYaw = (getGyro());
-        limelight.updateRobotOrientation(LLYaw);
+        limelight.updateRobotOrientation(robotYaw);
         innerCurVel = innerTurret.getVelocity();
         outerCurVel = outerTurret.getVelocity();
+        LLResult result = limelight.getLatestResult();
+
 
         if (result != null && result.isValid()) { // if LL available, use LL botpose
             tx = result.getTx(); // How far left or right the target is (degrees)
@@ -265,7 +264,7 @@ public class Turret {
                     botpose = drivePose;
                     usingLLForPose = false;
                 } else {
-                    botpose_tag = result.getBotpose();
+                    botpose_tag = result.getBotpose_MT2();
                     botpose = new Pose2d(botpose_tag.getPosition().x*39.37, botpose_tag.getPosition().y*39.37, botpose_tag.getOrientation().getYaw(AngleUnit.RADIANS));
                     usingLLForPose = true;
                 }

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.subsystems.turret;
+package org.firstinspires.ftc.teamcode.practiceArchive;
 import java.util.*;
 
 public class lookUpTable<T> {

@@ -176,7 +176,7 @@ public class notcompteleop extends OpMode {
         lastTriggerVal = gamepad1.right_trigger;
 
         PoseVelocity2d vel = drive.updatePoseEstimate();
-        drum.update(drive.localizer.getPose(), vel);
+        drum.update(drive.localizer.getPose(), vel, imu.getRobotYawPitchRollAngles().getYaw());
         if (drum.getNewPoseFromTurret() != null) {
             drive.localizer.setPose(drum.getNewPoseFromTurret());
         }

@@ -1,6 +1,4 @@
-package org.firstinspires.ftc.teamcode.subsystems;
-
-import java.util.Arrays;
+package org.firstinspires.ftc.teamcode.tests;
 
 public class OptimalAngleCalculator {
     public double calculateOptimalAngle(double current, double target) {

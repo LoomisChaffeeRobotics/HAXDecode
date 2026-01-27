@@ -226,7 +226,7 @@ public class TeleopV2 extends OpMode {
         lastTriggerVal = gamepad1.right_trigger;
 
         drive.updatePoseEstimate();
-        drum.update(drive.localizer.getPose(), new PoseVelocity2d(new Vector2d(0,0),0));
+        drum.update(drive.localizer.getPose(), new PoseVelocity2d(new Vector2d(0,0),0), imu.getRobotYawPitchRollAngles().getYaw());
 
         drive.localizer.setPose(drum.getNewPoseFromTurret());
         drum.updateTelemetry(t2);

@@ -4,13 +4,10 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
-import org.firstinspires.ftc.teamcode.subsystems.turret.Turret;
-import org.firstinspires.ftc.teamcode.subsystems.turret.limeLight;
 
 @Autonomous
 @Config
@@ -96,7 +93,7 @@ public class justinAuto extends OpMode {
     }
     private void waitForDrum(){
         while (!drum.isArrived()) {
-            drum.update(drive.localizer.getPose(), drive.updatePoseEstimate());
+//            drum.update(drive.localizer.getPose(), drive.updatePoseEstimate());
             telemetry.update();
             drive.updatePoseEstimate();
         }
@@ -150,7 +147,7 @@ public class justinAuto extends OpMode {
     public void loop () {
         if (state != State.DONE) {
             drive.updatePoseEstimate();
-            drum.update(drive.localizer.getPose(), drive.updatePoseEstimate());
+//            drum.update(drive.localizer.getPose(), drive.updatePoseEstimate());
 
             if (state == State.DRIVE_TO_SHOT) {
                 if (driveFinished()) {
