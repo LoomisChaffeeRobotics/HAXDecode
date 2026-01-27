@@ -25,7 +25,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.*;
-import org.json.simple.parser.JSONParser;
+//import org.json.simple.parser.JSONParser;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -70,8 +70,8 @@ public class TeleopV2 extends OpMode {
         t2 = dash.getTelemetry();
         // file read
         try {
-            JSONParser parser = new JSONParser();
-            jsonArray = (JSONArray) parser.parse(new FileReader(dataLog));
+            //JSONParser parser = new JSONParser();
+            //jsonArray = (JSONArray) parser.parse(new FileReader(dataLog));
             jsonObject = jsonArray.getJSONObject(0);
         } catch (Exception e) {
             telemetry.addData("error", e.toString());

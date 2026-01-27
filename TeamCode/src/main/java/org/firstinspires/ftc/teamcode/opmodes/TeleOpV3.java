@@ -107,8 +107,8 @@ public class TeleOpV3 extends OpMode {
     }
     @Override
     public void loop() {
-        double gamepady = -gamepad1.left_stick_x;
-        double gamepadx = -gamepad1.left_stick_y;
+        double gamepady = Math.abs(-gamepad1.left_stick_x) > 0.1 ? -gamepad1.left_stick_x : 0;
+        double gamepadx = Math.abs(-gamepad1.left_stick_y) > 0.1 ? -gamepad1.left_stick_y : 0;
         botHeading = drive.localizer.getPose().heading.toDouble();
 
         double fieldX = gamepadx * Math.sin(-botHeading) - gamepady * Math.cos(-botHeading);
@@ -180,7 +180,6 @@ public class TeleOpV3 extends OpMode {
             drum.setBlue(!blue);
             blue = !blue;
         }
-
         if (gamepad2.rightBumperWasPressed()) {
             drum.setCurrentGreen();
         } else if (gamepad2.leftBumperWasPressed()) {

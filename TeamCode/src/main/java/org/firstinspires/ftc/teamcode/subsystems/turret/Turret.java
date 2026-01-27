@@ -100,6 +100,7 @@ public class Turret {
     File dataLog = AppUtil.getInstance().getSettingsFile(logFilePath);
     TurretPID turPID;
     public double innerRPM = 0;
+    public int curId = 20;
     public double outerRPM = 0;
     public double thetaDiff = 0;
     static double turretFullLoop = (double) 8192 * 75 / 15; // # ticks for loop
@@ -258,7 +259,8 @@ public class Turret {
             // means you have to change coeffs to tag mode
 
             if (!result.getFiducialResults().isEmpty()) {
-                if (result.getFiducialResults().get(0).getFiducialId() != 20 && result.getFiducialResults().get(0).getFiducialId() != 24) {
+                curId = result.getFiducialResults().get(0).getFiducialId();
+                if (curId != 20 && curId != 24) {
                     turPID.setCoefficients(kPEnc, kIEnc, kDEnc, kFR, kFV);
                     turPID.update(turretCurTicks, robotVelo.angVel, orthogVelMag);
                     botpose = drivePose;

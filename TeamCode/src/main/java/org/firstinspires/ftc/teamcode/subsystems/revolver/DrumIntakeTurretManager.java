@@ -64,25 +64,7 @@ public class DrumIntakeTurretManager {
     public revMode lastMode = revMode.INTAKEIDLE;
     public String alliance;
     // functions
-    void fireSequenceAsync(){
-        lastTickArrived = false;
-//        if (((turret.innerCurVel / RPMtoTicksPerSecond) < (0.80 * turret.innerRPM)) || (turret.outerCurVel / RPMtoTicksPerSecond) < (0.80 * turret.outerRPM)) {
-//            turret.successfulShot = true;
-//        }
 
-        if (fireSequenceTimer.seconds() < 0.4) {
-            flickMode = "flick";
-            flicker.setPosition(flickPosUp);
-        } else if (fireSequenceTimer.seconds() >= 0.4 && fireSequenceTimer.seconds() < 0.75) {
-            flickMode = "retract";
-            flicker.setPosition(flickPosDown);
-        } else if (fireSequenceTimer.seconds() > 0.75) {
-            flickMode = "off";
-            colTrack.removeFiredBall(colTrack.pointer);
-            isFiring = false;
-            curMode = revMode.FIRESTANDBY;
-        }
-    }
     public void setStartingColors(String[] colors){
         colTrack.setStartingColors(colors);
     }
@@ -188,6 +170,25 @@ public class DrumIntakeTurretManager {
     public void setCurrentGreen() {
         colTrack.addGreen(colTrack.pointer);
     }
+    void fireSequenceAsync(){
+        lastTickArrived = false;
+//        if (((turret.innerCurVel / RPMtoTicksPerSecond) < (0.80 * turret.innerRPM)) || (turret.outerCurVel / RPMtoTicksPerSecond) < (0.80 * turret.outerRPM)) {
+//            turret.successfulShot = true;
+//        }
+
+        if (fireSequenceTimer.seconds() < 0.4) {
+            flickMode = "flick";
+            flicker.setPosition(flickPosUp);
+        } else if (fireSequenceTimer.seconds() >= 0.4 && fireSequenceTimer.seconds() < 0.75) {
+            flickMode = "retract";
+            flicker.setPosition(flickPosDown);
+        } else if (fireSequenceTimer.seconds() > 0.75) {
+            flickMode = "off";
+            colTrack.removeFiredBall(colTrack.pointer);
+            isFiring = false;
+            curMode = revMode.FIRESTANDBY;
+        }
+    }
     public void contFireAsync() {
         if (!colTrack.ballAvailable()) {
             curMode = revMode.INTAKEIDLE;
@@ -242,22 +243,27 @@ public class DrumIntakeTurretManager {
             pid.target = optimizeTarg(slotTarget[colTrack.pointer], curPos);
             intake.setVelocity(intakeOnVelocity);
             flicker.setPosition(flickPosDown);
+            turret.mode = Turret.turMode.IDLE;
+
         } else if (curMode == revMode.FIRESTANDBY) {
             colTrack.pointer = colTrack.findNearestBall();
             pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
             turret.mode = Turret.turMode.FIRING;
             intake.setVelocity(0);
             flicker.setPosition(flickPosDown);
+
         } else if (curMode == revMode.HPINTAKE) {
             // pointer will be changed manually using next slot and last slot
             isFiring = false;
             pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
             turret.mode = Turret.turMode.INTAKING;
             flicker.setPosition(flickPosDown);
+
         } else if (curMode == revMode.CONTFIRE) {
             contFireAsync();
             turret.mode = Turret.turMode.FIRING;
             intake.setVelocity(0);
+
         } else if (curMode == revMode.FIREPURPLE) {
             if (colTrack.colorAvailable("purple")) {
                 colTrack.pointer = colTrack.findNearestColor("purple");
@@ -274,6 +280,7 @@ public class DrumIntakeTurretManager {
                 curMode = revMode.FIRESTANDBY;
             }
             intake.setVelocity(0);
+
         } else if (curMode == revMode.FIREGREEN) {
             if (colTrack.colorAvailable("green")) {
                 colTrack.pointer = colTrack.findNearestColor("green");
@@ -291,6 +298,7 @@ public class DrumIntakeTurretManager {
                 curMode = revMode.FIRESTANDBY;
             }
             intake.setVelocity(0);
+
         } else if (curMode == revMode.FIRESINGLE) {
             if (colTrack.ballAvailable()) {
                 colTrack.pointer = colTrack.findNearestBall();
@@ -306,6 +314,7 @@ public class DrumIntakeTurretManager {
                 curMode = revMode.FIRESTANDBY;
             }
             intake.setVelocity(0);
+
         } else if (curMode == revMode.FIREIDLE) {
             if (colTrack.ballAvailable()) {
                 colTrack.pointer = colTrack.findNearestBall();
@@ -314,6 +323,7 @@ public class DrumIntakeTurretManager {
             turret.mode = Turret.turMode.IDLE;
             intake.setVelocity(0);
             flicker.setPosition(flickPosDown);
+
         } else if (curMode == revMode.INTAKEIDLE) {
             if (colTrack.emptyAvailable()) {
                 colTrack.pointer = colTrack.findNearestColor("white");
@@ -322,6 +332,7 @@ public class DrumIntakeTurretManager {
             turret.mode = Turret.turMode.IDLE;
             intake.setVelocity(0);
             flicker.setPosition(flickPosDown);
+
         } else if (curMode ==revMode.SIMPLEFIRE) {
             if (lastMode != curMode) {
                 fireSequenceTimer.reset();
