@@ -204,9 +204,9 @@ public class Turret {
         telemetry.update();
     }
     public void init(HardwareMap hardwareMap){
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
-        limelight.start(); // This tells Limelight to start looking!
+//        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+//        limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
+//        limelight.start(); // This tells Limelight to start looking!
         innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
         outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
         turEnc = hardwareMap.get(DcMotorEx.class, "FL");
@@ -244,69 +244,69 @@ public class Turret {
             targId = 24;
         }
     }
-    public Pose2d updateLL(double robotYaw) {
-        // biggest problem with OTOS is that when it's not clean, translation is unreliable
-        // OTOS also has built in IMU but has seemed to perhaps be unreliable as well? may need to retune angularScalar
-        // perhaps section off the LL processing to this method instead of loop()
-
-        /* this is going to both return a pose from the LL to fuse later and also update class tag data so
-        we can use it in loop, the class tag data is purely for shooting PID
-        something like if you see the right tag, return a tx ty ta that's not null, otherwise make it null
-        and when you're checking in loop check that it's not null then set the PID accordingly
-        and if it's null use turret encoders except we don't want to do that yet because we have < 1 week.
-        so later, create some PID code in loop
-
-        the loop will look at data for shooting distance AFTER the pose2d returned by this has been FUSED
-        with the other data in LocalizationFuser which might be a problem bc it's kind of cyclical
-        cyclicality might not be there if not using heading to talk to LL though?
-
-         */
-        limelight.updateRobotOrientation(robotYaw);
-        LLResult result = limelight.getLatestResult();
-        if (result != null && result.isValid()) { // if LL available, use LL botpose
-            // if there's the right tag in sight, update turret PID to focus on tag
-            // means you have to change coeffs to tag mode
-
-            if (!result.getFiducialResults().isEmpty()) {
-                curId = result.getFiducialResults().get(0).getFiducialId();
-                if (curId != 20 && curId != 24) {
-                    usingLLForPose = false;
-                    LLonCorrectTag = false;
-                    return null;
-                } else {
-                    if (curId == targId) {
-                        tx = result.getTx(); // How far left or right the target is (degrees)
-                        ty = result.getTy(); // How far up or down the target is (degrees)
-                        ta = result.getTa(); // How big the target looks (0%-100% of the image)
-                        LLonCorrectTag = true;
-                    }
-                    botpose_tag = result.getBotpose_MT2();
-                    usingLLForPose = true;
-                    LLonCorrectTag = false;
-                    return new Pose2d(botpose_tag.getPosition().x*39.37, botpose_tag.getPosition().y*39.37, botpose_tag.getOrientation().getYaw(AngleUnit.RADIANS));
-                }
-            }
-        } else {
-            usingLLForPose = false;
-            LLonCorrectTag = false;
-            return null;
-        }
-
-        return null;
-    }
-    public void loop(Pose2d fusedPose, PoseVelocity2d finalVel, double robotYaw){
+//    public Pose2d updateLL(double robotYaw) {
+//        // biggest problem with OTOS is that when it's not clean, translation is unreliable
+//        // OTOS also has built in IMU but has seemed to perhaps be unreliable as well? may need to retune angularScalar
+//        // perhaps section off the LL processing to this method instead of loop()
+//
+//        /* this is going to both return a pose from the LL to fuse later and also update class tag data so
+//        we can use it in loop, the class tag data is purely for shooting PID
+//        something like if you see the right tag, return a tx ty ta that's not null, otherwise make it null
+//        and when you're checking in loop check that it's not null then set the PID accordingly
+//        and if it's null use turret encoders except we don't want to do that yet because we have < 1 week.
+//        so later, create some PID code in loop
+//
+//        the loop will look at data for shooting distance AFTER the pose2d returned by this has been FUSED
+//        with the other data in LocalizationFuser which might be a problem bc it's kind of cyclical
+//        cyclicality might not be there if not using heading to talk to LL though?
+//
+//         */
+//        limelight.updateRobotOrientation(robotYaw);
+//        LLResult result = limelight.getLatestResult();
+//        if (result != null && result.isValid()) { // if LL available, use LL botpose
+//            // if there's the right tag in sight, update turret PID to focus on tag
+//            // means you have to change coeffs to tag mode
+//
+//            if (!result.getFiducialResults().isEmpty()) {
+//                curId = result.getFiducialResults().get(0).getFiducialId();
+//                if (curId != 20 && curId != 24) {
+//                    usingLLForPose = false;
+//                    LLonCorrectTag = false;
+//                    return null;
+//                } else {
+//                    if (curId == targId) {
+//                        tx = result.getTx(); // How far left or right the target is (degrees)
+//                        ty = result.getTy(); // How far up or down the target is (degrees)
+//                        ta = result.getTa(); // How big the target looks (0%-100% of the image)
+//                        LLonCorrectTag = true;
+//                    }
+//                    botpose_tag = result.getBotpose_MT2();
+//                    usingLLForPose = true;
+//                    LLonCorrectTag = false;
+//                    return new Pose2d(botpose_tag.getPosition().x*39.37, botpose_tag.getPosition().y*39.37, botpose_tag.getOrientation().getYaw(AngleUnit.RADIANS));
+//                }
+//            }
+//        } else {
+//            usingLLForPose = false;
+//            LLonCorrectTag = false;
+//            return null;
+//        }
+//
+//        return null;
+//    }
+    public void loop(Pose2d fusedPose, PoseVelocity2d finalVel){
         turretCurTicks = -turEnc.getCurrentPosition();
         drivePose = fusedPose;
         robotVelo = finalVel;
         innerCurVel = innerTurret.getVelocity();
         outerCurVel = outerTurret.getVelocity();
 
-        LLPose = updateLL(robotYaw);
-        if (LLPose != null) {
-            botpose = LLPose;
-        } else {
-            botpose = drivePose;
-        }
+//        LLPose = updateLL(robotYaw);
+//        if (LLPose != null) {
+//            botpose = LLPose;
+//        } else {
+//            botpose = drivePose;
+//        }
 
         updateTheta();
 //        updateAngleToGoal();
