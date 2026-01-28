@@ -239,25 +239,16 @@ public class Turret {
             goalPose = goalPoseRed;
         }
     }
-    public Pose2d updateLL(double robotYaw) {
-        // biggest problem with OTOS is that when it's not clean, translation is unreliable
-        // OTOS also has built in IMU but has seemed to perhaps be unreliable as well? may need to retune angularScalar
-        // perhaps section off the LL processing to this method instead of loop()
-
-        /* this is going to both return a pose from the LL to fuse later and also update class tag data so
-        we can use it in loop, the class tag data is purely for shooting PID
-        something like if you see the right tag, return a tx ty ta that's not null, otherwise make it null
-        and when you're checking in loop check that it's not null then set the PID accordingly
-        and if it's null use turret encoders except we don't want to do that yet because we have < 1 week.
-        so later, create some PID code in loop
-
-        the loop will look at data for shooting distance AFTER the pose2d returned by this has been FUSED
-        with the other data in LocalizationFuser which might be a problem bc it's kind of cyclical
-        cyclicality might not be there if not using heading to talk to LL though?
-
-         */
+    public void loop(Pose2d pose, PoseVelocity2d vel, double robotYaw){
+        turretCurTicks = -turEnc.getCurrentPosition();
+        drivePose = pose;
+        robotVelo = vel;
         limelight.updateRobotOrientation(robotYaw);
+        innerCurVel = innerTurret.getVelocity();
+        outerCurVel = outerTurret.getVelocity();
         LLResult result = limelight.getLatestResult();
+
+
         if (result != null && result.isValid()) { // if LL available, use LL botpose
             tx = result.getTx(); // How far left or right the target is (degrees)
             ty = result.getTy(); // How far up or down the target is (degrees)
@@ -287,18 +278,6 @@ public class Turret {
             turPID.update(turretCurTicks, robotVelo.angVel, orthogVelMag);
             usingLLForPose = false;
         }
-
-        return new Pose2d(0,0,0);
-    }
-    public void loop(Pose2d fusedPose, PoseVelocity2d finalVel, double robotYaw){
-        turretCurTicks = -turEnc.getCurrentPosition();
-        drivePose = fusedPose;
-        robotVelo = finalVel;
-        innerCurVel = innerTurret.getVelocity();
-        outerCurVel = outerTurret.getVelocity();
-
-
-
         updateTheta();
 //        updateAngleToGoal();
         updateOrthogVelMag();
