@@ -86,13 +86,13 @@ public class Turret {
     public static double kDTag = 0.001;
     double offset = 0;
     Pose2d botpose;
+    Pose2d LLPose;
     Pose2d drivePose;
     Limelight3A limelight;
     Servo spinner;
     DcMotorEx turEnc;
     DcMotorEx innerTurret;
     DcMotorEx outerTurret;
-    Pose2d lastPoseEstimate;
     Pose2d goalPoseBlue = new Pose2d(-68, -53, Math.toRadians(-135));
     Pose2d goalPoseRed = new Pose2d(-68, 53, Math.toRadians(-135));
     Pose2d goalPose = goalPoseBlue;
@@ -101,6 +101,7 @@ public class Turret {
     TurretPID turPID;
     public double innerRPM = 0;
     public int curId = 20;
+    public int targId = 20;
     public double outerRPM = 0;
     public double thetaDiff = 0;
     static double turretFullLoop = (double) 8192 * 75 / 15; // # ticks for loop
@@ -118,6 +119,7 @@ public class Turret {
     public double outerCurVel;
     public double turPower = 0;
     public boolean usingLLForPose = false;
+    public boolean LLonCorrectTag = false;
     double turretCurTicks = 0;
     Pose3D botpose_tag;
     LLResultTypes.FiducialResult fIDGetter;
@@ -236,8 +238,10 @@ public class Turret {
     public void setBlue(boolean isBlue){
         if (isBlue) {
             goalPose = goalPoseBlue;
+            targId = 20;
         } else {
             goalPose = goalPoseRed;
+            targId = 24;
         }
     }
     public Pose2d updateLL(double robotYaw) {
@@ -260,36 +264,35 @@ public class Turret {
         limelight.updateRobotOrientation(robotYaw);
         LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid()) { // if LL available, use LL botpose
-            tx = result.getTx(); // How far left or right the target is (degrees)
-            ty = result.getTy(); // How far up or down the target is (degrees)
-            ta = result.getTa(); // How big the target looks (0%-100% of the image)
-
             // if there's the right tag in sight, update turret PID to focus on tag
             // means you have to change coeffs to tag mode
 
             if (!result.getFiducialResults().isEmpty()) {
                 curId = result.getFiducialResults().get(0).getFiducialId();
                 if (curId != 20 && curId != 24) {
-                    turPID.setCoefficients(kPEnc, kIEnc, kDEnc, kFR, kFV);
-                    turPID.update(turretCurTicks, robotVelo.angVel, orthogVelMag);
-                    botpose = drivePose;
                     usingLLForPose = false;
+                    LLonCorrectTag = false;
+                    return null;
                 } else {
+                    if (curId == targId) {
+                        tx = result.getTx(); // How far left or right the target is (degrees)
+                        ty = result.getTy(); // How far up or down the target is (degrees)
+                        ta = result.getTa(); // How big the target looks (0%-100% of the image)
+                        LLonCorrectTag = true;
+                    }
                     botpose_tag = result.getBotpose_MT2();
-                    botpose = new Pose2d(botpose_tag.getPosition().x*39.37, botpose_tag.getPosition().y*39.37, botpose_tag.getOrientation().getYaw(AngleUnit.RADIANS));
                     usingLLForPose = true;
+                    LLonCorrectTag = false;
+                    return new Pose2d(botpose_tag.getPosition().x*39.37, botpose_tag.getPosition().y*39.37, botpose_tag.getOrientation().getYaw(AngleUnit.RADIANS));
                 }
             }
         } else {
-            // if there's no tag in sight, update turret PID based on encoder
-            botpose = drivePose; // I worry drive will gain error if SparkFun gets dusty
-            turPID.setCoefficients(kPEnc, kIEnc, kDEnc, kFR, kFV);
-//            turPID.target = angleToTicks(angleToGoal);
-            turPID.update(turretCurTicks, robotVelo.angVel, orthogVelMag);
             usingLLForPose = false;
+            LLonCorrectTag = false;
+            return null;
         }
 
-        return new Pose2d(0,0,0);
+        return null;
     }
     public void loop(Pose2d fusedPose, PoseVelocity2d finalVel, double robotYaw){
         turretCurTicks = -turEnc.getCurrentPosition();
@@ -298,13 +301,14 @@ public class Turret {
         innerCurVel = innerTurret.getVelocity();
         outerCurVel = outerTurret.getVelocity();
 
-
+        LLPose = updateLL(robotYaw);
 
         updateTheta();
 //        updateAngleToGoal();
         updateOrthogVelMag();
         updateSpeed();
         updateTurretAngle();
+        // put stuff about turPID here using tx, ty, ta's nullness and/or values
 
         // firing stuff?
         vGoal = speed * Math.cos(thetaDiff);

@@ -15,9 +15,18 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 public class LeaveAutk extends OpMode {
     MecanumDrive drive;
     ElapsedTime moveTime = new ElapsedTime();
+    public boolean left;
     @Override
     public void init() {
-        drive = new MecanumDrive(hardwareMap, new Pose2d(0,0,0));
+        drive = new MecanumDrive(hardwareMap, new Pose2d(66,0,Math.toRadians(180)));
+    }
+    @Override
+    public void init_loop() {
+        if (gamepad2.xWasPressed()) {
+            left = !left;
+        }
+        telemetry.addData("left?", left);
+        telemetry.update();
     }
     @Override
     public void start() {
@@ -27,7 +36,11 @@ public class LeaveAutk extends OpMode {
     @Override
     public void loop() {
        if (moveTime.seconds() < 0.8) {
-           drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0.5, 0), 0));
+           if (left) {
+               drive.setDrivePowers(new PoseVelocity2d(new Vector2d(-0.5, 0), 0));
+           } else {
+               drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0.5, 0), 0));
+           }
        } else {
            drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0,0),0));
        }

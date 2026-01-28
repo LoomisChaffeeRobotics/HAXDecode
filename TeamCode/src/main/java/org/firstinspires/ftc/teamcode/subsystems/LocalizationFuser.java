@@ -11,6 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 import java.util.List;
 public class LocalizationFuser {
+    // research "ransack algorithm"
     public Pose2d OdoPose;
     public Pose3D LLPose;
     public IMU imu;
@@ -55,10 +56,10 @@ public class LocalizationFuser {
 
         List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
 
-        if (result != null && result.isValid()){
+        if (result != null && result.isValid()) {
             Pose3D botpose_mt2 = result.getBotpose_MT2();
             if (botpose_mt2 != null) {
-                LLPose = new Pose3D(botpose_mt2.getPosition(),botpose_mt2.getOrientation());
+                LLPose = new Pose3D(botpose_mt2.getPosition(), botpose_mt2.getOrientation());
 
             }
             tx = result.getTx(); // How far left or right the target is (degrees)
@@ -67,15 +68,15 @@ public class LocalizationFuser {
             fIDGetter = fiducialResults.get(0);
             atId = fIDGetter.getFiducialId();
             heading = calcLimelightYawRadians(tx);
-            return new Pose2d(LLPose.getPosition().x,LLPose.getPosition().y, heading);
+            return new Pose2d(LLPose.getPosition().x, LLPose.getPosition().y, heading);
 
-        }
-        else{
+        } else {
             heading = curImuYaw;
             return drPose;
         }
+    }
 
         //heading = Math.toRadians(imu.getRobotYawPitchRollAngles().getYaw()) + IMUOffsetRad;
         //return new Pose2d(0,0,heading);
-    }
+
 }
