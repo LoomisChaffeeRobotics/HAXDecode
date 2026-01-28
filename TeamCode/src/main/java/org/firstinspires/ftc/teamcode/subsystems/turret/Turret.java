@@ -302,6 +302,11 @@ public class Turret {
         outerCurVel = outerTurret.getVelocity();
 
         LLPose = updateLL(robotYaw);
+        if (LLPose != null) {
+            botpose = LLPose;
+        } else {
+            botpose = drivePose;
+        }
 
         updateTheta();
 //        updateAngleToGoal();
@@ -342,11 +347,7 @@ public class Turret {
         spinner.setPosition(0);
     }
     public Pose2d getBotpose () {
-        if (botpose != drivePose) {
-            return botpose;
-        } else {
-            return null;
-        }
+        return LLPose;
     }
     double getLRPM(double dist) {
         for (int i = 0; i < LUT.length; i++) {

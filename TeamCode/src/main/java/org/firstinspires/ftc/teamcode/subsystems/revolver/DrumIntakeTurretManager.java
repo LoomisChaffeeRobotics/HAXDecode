@@ -337,6 +337,7 @@ public class DrumIntakeTurretManager {
             if (lastMode != curMode) {
                 fireSequenceTimer.reset();
             }
+            turret.mode = Turret.turMode.FIRING;
             fireSequenceAsync();
         }
 
