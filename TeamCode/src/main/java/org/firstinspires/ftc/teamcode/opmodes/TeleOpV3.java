@@ -116,14 +116,14 @@ public class TeleOpV3 extends OpMode {
 
         if (gamepad1.left_trigger > 0.5) {
             drive.setDrivePowers(new PoseVelocity2d(
-                    new Vector2d(0.3 * gamepadx, 0.3 * gamepady),
+                    new Vector2d(0.3 * fieldX, 0.3 * -fieldY),
                     -0.3 * gamepad1.right_stick_x
             ));
         } else {
             drive.setDrivePowers(new PoseVelocity2d(
                     new Vector2d(
-                            gamepadx,
-                            gamepady
+                            fieldX,
+                            -fieldY
                     ),
                     -gamepad1.right_stick_x
             ));
