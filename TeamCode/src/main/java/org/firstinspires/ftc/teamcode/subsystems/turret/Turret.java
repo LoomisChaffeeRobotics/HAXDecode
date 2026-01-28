@@ -279,6 +279,7 @@ public class Turret {
                     botpose = new Pose2d(botpose_tag.getPosition().x*39.37, botpose_tag.getPosition().y*39.37, botpose_tag.getOrientation().getYaw(AngleUnit.RADIANS));
                     usingLLForPose = true;
                 }
+
             }
         } else {
             // if there's no tag in sight, update turret PID based on encoder
