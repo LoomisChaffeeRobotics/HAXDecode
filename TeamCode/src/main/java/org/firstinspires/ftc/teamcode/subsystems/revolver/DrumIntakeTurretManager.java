@@ -219,13 +219,7 @@ public class DrumIntakeTurretManager {
             lastTickArrived = true;
         }
     }
-    public boolean seeingTag() {
-        return turret.usingLLForPose;
-    }
-    public Pose2d getNewPoseFromTurret() {
-        return turret.getBotpose();
-    }
-    public void update(Pose2d pose, PoseVelocity2d velo, double robotYaw) {
+    public void update(Pose2d pose, PoseVelocity2d velo) {
         pid.setCoefficients(kP, kI, kD);
         pid.iMax = iMax;
         pid.iRange = iRange;
@@ -345,7 +339,7 @@ public class DrumIntakeTurretManager {
 
         //-----------------------loop actions-------------------------
         updateLastTickArrived();
-        turret.loop(pose, velo, robotYaw);
+        turret.loop(pose, velo);
         pid.update(curPos);
         revSpin.setPower(pid.velo);
         lastMode = curMode;
@@ -356,9 +350,6 @@ public class DrumIntakeTurretManager {
     }
     public boolean isArrived() {
         return pid.arrived;
-    }
-    public String readMotif() {
-        return turret.getCurrentMotif();
     }
     public String[] getColors() {
         return colTrack.slotColor;

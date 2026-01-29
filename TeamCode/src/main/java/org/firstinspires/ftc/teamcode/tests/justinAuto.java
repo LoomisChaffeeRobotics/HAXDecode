@@ -74,7 +74,7 @@ public class justinAuto extends OpMode {
     }
 
     private void loadMotifAndResetShots() {
-        motif = drum.readMotif(); // Somehow read motif
+//        motif = drum.readMotif(); // Somehow read motif
         if (!(motif.equals("GPP") || motif.equals("PGP") || motif.equals("PPG"))) {
             motif = "GPP";
         }

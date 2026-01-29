@@ -32,15 +32,13 @@ import java.util.Objects;
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp
 @Config
 public class TeleOpV4 extends OpMode {
-    MecanumDrive drive;
     DrumIntakeTurretManager drum;
     FtcDashboard dash;
     LocalizationFuser fuser;
     Telemetry t2;
     double botHeading;
-    IMU imu;
     double lastTriggerVal;
-    String[] colorsString = {"white", "white", "white"};
+    String[] colorsString = {"green", "purple", "purple"};
     int initPointer = 0;
     boolean blue;
     double offset = 0;
@@ -49,12 +47,9 @@ public class TeleOpV4 extends OpMode {
     @Override
     public void init() {
         drum = new DrumIntakeTurretManager();
-        drive = new MecanumDrive(hardwareMap, new Pose2d(66,0,-Math.PI));
         drum.init(hardwareMap, DrumIntakeTurretManager.revMode.FIREIDLE);
-        imu = hardwareMap.get(IMU.class, "imu");
-        imu.initialize(new IMU.Parameters(
-                new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD,
-                        RevHubOrientationOnRobot.UsbFacingDirection.DOWN)));
+        fuser = new LocalizationFuser();
+        fuser.init(new Pose2d(66,0,-Math.PI), hardwareMap);
         dash = FtcDashboard.getInstance();
         t2 = dash.getTelemetry();
         // file read
@@ -102,37 +97,26 @@ public class TeleOpV4 extends OpMode {
             drum.resetDrumEnc();
         }
         drum.curMode = tempMode;
-        if (blue) {
-            drive.localizer.setPose(new Pose2d(66, -17, Math.toRadians(180)));
-        } else {
-            drive.localizer.setPose(new Pose2d(66, 17, Math.toRadians(180)));
-        }
-        imu.resetYaw();
-        if (blue) {
-            offset = drive.localizer.getPose().heading.toDouble();
-        } else {
-            offset = -1 * drive.localizer.getPose().heading.toDouble();
-        }
+        fuser.start(blue);
     }
     @Override
     public void loop() {
         double gamepady = -gamepad1.left_stick_x;
         double gamepadx = -gamepad1.left_stick_y;
-        double imuHeading = fuser.curImuYaw;
-        botHeading = imuHeading + offset;
+        botHeading = fuser.getYaw();
 
-        fusedPose = fuser.ReturnPose;
+        fusedPose = fuser.getPose();
 
         double fieldX = -gamepadx * Math.sin(botHeading) + gamepady * Math.cos(botHeading);
         double fieldY = gamepadx * Math.cos(botHeading) + gamepady * Math.sin(botHeading);
-
+        fuser.loop(0); // eventually use a turret yaw getter before looping fuser once turret spinning
         if (gamepad1.left_trigger > 0.5) {
-            drive.setDrivePowers(new PoseVelocity2d(
+            fuser.setDrivePowers(new PoseVelocity2d(
                     new Vector2d(0.3 * fieldX, 0.3 * -fieldY),
                     -0.3 * gamepad1.right_stick_x
             ));
         } else {
-            drive.setDrivePowers(new PoseVelocity2d(
+            fuser.setDrivePowers(new PoseVelocity2d(
                     new Vector2d(
                             fieldX,
                             -fieldY
@@ -182,8 +166,7 @@ public class TeleOpV4 extends OpMode {
 
 
         if (gamepad1.startWasPressed()) {
-            drive.localizer.setPose(new Pose2d(66,0,-Math.PI));
-            imu.resetYaw();
+            fuser.resetDrive();
         }
         if (gamepad1.xWasPressed()) {
             drum.curMode = DrumIntakeTurretManager.revMode.SIMPLEFIRE;
@@ -201,23 +184,19 @@ public class TeleOpV4 extends OpMode {
         t2.addData("botheading", botHeading);
         lastTriggerVal = gamepad1.right_trigger;
 
-        PoseVelocity2d vel = drive.updatePoseEstimate();
-        drum.update(drive.localizer.getPose(), vel, imu.getRobotYawPitchRollAngles().getYaw() + 180); // degrees
-        if (drum.getNewPoseFromTurret() != null) {
-            drive.localizer.setPose(drum.getNewPoseFromTurret());
-        }
+        drum.update(fuser.getPose(), fuser.getVelo()); // degrees
         drum.updateTelemetry(t2);
+        fuser.updateTelemetry(t2);
 
         TelemetryPacket packet = new TelemetryPacket();
         packet.fieldOverlay().setStroke("#3F51B5");
-        Drawing.drawRobot(packet.fieldOverlay(), drive.localizer.getPose());
+        Drawing.drawRobot(packet.fieldOverlay(), fuser.getPose());
         FtcDashboard.getInstance().sendTelemetryPacket(packet);
         telemetry.addData("colors", Arrays.toString(drum.getColors()));
-        t2.addData("IMU yaw", imu.getRobotYawPitchRollAngles().getYaw() + 180);
         t2.update();
         telemetry.addData("mode", drum.curMode.toString());
 
-        if (drum.seeingTag()) {
+        if (fuser.seeingTag()) {
             telemetry.addLine("!------------TAG SEEN----------!");
         }
 

@@ -176,10 +176,10 @@ public class notcompteleop extends OpMode {
         lastTriggerVal = gamepad1.right_trigger;
 
         PoseVelocity2d vel = drive.updatePoseEstimate();
-        drum.update(drive.localizer.getPose(), vel, imu.getRobotYawPitchRollAngles().getYaw());
-        if (drum.getNewPoseFromTurret() != null) {
-            drive.localizer.setPose(drum.getNewPoseFromTurret());
-        }
+//        drum.update(drive.localizer.getPose(), vel, imu.getRobotYawPitchRollAngles().getYaw());
+//        if (drum.getNewPoseFromTurret() != null) {
+//            drive.localizer.setPose(drum.getNewPoseFromTurret());
+//        }
         drum.updateTelemetry(t2);
 
         TelemetryPacket packet = new TelemetryPacket();
@@ -189,9 +189,9 @@ public class notcompteleop extends OpMode {
         telemetry.addData("colors", Arrays.toString(drum.getColors()));
         telemetry.addData("mode", drum.curMode.toString());
 
-        if (drum.seeingTag()) {
-            telemetry.addLine("!------------TAG SEEN----------!");
-        }
+//        if (drum.seeingTag()) {
+//            telemetry.addLine("!------------TAG SEEN----------!");
+//        }
 
         telemetry.update();
     }

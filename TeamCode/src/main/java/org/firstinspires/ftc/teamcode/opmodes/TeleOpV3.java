@@ -48,10 +48,6 @@ public class TeleOpV3 extends OpMode {
         drum = new DrumIntakeTurretManager();
         drive = new MecanumDrive(hardwareMap, new Pose2d(66,0,-Math.PI));
         drum.init(hardwareMap, DrumIntakeTurretManager.revMode.FIREIDLE);
-        imu = hardwareMap.get(IMU.class, "imu");
-        imu.initialize(new IMU.Parameters(
-                new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD,
-                        RevHubOrientationOnRobot.UsbFacingDirection.DOWN)));
         dash = FtcDashboard.getInstance();
         t2 = dash.getTelemetry();
         // file read
@@ -197,10 +193,10 @@ public class TeleOpV3 extends OpMode {
         lastTriggerVal = gamepad1.right_trigger;
 
         PoseVelocity2d vel = drive.updatePoseEstimate();
-        drum.update(drive.localizer.getPose(), vel, imu.getRobotYawPitchRollAngles().getYaw() + 180); // degrees
-        if (drum.getNewPoseFromTurret() != null) {
-            drive.localizer.setPose(drum.getNewPoseFromTurret());
-        }
+        drum.update(drive.localizer.getPose(), vel); // degrees
+//        if (drum.getNewPoseFromTurret() != null) {
+//            drive.localizer.setPose(drum.getNewPoseFromTurret());
+//        }
         drum.updateTelemetry(t2);
 
         TelemetryPacket packet = new TelemetryPacket();
@@ -212,9 +208,9 @@ public class TeleOpV3 extends OpMode {
         t2.update();
         telemetry.addData("mode", drum.curMode.toString());
 
-        if (drum.seeingTag()) {
-            telemetry.addLine("!------------TAG SEEN----------!");
-        }
+//        if (drum.seeingTag()) {
+//            telemetry.addLine("!------------TAG SEEN----------!");
+//        }
 
         telemetry.update();
     }

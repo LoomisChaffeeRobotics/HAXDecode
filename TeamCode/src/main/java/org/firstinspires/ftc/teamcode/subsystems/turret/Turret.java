@@ -86,9 +86,6 @@ public class Turret {
     public static double kDTag = 0.001;
     double offset = 0;
     Pose2d botpose;
-    Pose2d LLPose;
-    Pose2d drivePose;
-    Limelight3A limelight;
     Servo spinner;
     DcMotorEx turEnc;
     DcMotorEx innerTurret;
@@ -100,10 +97,9 @@ public class Turret {
     File dataLog = AppUtil.getInstance().getSettingsFile(logFilePath);
     TurretPID turPID;
     public double innerRPM = 0;
-    public int curId = 20;
-    public int targId = 20;
     public double outerRPM = 0;
-    public double thetaDiff = 0;
+    public double veloGoalAngle = 0;
+    public double roboRelativeAngleToGoal = 0;
     static double turretFullLoop = (double) 8192 * 75 / 15; // # ticks for loop
     static double RPMtoTicksPerSecond = (double) 28 / 60;
     public double speed = 0;
@@ -118,12 +114,7 @@ public class Turret {
     public double innerCurVel;
     public double outerCurVel;
     public double turPower = 0;
-    public boolean usingLLForPose = false;
-    public boolean LLonCorrectTag = false;
     double turretCurTicks = 0;
-    Pose3D botpose_tag;
-    LLResultTypes.FiducialResult fIDGetter;
-    int atId;
     public enum turMode {
         FIRING,
         INTAKING,
@@ -133,7 +124,7 @@ public class Turret {
     public boolean bothMotorsSpunUp = false;
     public boolean successfulShot = false;
     double getGyro(){
-        return drivePose.heading.toDouble();
+        return botpose.heading.toDouble();
     }
     void updateTurretAngle() {
         turretAngle = - 2 * Math.PI * (turretCurTicks / turretFullLoop);
@@ -146,21 +137,14 @@ public class Turret {
         double[] velVect = new double[] {robotVelo.linearVel.x, robotVelo.linearVel.y};
         double dotProduct = distVect[0] * velVect[0] + distVect[1] * velVect[1];
         double prodMagDist = Math.sqrt(Math.pow(distVect[0], 2) + Math.pow(distVect[1], 2)) * Math.sqrt(Math.pow(velVect[1],2) + Math.pow(velVect[0],2));
-        thetaDiff = Math.acos(dotProduct / (prodMagDist + 0.000001));
+        veloGoalAngle = Math.acos(dotProduct / (prodMagDist + 0.000001));
     }
-//    void updateAngleToGoal() {
-//        // need to first find difference in angle between distance vector and robot pointed vector (not turret)
-//        // then need to optimize in case the difference is over 180 and normalize to robot range (-PI to PI)
-//        double[] distVect = new double[] {goalPose.position.x - botpose.position.x, goalPose.position.y - botpose.position.y};
-//        double[] unitDirVect = new double[] {Math.cos(getGyro()), Math.sin(getGyro())};
-//        angleToGoal = Math.acos((distVect[0] * unitDirVect[0] + distVect[1] + unitDirVect[1])/
-//                Math.sqrt(Math.pow(distVect[0],2) + Math.pow(unitDirVect[0],2)));
-//        //acos gives 0 to PI, need to check for negative angles
-//        // this seems wrong
-//        if (getGyro() > Math.atan2(distVect[1], distVect[0])) {
-//            angleToGoal = -angleToGoal;
-//        };
-//    }
+    void updateAngleToGoal() {
+        double[] distVect = new double[] {goalPose.position.x - botpose.position.x, goalPose.position.y - botpose.position.y};
+        double thetaBot = getGyro();
+        double thetaGoal = Math.atan2(distVect[1], distVect[0]);
+        roboRelativeAngleToGoal = thetaGoal - thetaBot;
+    }
     double angleToTicks(double angle) {
         // # ticks = #radians  (turretFullLoop / 2PI)
         return (angle / (2 * Math.PI)) * turretFullLoop;
@@ -175,7 +159,7 @@ public class Turret {
         telemetry.addData("outerTurret targ rpm)", outerRPM);
         telemetry.addData("innerTurret cur rpm",  innerCurVel / RPMtoTicksPerSecond);
         telemetry.addData("outerTurret cur rpm)", outerCurVel/ RPMtoTicksPerSecond);
-        telemetry.addData("thetaDiff", thetaDiff);
+        telemetry.addData("veloGoalAngle", veloGoalAngle);
 //        telemetry.addData("angle To Goal (deg)", angleToGoal * 180/Math.PI);
         telemetry.addData("vG", vGoal);
         telemetry.addData("dGoal", dGoal);
@@ -194,13 +178,8 @@ public class Turret {
         telemetry.addData("speed", speed);
         telemetry.addData("spun up", bothMotorsSpunUp);
         telemetry.addData("offset", offset);
-        telemetry.addData("tag?", usingLLForPose);
-        telemetry.addData("ATagID", atId);
         telemetry.addData("tagX", tx);
         telemetry.addData("SuccessShot?", successfulShot);
-        if (botpose_tag != null) {
-            telemetry.addData("botpose tag", botpose_tag);
-        }
         telemetry.update();
     }
     public void init(HardwareMap hardwareMap){
@@ -238,75 +217,16 @@ public class Turret {
     public void setBlue(boolean isBlue){
         if (isBlue) {
             goalPose = goalPoseBlue;
-            targId = 20;
         } else {
             goalPose = goalPoseRed;
-            targId = 24;
         }
     }
-//    public Pose2d updateLL(double robotYaw) {
-//        // biggest problem with OTOS is that when it's not clean, translation is unreliable
-//        // OTOS also has built in IMU but has seemed to perhaps be unreliable as well? may need to retune angularScalar
-//        // perhaps section off the LL processing to this method instead of loop()
-//
-//        /* this is going to both return a pose from the LL to fuse later and also update class tag data so
-//        we can use it in loop, the class tag data is purely for shooting PID
-//        something like if you see the right tag, return a tx ty ta that's not null, otherwise make it null
-//        and when you're checking in loop check that it's not null then set the PID accordingly
-//        and if it's null use turret encoders except we don't want to do that yet because we have < 1 week.
-//        so later, create some PID code in loop
-//
-//        the loop will look at data for shooting distance AFTER the pose2d returned by this has been FUSED
-//        with the other data in LocalizationFuser which might be a problem bc it's kind of cyclical
-//        cyclicality might not be there if not using heading to talk to LL though?
-//
-//         */
-//        limelight.updateRobotOrientation(robotYaw);
-//        LLResult result = limelight.getLatestResult();
-//        if (result != null && result.isValid()) { // if LL available, use LL botpose
-//            // if there's the right tag in sight, update turret PID to focus on tag
-//            // means you have to change coeffs to tag mode
-//
-//            if (!result.getFiducialResults().isEmpty()) {
-//                curId = result.getFiducialResults().get(0).getFiducialId();
-//                if (curId != 20 && curId != 24) {
-//                    usingLLForPose = false;
-//                    LLonCorrectTag = false;
-//                    return null;
-//                } else {
-//                    if (curId == targId) {
-//                        tx = result.getTx(); // How far left or right the target is (degrees)
-//                        ty = result.getTy(); // How far up or down the target is (degrees)
-//                        ta = result.getTa(); // How big the target looks (0%-100% of the image)
-//                        LLonCorrectTag = true;
-//                    }
-//                    botpose_tag = result.getBotpose_MT2();
-//                    usingLLForPose = true;
-//                    LLonCorrectTag = false;
-//                    return new Pose2d(botpose_tag.getPosition().x*39.37, botpose_tag.getPosition().y*39.37, botpose_tag.getOrientation().getYaw(AngleUnit.RADIANS));
-//                }
-//            }
-//        } else {
-//            usingLLForPose = false;
-//            LLonCorrectTag = false;
-//            return null;
-//        }
-//
-//        return null;
-//    }
     public void loop(Pose2d fusedPose, PoseVelocity2d finalVel){
         turretCurTicks = -turEnc.getCurrentPosition();
-        drivePose = fusedPose;
+        botpose = fusedPose;
         robotVelo = finalVel;
         innerCurVel = innerTurret.getVelocity();
         outerCurVel = outerTurret.getVelocity();
-
-//        LLPose = updateLL(robotYaw);
-//        if (LLPose != null) {
-//            botpose = LLPose;
-//        } else {
-//            botpose = drivePose;
-//        }
 
         updateTheta();
 //        updateAngleToGoal();
@@ -316,7 +236,7 @@ public class Turret {
         // put stuff about turPID here using tx, ty, ta's nullness and/or values
 
         // firing stuff?
-        vGoal = speed * Math.cos(thetaDiff);
+        vGoal = speed * Math.cos(veloGoalAngle);
         dGoal = Math.sqrt(Math.pow(botpose.position.x - goalPose.position.x, 2) + Math.pow(botpose.position.y - goalPose.position.y, 2));
         flightTime = getToF(dGoal/39.37);
         calcOffset(dGoal);
@@ -345,9 +265,6 @@ public class Turret {
             bothMotorsSpunUp = false;
         }
         spinner.setPosition(0);
-    }
-    public Pose2d getBotpose () {
-        return LLPose;
     }
     double getLRPM(double dist) {
         for (int i = 0; i < LUT.length; i++) {
@@ -402,17 +319,4 @@ public class Turret {
             offset = 10 - 0.0909090909 * (distanceFinal - 115);
         }
     }
-    public String getCurrentMotif(){
-        if (atId == 21){
-            return "GPP";
-        }
-        else if (atId == 22){
-            return "PGP";
-        }
-        else if (atId == 23){
-            return "PPG";
-        }
-        return "null";
-    }
-
 }
