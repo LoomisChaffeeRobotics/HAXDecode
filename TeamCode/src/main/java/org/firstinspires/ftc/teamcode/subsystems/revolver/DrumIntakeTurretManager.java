@@ -27,9 +27,9 @@ public class DrumIntakeTurretManager {
     FancyPID pid = new FancyPID();
     double flickPosUp = 0.95;
     double flickPosDown = 0.4;
-    public static double kP = 0.0002;
-    public static double kI = 0.000005;
-    public static double kD = 0.0001;
+    public static double kP = 0.000225;
+    public static double kI = 0.0000075;
+    public static double kD = 0.000;
     public static double iMax = 0.3;
     public static double iRange = 0.15;
     public static double errorTol = 100;
@@ -72,11 +72,18 @@ public class DrumIntakeTurretManager {
         colTrack.setGain(gain);
     }
     public void nextSlot() {
-        colTrack.pointer = Math.abs((colTrack.pointer +1)) % 3;
+        if (colTrack.pointer == 2) {
+            colTrack.pointer = 0;
+        } else {
+            colTrack.pointer++;
+        }
     }
     public void lastSlot() {
-        colTrack.pointer = Math.abs((colTrack.pointer + 2)) % 3;
-    }
+        if (colTrack.pointer == 0) {
+            colTrack.pointer = 2;
+        } else {
+            colTrack.pointer--;
+        }    }
     public void toggleManualShoot() {
         if (curMode == revMode.FIRESTANDBY) {
             curMode = revMode.INTAKING;
@@ -118,7 +125,6 @@ public class DrumIntakeTurretManager {
         t.addData("curMode", curMode);
         t.addData("lastTickArrived", lastTickArrived);
         turret.updateTelemetry(t);
-        t.update();
     }
 
     //----------------------------------------------------------------------------------

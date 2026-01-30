@@ -42,15 +42,17 @@ public class LocalizationFuser {
     int curId;
     public double curImuYaw = 0;
     double heading;
+    double latency = 0;
     PoseVelocity2d velo;
     public void init(Pose2d startPose, HardwareMap hardwareMap) {
-        imu = hardwareMap.get(IMU.class, "imu");
+        imu = hardwareMap.get(IMU.class, "imu2");
         imu.initialize(new IMU.Parameters(
                 new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD,
                         RevHubOrientationOnRobot.UsbFacingDirection.DOWN)));
         IMUOffsetRad = startPose.heading.toDouble();
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
+        limelight.setPollRateHz(50); // This sets how often we ask Limelight for data (100 times per second)
+        limelight.pipelineSwitch(0);
         limelight.start(); // This tells Limelight to start looking!
         drive = new MecanumDrive(hardwareMap, new Pose2d(66,0,-Math.PI));
     }
@@ -80,16 +82,17 @@ public class LocalizationFuser {
                         tx = result.getTx(); // How far left or right the target is (degrees)
                         ty = result.getTy(); // How far up or down the target is (degrees)
                         ta = result.getTa(); // How big the target looks (0%-100% of the image)
+                        latency = result.getTargetingLatency();
                         LLonCorrectTag = true; // use this boolean later for turret spinning
                     } else {
                         LLonCorrectTag = false;
                     }
-                    Pose3D temp = result.getBotpose();
-                    if (temp.getPosition().x == 0 && temp.getPosition().y == 0) {
+                    Pose3D temp = result.getBotpose_MT2();
+                    if (temp.getPosition().x == 0 && temp.getPosition().y == 0 || result.getTargetingLatency() > 35) {
                         usingLLForPose = false;
                     } else {
                         PrevPose = new Pose2d(LLPose.position.x, LLPose.position.y, LLPose.heading.toDouble());
-                        LLPose = new Pose2d(temp.getPosition().x*39.37, temp.getPosition().y*39.37, temp.getOrientation().getYaw(AngleUnit.RADIANS));
+                        LLPose = new Pose2d(temp.getPosition().x*39.37, temp.getPosition().y*39.37, curImuYaw);
                         usingLLForPose = true;
                         lastUsingLL = true;
                     }
@@ -131,7 +134,7 @@ public class LocalizationFuser {
                 finalPose = PrevPose;
             }
             else {
-                finalPose = drive.localizer.getPose();
+                finalPose = new Pose2d(drive.localizer.getPose().position, curImuYaw);
             }
         }
 
@@ -170,6 +173,9 @@ public class LocalizationFuser {
     public void updateTelemetry(Telemetry t) {
         t.addData("Using LLPose?", usingLLForPose);
         t.addData("Right goal tag?", LLonCorrectTag);
-        t.update();
+        t.addData("fused pose heading", finalPose.heading.toDouble());
+        t.addData("imu heading", curImuYaw);
+        t.addData("tagX", tx);
+        t.addData("latency", latency);
     }
 }

@@ -43,6 +43,7 @@ public class TeleOpV4 extends OpMode {
     boolean blue;
     double offset = 0;
     Pose2d fusedPose = new Pose2d(0,0,0);
+    int fcMultiplier = 1;
     DrumIntakeTurretManager.revMode tempMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
     @Override
     public void init() {
@@ -98,18 +99,29 @@ public class TeleOpV4 extends OpMode {
         }
         drum.curMode = tempMode;
         fuser.start(blue);
+        fuser.resetDrive();
+        if (blue) {
+            fcMultiplier*=-1;
+        }
     }
     @Override
     public void loop() {
-        double gamepady = -gamepad1.left_stick_x;
-        double gamepadx = -gamepad1.left_stick_y;
-        botHeading = fuser.getYaw();
+        double gamepady = -gamepad1.left_stick_y;
+        double gamepadx = -gamepad1.left_stick_x;
+
+        if(!blue){
+            gamepadx *= -1;
+            gamepady *= -1;
+        }
+
+        double controlAngle =
+        botHeading = fcMultiplier * fuser.getYaw();
 
         fusedPose = fuser.getPose();
         fuser.loop(0); // eventually use a turret yaw getter before looping fuser once turret spinning
 
-        double fieldX = -gamepadx * Math.sin(botHeading) + gamepady * Math.cos(botHeading);
-        double fieldY = gamepadx * Math.cos(botHeading) + gamepady * Math.sin(botHeading);
+        double fieldX = gamepadx * Math.cos(botHeading) + gamepady * Math.sin(botHeading);
+        double fieldY = -gamepadx * Math.sin(botHeading) + gamepady * Math.cos(botHeading);
         if (gamepad1.left_trigger > 0.5) {
             fuser.setDrivePowers(new PoseVelocity2d(
                     new Vector2d(0.3 * fieldX, 0.3 * -fieldY),
@@ -117,10 +129,7 @@ public class TeleOpV4 extends OpMode {
             ));
         } else {
             fuser.setDrivePowers(new PoseVelocity2d(
-                    new Vector2d(
-                            fieldX,
-                            -fieldY
-                    ),
+                    new Vector2d(fieldX,-fieldY),
                     -gamepad1.right_stick_x
             ));
         }
@@ -160,7 +169,7 @@ public class TeleOpV4 extends OpMode {
 
         if (gamepad2.dpadUpWasPressed()) {
             drum.nextSlot();
-        } else if (gamepad1.dpadDownWasPressed()) {
+        } else if (gamepad2.dpadDownWasPressed()) {
             drum.lastSlot();
         }
 
@@ -191,6 +200,8 @@ public class TeleOpV4 extends OpMode {
         TelemetryPacket packet = new TelemetryPacket();
         packet.fieldOverlay().setStroke("#3F51B5");
         Drawing.drawRobot(packet.fieldOverlay(), fusedPose);
+        packet.fieldOverlay().setStroke("#FF51B5");
+//        Drawing.drawRobot(packet.fieldOverlay(), new Pose2d(fusedPose.position, botHeading));
         FtcDashboard.getInstance().sendTelemetryPacket(packet);
         telemetry.addData("colors", Arrays.toString(drum.getColors()));
         t2.update();
