@@ -18,14 +18,11 @@ import java.util.List;
 public class LocalizationFuser {
     // research "ransack algorithm"
     MecanumDrive drive;
-    public Pose2d OdoPose;
-    public Pose2d LLPose;
-
-    public Pose2d finalPose;
+    public Pose2d LLPose = new Pose2d(0,0,0);
+    public Pose2d finalPose = new Pose2d(0,0,0);
     
     public IMU imu;
-    
-    public Pose2d PrevPose;
+    public Pose2d PrevPose = new Pose2d(0,0,0);
     public double IMUOffsetRad;
     public boolean usingLLForPose = false;
 
@@ -34,8 +31,8 @@ public class LocalizationFuser {
     Pose2d goalPoseBlue = new Pose2d(-68, -53, Math.toRadians(-135));
     Pose2d goalPoseRed = new Pose2d(-68, 53, Math.toRadians(-135));
     Pose2d goalPose = goalPoseBlue;
-    Pose3D botpose_tag;
     public int targId = 20;
+    public double tagDist = 0;
     public boolean LLonCorrectTag = false;
     public boolean lastUsingLL = false;
     public boolean isFinalPoseNull = false;
@@ -68,8 +65,7 @@ public class LocalizationFuser {
         imu.resetYaw();
         drive.localizer.setPose(new Pose2d(66,0,-Math.PI));
     }
-    public void updateLL(double robotYawDeg) {
-        limelight.updateRobotOrientation(robotYawDeg);
+    public void updateLL() {
         LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid()) { // if LL available, use LL botpose
             // if there's the right tag in sight, update turret PID to focus on tag
@@ -88,11 +84,15 @@ public class LocalizationFuser {
                     } else {
                         LLonCorrectTag = false;
                     }
-                    Pose3D temp = result.getBotpose_MT2();
-                    PrevPose = LLPose;
-                    LLPose = new Pose2d(temp.getPosition().x*39.37, temp.getPosition().y*39.37, Math.toRadians(robotYawDeg));
-                    usingLLForPose = true;
-                    lastUsingLL = true;
+                    Pose3D temp = result.getBotpose();
+                    if (temp.getPosition().x == 0 && temp.getPosition().y == 0) {
+                        usingLLForPose = false;
+                    } else {
+                        PrevPose = new Pose2d(LLPose.position.x, LLPose.position.y, LLPose.heading.toDouble());
+                        LLPose = new Pose2d(temp.getPosition().x*39.37, temp.getPosition().y*39.37, temp.getOrientation().getYaw(AngleUnit.RADIANS));
+                        usingLLForPose = true;
+                        lastUsingLL = true;
+                    }
                 }
             }
         } else {
@@ -117,11 +117,12 @@ public class LocalizationFuser {
             drive.localizer.setPose(new Pose2d(drive.localizer.getPose().position, curImuYaw)); // assume IMU is most reliable
         }*/
 
-        updateLL(Math.toDegrees(curImuYaw));
+        updateLL();
 
         if (usingLLForPose) {
             lastUsingLL = true;
             finalPose = LLPose;
+            drive.localizer.setPose(finalPose);
         }
         else {
             if (lastUsingLL) {

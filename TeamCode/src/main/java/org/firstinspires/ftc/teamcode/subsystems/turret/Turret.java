@@ -167,6 +167,11 @@ public class Turret {
         telemetry.addData("dGoalEstimate", dGoalEstimate);
         telemetry.addData("curX", botpose.position.x);
         telemetry.addData("curY", botpose.position.y);
+        telemetry.addData("diffX", botpose.position.x - goalPose.position.x);
+        telemetry.addData("diffY", botpose.position.y - goalPose.position.y);
+        telemetry.addData("squareX", (botpose.position.x - goalPose.position.x)*(botpose.position.x - goalPose.position.x));
+        telemetry.addData("squareY", (botpose.position.y - goalPose.position.y)*(botpose.position.y - goalPose.position.y));
+        telemetry.addData("rootDist", Math.sqrt((botpose.position.y - goalPose.position.y)*(botpose.position.y - goalPose.position.y) +(botpose.position.x - goalPose.position.x)*(botpose.position.x - goalPose.position.x)));
         telemetry.addData("turretAngle (deg)", turretAngle * 180/Math.PI);
         telemetry.addData("gyro", getGyro());
         telemetry.addData("limelightX", tx);
@@ -237,7 +242,7 @@ public class Turret {
 
         // firing stuff?
         vGoal = speed * Math.cos(veloGoalAngle);
-        dGoal = Math.sqrt(Math.pow(botpose.position.x - goalPose.position.x, 2) + Math.pow(botpose.position.y - goalPose.position.y, 2));
+        dGoal = Math.sqrt(((botpose.position.x - goalPose.position.x) * (botpose.position.x - goalPose.position.x)) + ((botpose.position.y - goalPose.position.y)*(botpose.position.y - goalPose.position.y)));
         flightTime = getToF(dGoal/39.37);
         calcOffset(dGoal);
         dGoalEstimate = (dGoal) + offset; // temporarily removed velocity compensation

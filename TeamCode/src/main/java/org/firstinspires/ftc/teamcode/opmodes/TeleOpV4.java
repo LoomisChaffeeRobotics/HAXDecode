@@ -106,10 +106,10 @@ public class TeleOpV4 extends OpMode {
         botHeading = fuser.getYaw();
 
         fusedPose = fuser.getPose();
+        fuser.loop(0); // eventually use a turret yaw getter before looping fuser once turret spinning
 
         double fieldX = -gamepadx * Math.sin(botHeading) + gamepady * Math.cos(botHeading);
         double fieldY = gamepadx * Math.cos(botHeading) + gamepady * Math.sin(botHeading);
-        fuser.loop(0); // eventually use a turret yaw getter before looping fuser once turret spinning
         if (gamepad1.left_trigger > 0.5) {
             fuser.setDrivePowers(new PoseVelocity2d(
                     new Vector2d(0.3 * fieldX, 0.3 * -fieldY),
@@ -190,7 +190,7 @@ public class TeleOpV4 extends OpMode {
 
         TelemetryPacket packet = new TelemetryPacket();
         packet.fieldOverlay().setStroke("#3F51B5");
-        Drawing.drawRobot(packet.fieldOverlay(), fuser.getPose());
+        Drawing.drawRobot(packet.fieldOverlay(), fusedPose);
         FtcDashboard.getInstance().sendTelemetryPacket(packet);
         telemetry.addData("colors", Arrays.toString(drum.getColors()));
         t2.update();
