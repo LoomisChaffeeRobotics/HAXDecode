@@ -24,6 +24,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+import org.firstinspires.ftc.teamcode.subsystems.FancyPID;
 import org.firstinspires.ftc.teamcode.subsystems.TurretPID;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
 
@@ -84,6 +85,14 @@ public class Turret {
     public static double kPTag = 0.02;
     public static double kITag = 0;
     public static double kDTag = 0.001;
+    public static double kPInnerVelo = 0;
+    public static double kIInnerVelo = 0;
+    public static double kDInnerVelo = 0;
+    public static double kPOuter = 0;
+    public static double kIOuter = 0;
+    public static double kDOuter = 0;
+    public static double outerGain = 0.5;
+    public static double innerGain = 0.5;
     double offset = 0;
     Pose2d botpose;
     Servo spinner;
@@ -96,6 +105,7 @@ public class Turret {
     String logFilePath = String.format("%s/FIRST/lastInfo.json", Environment.getExternalStorageDirectory().getAbsolutePath());
     File dataLog = AppUtil.getInstance().getSettingsFile(logFilePath);
     TurretPID turPID;
+    FancyPID veloPID;
     public double innerRPM = 0;
     public double outerRPM = 0;
     public double veloGoalAngle = 0;
@@ -113,6 +123,8 @@ public class Turret {
     public double flightTime = 0;
     public double innerCurVel;
     public double outerCurVel;
+    double filteredInner = 0;
+    double filteredOuter = 0;
     public double turPower = 0;
     double turretCurTicks = 0;
     public enum turMode {
@@ -123,6 +135,7 @@ public class Turret {
     public turMode mode = turMode.IDLE;
     public boolean bothMotorsSpunUp = false;
     public boolean successfulShot = false;
+    public boolean addedOffset = false;
     double getGyro(){
         return botpose.heading.toDouble();
     }
@@ -184,6 +197,10 @@ public class Turret {
         telemetry.addData("spun up", bothMotorsSpunUp);
         telemetry.addData("offset", offset);
         telemetry.addData("SuccessShot?", successfulShot);
+        telemetry.addData("inner pids", innerTurret.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).toString());
+        telemetry.addData("inner algo", innerTurret.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).algorithm.toString());
+        telemetry.addData("outer pids", outerTurret.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).toString());
+        telemetry.addData("outer algo", outerTurret.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).algorithm.toString());
     }
     public void init(HardwareMap hardwareMap){
 //        limelight = hardwareMap.get(Limelight3A.class, "limelight");
@@ -216,6 +233,8 @@ public class Turret {
 
         turPID = new TurretPID();
         turPID.init();
+        veloPID = new FancyPID();
+        veloPID.init();
     }
     public void setBlue(boolean isBlue){
         if (isBlue) {
@@ -224,13 +243,24 @@ public class Turret {
             goalPose = goalPoseRed;
         }
     }
+    public void updateUpperFilter(double velo) {
+        filteredOuter = (outerGain * velo) + ((1-outerGain) * filteredOuter);
+    }
+    public void updateLowerFilter(double velo) {
+        filteredInner = (innerGain * velo) + ((1-innerGain) * filteredInner);
+    }
     public void loop(Pose2d fusedPose, PoseVelocity2d finalVel){
         turretCurTicks = -turEnc.getCurrentPosition();
         botpose = fusedPose;
         robotVelo = finalVel;
         innerCurVel = innerTurret.getVelocity();
         outerCurVel = outerTurret.getVelocity();
+        updateLowerFilter(innerCurVel);
+        updateUpperFilter(outerCurVel); // feedback is filtered, output is not (doesn't need to be)
+        // we can change the pid coeffs first. if that doesn't work, we use the veloPID
 
+        innerTurret.setVelocityPIDFCoefficients(kPInnerVelo, kIInnerVelo, kDInnerVelo, 0);
+        outerTurret.setVelocityPIDFCoefficients(kPOuter, kIOuter, kDOuter, 0);
         updateTheta();
 //        updateAngleToGoal();
         updateOrthogVelMag();
@@ -253,7 +283,7 @@ public class Turret {
             // if there is too much lag, only calc velocities when firing
             innerTurret.setVelocity(innerRPM * RPMtoTicksPerSecond);
             outerTurret.setVelocity(outerRPM * RPMtoTicksPerSecond);
-            if (((Math.abs(innerRPM - (innerCurVel / RPMtoTicksPerSecond)) < 500) && ((Math.abs(outerRPM - (outerCurVel / RPMtoTicksPerSecond)) < 500)))) {
+            if (((Math.abs(innerRPM - (innerCurVel / RPMtoTicksPerSecond)) < 200) && ((Math.abs(outerRPM - (outerCurVel / RPMtoTicksPerSecond)) < 200)))) {
                 bothMotorsSpunUp = true;
             } else {
                 bothMotorsSpunUp = false;
@@ -267,6 +297,7 @@ public class Turret {
             outerTurret.setVelocity(0);
             bothMotorsSpunUp = false;
         }
+
         spinner.setPosition(0);
     }
     double getLRPM(double dist) {
@@ -312,14 +343,29 @@ public class Turret {
         return 0;
     }
     public void calcOffset(double distanceFinal) {
-        if (distanceFinal < 24) {
-            offset = 10;
-        } else if (distanceFinal < 60) {
-            offset = 10;
-        } else if (distanceFinal < 115) {
-            offset = 10;
+        if (addedOffset) {
+            if (distanceFinal < 24) {
+                offset = 12;
+            } else if (distanceFinal < 60) {
+                offset = 11;
+            } else if (distanceFinal < 115) {
+                offset = 9;
+            } else {
+                offset = 9 - 0.0909090909 * (distanceFinal - 115);
+            }
         } else {
-            offset = 10 - 0.0909090909 * (distanceFinal - 115);
+            if (distanceFinal < 24) {
+                offset = 10;
+            } else if (distanceFinal < 60) {
+                offset = 9;
+            } else if (distanceFinal < 115) {
+                offset = 9;
+            } else {
+                offset = 9 - 0.0909090909 * (distanceFinal - 115);
+            }
         }
+    }
+    public void toggleAddedOffset() {
+        addedOffset = !addedOffset;
     }
 }

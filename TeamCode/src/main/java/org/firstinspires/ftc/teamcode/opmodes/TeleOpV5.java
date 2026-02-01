@@ -1,37 +1,26 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import android.os.Environment;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.util.ReadWriteFile;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import org.firstinspires.ftc.teamcode.Drawing;
-import org.firstinspires.ftc.teamcode.MecanumDrive;
+import org.firstinspires.ftc.teamcode.subsystems.FancyPID;
 import org.firstinspires.ftc.teamcode.subsystems.LocalizationFuser;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-//import org.json.simple.parser.JSONParser;
 
-import java.io.File;
-import java.io.FileReader;
 import java.util.Arrays;
-import java.util.Objects;
 
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp
 @Config
-public class TeleOpV4 extends OpMode {
+@Disabled
+public class TeleOpV5 extends OpMode {
     DrumIntakeTurretManager drum;
     FtcDashboard dash;
     LocalizationFuser fuser;
@@ -44,6 +33,7 @@ public class TeleOpV4 extends OpMode {
     double offset = 0;
     Pose2d fusedPose = new Pose2d(0,0,0);
     int fcMultiplier = 1;
+    FancyPID rotPID = new FancyPID();
     DrumIntakeTurretManager.revMode tempMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
     @Override
     public void init() {
@@ -100,34 +90,28 @@ public class TeleOpV4 extends OpMode {
         drum.curMode = tempMode;
         fuser.start(blue);
         fuser.resetDrive();
-
+        if (blue) {
+            fcMultiplier*=-1;
+        }
     }
     @Override
     public void loop() {
+        double gamepady = -gamepad1.left_stick_y;
+        double gamepadx = -gamepad1.left_stick_x;
 
-        double gamepady;
-        double gamepadx;
-        if (blue) {
-            gamepady = -gamepad1.left_stick_y;
-            gamepadx = -gamepad1.left_stick_x;
-        } else {
-            gamepady = gamepad1.left_stick_y;
-            gamepadx = gamepad1.left_stick_x;
+        if(!blue){
+            gamepadx *= -1;
+            gamepady *= -1;
         }
 
-//        double controlAngle =
-        botHeading = fuser.getYaw();
+        double controlAngle =
+        botHeading = fcMultiplier * fuser.getYaw();
 
         fusedPose = fuser.getPose();
         fuser.loop(0); // eventually use a turret yaw getter before looping fuser once turret spinning
 
-
-        double fieldX;
-        double fieldY;
-
-        fieldX = gamepadx * Math.cos(-botHeading) + gamepady * Math.sin(-botHeading);
-        fieldY = -gamepadx * Math.sin(-botHeading) + gamepady * Math.cos(-botHeading);
-
+        double fieldX = gamepadx * Math.cos(botHeading) + gamepady * Math.sin(botHeading);
+        double fieldY = -gamepadx * Math.sin(botHeading) + gamepady * Math.cos(botHeading);
         if (gamepad1.left_trigger > 0.5) {
             fuser.setDrivePowers(new PoseVelocity2d(
                     new Vector2d(0.3 * fieldX, 0.3 * -fieldY),

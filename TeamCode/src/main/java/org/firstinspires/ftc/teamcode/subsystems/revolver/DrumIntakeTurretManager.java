@@ -27,9 +27,9 @@ public class DrumIntakeTurretManager {
     FancyPID pid = new FancyPID();
     double flickPosUp = 0.95;
     double flickPosDown = 0.4;
-    public static double kP = 0.000225;
-    public static double kI = 0.0000075;
-    public static double kD = 0.0001;
+    public static double kP = 0.0002;
+    public static double kI = 0.00004;
+    public static double kD = 0.00015;
     public static double iMax = 0.3;
     public static double iRange = 0.15;
     public static double errorTol = 100;
@@ -202,7 +202,7 @@ public class DrumIntakeTurretManager {
         } else {
             colTrack.pointer = colTrack.findNearestBall();
             pid.target = optimizeTarg(slotTarget[colTrack.pointer] + FCV / 2, curPos);
-            if (pid.arrived) {
+            if (pid.arrived && !isFiring) {
                 fireSequenceTimer.reset();
                 isFiring = true;
                 activateAsync = false;
@@ -224,6 +224,9 @@ public class DrumIntakeTurretManager {
             isDepressed = false;
             lastTickArrived = true;
         }
+    }
+    public void toggleAddedOffset() {
+        turret.toggleAddedOffset();
     }
     public void update(Pose2d pose, PoseVelocity2d velo) {
         pid.setCoefficients(kP, kI, kD);

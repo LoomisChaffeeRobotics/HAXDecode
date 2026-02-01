@@ -17,17 +17,20 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 import java.util.List;
 public class LocalizationFuser {
     // research "ransack algorithm"
+    public static double kP = 0;
+    public static double kI = 0;
+    public static double kD = 0;
+    double angVelPID;
+    FancyPID rotPID = new FancyPID();
     MecanumDrive drive;
     public Pose2d LLPose = new Pose2d(0,0,0);
     public Pose2d finalPose = new Pose2d(0,0,0);
-    
+
     public IMU imu;
     public Pose2d PrevPose = new Pose2d(0,0,0);
     public double IMUOffsetRad;
     public boolean usingLLForPose = false;
-
     Limelight3A limelight;
-
     Pose2d goalPoseBlue = new Pose2d(-68, -53, Math.toRadians(-135));
     Pose2d goalPoseRed = new Pose2d(-68, 53, Math.toRadians(-135));
     Pose2d goalPose = goalPoseBlue;
@@ -36,6 +39,7 @@ public class LocalizationFuser {
     public boolean LLonCorrectTag = false;
     public boolean lastUsingLL = false;
     public boolean isFinalPoseNull = false;
+    public boolean driveTargeting = false;
     public double tx;
     public double ty;
     public double ta;
@@ -43,6 +47,7 @@ public class LocalizationFuser {
     public double curImuYaw = 0;
     double heading;
     double latency = 0;
+    double robotAngleToGoal = 0;
     PoseVelocity2d velo;
     public void init(Pose2d startPose, HardwareMap hardwareMap) {
         imu = hardwareMap.get(IMU.class, "imu2");
@@ -57,11 +62,18 @@ public class LocalizationFuser {
         drive = new MecanumDrive(hardwareMap, new Pose2d(66,0,-Math.PI));
     }
     public void start(boolean blue) {
+        drive.localizer.setPose(new Pose2d(66, 0, -Math.toRadians(180)));
         if (blue) {
-            drive.localizer.setPose(new Pose2d(66, -17, Math.toRadians(180)));
+            goalPose = goalPoseBlue;
         } else {
-            drive.localizer.setPose(new Pose2d(66, 17, Math.toRadians(180)));
+            goalPose = goalPoseRed;
         }
+    }
+    public void calcGoalAngleDiff(Pose2d bot) {
+        double[] distVect = new double[] {goalPose.position.x - bot.position.x, goalPose.position.y - bot.position.y};
+        double thetaBot = curImuYaw;
+        double thetaGoal = Math.atan2(distVect[1], distVect[0]);
+         robotAngleToGoal = thetaGoal - thetaBot;
     }
     public void resetDrive() {
         imu.resetYaw();
@@ -114,12 +126,8 @@ public class LocalizationFuser {
             IMUOffsetRad = -Math.toRadians(180);
         }
         curImuYaw = Math.toRadians(imu.getRobotYawPitchRollAngles().getYaw()) + IMUOffsetRad;
+
         limelight.updateRobotOrientation(Math.toDegrees(curImuYaw));
-
-        /*if (Math.abs(drive.localizer.getPose().heading.toDouble() - curImuYaw) > Math.toRadians(90)) {
-            drive.localizer.setPose(new Pose2d(drive.localizer.getPose().position, curImuYaw)); // assume IMU is most reliable
-        }*/
-
         updateLL();
 
         if (usingLLForPose) {
@@ -138,6 +146,14 @@ public class LocalizationFuser {
             }
         }
 
+        calcGoalAngleDiff(finalPose);
+        if (driveTargeting) {
+            rotPID.setCoefficients(kP, kI, kD);
+            rotPID.target = robotAngleToGoal;
+            rotPID.update(curImuYaw);
+            angVelPID = rotPID.velo;
+        }
+
         velo = drive.updatePoseEstimate();
     }
     public double getTagX() {
@@ -153,7 +169,14 @@ public class LocalizationFuser {
         return curImuYaw;
     }
     public void setDrivePowers(PoseVelocity2d powers) {
-        drive.setDrivePowers(powers);
+        if (driveTargeting) {
+            drive.setDrivePowers(powers);
+        } else {
+            drive.setDrivePowers(new PoseVelocity2d(powers.linearVel, angVelPID));
+        }
+    }
+    public void toggleDriveTargeting() {
+        driveTargeting = !driveTargeting;
     }
     public boolean seeingTag() {
         return usingLLForPose;

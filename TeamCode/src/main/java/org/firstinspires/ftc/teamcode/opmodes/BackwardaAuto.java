@@ -12,7 +12,7 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 @Autonomous
 @Config
-public class LeaveAutk extends OpMode {
+public class BackwardaAuto extends OpMode {
     MecanumDrive drive;
     ElapsedTime moveTime = new ElapsedTime();
     public boolean left;
@@ -22,10 +22,6 @@ public class LeaveAutk extends OpMode {
     }
     @Override
     public void init_loop() {
-        if (gamepad2.xWasPressed()) {
-            left = !left;
-        }
-        telemetry.addData("left?", left);
         telemetry.update();
     }
     @Override
@@ -37,9 +33,9 @@ public class LeaveAutk extends OpMode {
     public void loop() {
        if (moveTime.seconds() < 0.8) {
            if (left) {
-               drive.setDrivePowers(new PoseVelocity2d(new Vector2d(-0, .5), 0));
+               drive.setDrivePowers(new PoseVelocity2d(new Vector2d(-0.5, 0), 0));
            } else {
-               drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0, -0.5), 0));
+               drive.setDrivePowers(new PoseVelocity2d(new Vector2d(-.5, 0), 0));
            }
        } else {
            drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0,0),0));
