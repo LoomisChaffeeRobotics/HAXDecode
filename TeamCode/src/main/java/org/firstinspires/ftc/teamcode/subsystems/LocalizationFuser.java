@@ -33,7 +33,10 @@ public class LocalizationFuser {
     Limelight3A limelight;
     Pose2d goalPoseBlue = new Pose2d(-68, -53, Math.toRadians(-135));
     Pose2d goalPoseRed = new Pose2d(-68, 53, Math.toRadians(-135));
-    Pose2d goalPose = goalPoseBlue;
+    public static double goalX = 0;
+    public static double goalY = 0;
+    public static double goalH = 0;
+    Pose2d goalPose = new Pose2d(goalX, goalY, goalH);
     public int targId = 20;
     public double tagDist = 0;
     public boolean LLonCorrectTag = false;
@@ -169,7 +172,7 @@ public class LocalizationFuser {
         return curImuYaw;
     }
     public void setDrivePowers(PoseVelocity2d powers) {
-        if (driveTargeting) {
+        if (!driveTargeting) {
             drive.setDrivePowers(powers);
         } else {
             drive.setDrivePowers(new PoseVelocity2d(powers.linearVel, angVelPID));

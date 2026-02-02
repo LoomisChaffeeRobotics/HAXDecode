@@ -85,12 +85,14 @@ public class Turret {
     public static double kPTag = 0.02;
     public static double kITag = 0;
     public static double kDTag = 0.001;
-    public static double kPInnerVelo = 0;
+    public static double kPInnerVelo = 180;
     public static double kIInnerVelo = 0;
-    public static double kDInnerVelo = 0;
-    public static double kPOuter = 0;
+    public static double kDInnerVelo = 40;
+    public static double kFVelo = 13;
+    public static double kPOuter = 90;
     public static double kIOuter = 0;
     public static double kDOuter = 0;
+    public static double kFOuter = 13;
     public static double outerGain = 0.5;
     public static double innerGain = 0.5;
     double offset = 0;
@@ -258,9 +260,9 @@ public class Turret {
         updateLowerFilter(innerCurVel);
         updateUpperFilter(outerCurVel); // feedback is filtered, output is not (doesn't need to be)
         // we can change the pid coeffs first. if that doesn't work, we use the veloPID
-
-        innerTurret.setVelocityPIDFCoefficients(kPInnerVelo, kIInnerVelo, kDInnerVelo, 0);
-        outerTurret.setVelocityPIDFCoefficients(kPOuter, kIOuter, kDOuter, 0);
+//
+        innerTurret.setVelocityPIDFCoefficients(kPInnerVelo, kIInnerVelo, kDInnerVelo, kFVelo);
+        outerTurret.setVelocityPIDFCoefficients(kPInnerVelo, kIInnerVelo, kDInnerVelo, kFVelo);
         updateTheta();
 //        updateAngleToGoal();
         updateOrthogVelMag();
