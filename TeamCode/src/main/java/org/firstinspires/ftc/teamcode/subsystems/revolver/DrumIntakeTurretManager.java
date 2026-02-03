@@ -371,4 +371,8 @@ public class DrumIntakeTurretManager {
         }
         turret.setBlue(isBlue);
     }
+    public void updateLLState(boolean llState) {
+        turret.updateLLState(llState);
+    }
 }
+

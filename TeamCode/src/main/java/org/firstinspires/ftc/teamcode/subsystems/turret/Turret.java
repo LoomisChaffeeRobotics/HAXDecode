@@ -33,7 +33,7 @@ import java.util.List;
 
 @Config
 public class Turret {
-    double[][] LUT = new double[][]{
+    double[][] LUT1 = new double[][]{
             {0.5, 1116.1, 1690.7, 0.6},
             {0.6, 1153.9, 1806.6, 0.7},
             {0.7, 1218.7, 1931.4, 0.8},
@@ -73,6 +73,25 @@ public class Turret {
             {3.4, 5214.4, 1031.2, 1.4},
             {3.6, 5360.2, 1031.2, 1.4},
             {3.6, 5360.2, 1031.2, 1.4}
+    };
+
+    double[][] LUT = new double[][]{
+            {0.5206, 1.7931e+03, 969.3000, 0.5200},
+            {0.6779, 2.0028e+03, 916.6700, 0.6300},
+            {0.8223, 2.2191e+03, 869.3000, 0.7100},
+            {0.9786, 2.4588e+03, 825.4400, 0.7800},
+            {1.1761, 2.7317e+03, 783.3300, 0.8600},
+            {1.3627, 3.0013e+03, 730.7000, 0.9200},
+            {1.5521, 3.2809e+03, 662.2800, 0.9700},
+            {1.7140, 3.5006e+03, 621.9300, 1.0100},
+            {1.8953, 3.7369e+03, 588.6000, 1.0500},
+            {2.1189, 4.0065e+03, 558.7700, 1.1000},
+            {2.3237, 4.2494e+03, 541.2300, 1.1400},
+            {2.4965, 4.4558e+03, 525.4400, 1.1700},
+            {2.6907, 4.6888e+03, 509.6500, 1.2000},
+            {2.6907, 4.6889e+03, 509.6500, 1.2000},
+            {2.9347, 4.9684e+03, 500.8800, 1.2400},
+            {2.9347, 4.9684e+03, 500.8800, 1.2400},
     };
     public double tx = 0;
     public double ty;
@@ -138,6 +157,7 @@ public class Turret {
     public boolean bothMotorsSpunUp = false;
     public boolean successfulShot = false;
     public boolean addedOffset = false;
+    public boolean usingLL = false;
     double getGyro(){
         return botpose.heading.toDouble();
     }
@@ -154,7 +174,10 @@ public class Turret {
         double prodMagDist = Math.sqrt(Math.pow(distVect[0], 2) + Math.pow(distVect[1], 2)) * Math.sqrt(Math.pow(velVect[1],2) + Math.pow(velVect[0],2));
         veloGoalAngle = Math.acos(dotProduct / (prodMagDist + 0.000001));
     }
-    void updateAngleToGoal() {
+    public void updateLLState(boolean usingLL){
+        this.usingLL = usingLL;
+    }
+    public void updateAngleToGoal() {
         double[] distVect = new double[] {goalPose.position.x - botpose.position.x, goalPose.position.y - botpose.position.y};
         double thetaBot = getGyro();
         double thetaGoal = Math.atan2(distVect[1], distVect[0]);
@@ -166,8 +189,14 @@ public class Turret {
     }
     void updateOrthogVelMag() {
         double[] distVect = new double[] {goalPose.position.x - botpose.position.x, goalPose.position.y - botpose.position.y};
-        double[] orthogGoalVect = new double[] {-distVect[1], distVect[0]};
-        orthogVelMag = (robotVelo.linearVel.x * orthogGoalVect[0] + robotVelo.linearVel.y * orthogGoalVect[1]) / (Math.sqrt(Math.pow(orthogGoalVect[0], 2) + Math.pow(orthogGoalVect[1], 2)) +0.00000001);
+        double magVelo = Math.sqrt(Math.pow(robotVelo.linearVel.x, 2) + Math.pow(robotVelo.linearVel.y, 2));
+        double dotProduct = distVect[0] * robotVelo.linearVel.x + distVect[1] * robotVelo.linearVel.y;
+        double magDist = Math.sqrt(Math.pow(distVect[0], 2) + Math.pow(distVect[1], 2));
+        double cosineTheta = dotProduct/(magVelo * magDist);
+
+        double[] projectedVector = new double[] {magVelo * cosineTheta * (distVect[0]/magDist), magVelo * cosineTheta * (distVect[1]/magDist)};
+        double[] orthogVelVector = new double[] {robotVelo.linearVel.x - projectedVector[0], robotVelo.linearVel.y - projectedVector[1]};
+        orthogVelMag = Math.sqrt(Math.pow(orthogVelVector[0], 2) + Math.pow(orthogVelVector[1], 2)) * Math.signum(dotProduct);
     }
     public void updateTelemetry(Telemetry telemetry){
         telemetry.addData("innerTurret targ rpm", innerRPM);
@@ -298,6 +327,16 @@ public class Turret {
             innerTurret.setVelocity(0);
             outerTurret.setVelocity(0);
             bothMotorsSpunUp = false;
+        }
+
+        if (usingLL) {
+            turPID.setCoefficients(kPTag, kITag, kDTag, kFR, kFV);
+            turPID.target = 0;
+            turPID.update(tx, robotVelo.angVel, orthogVelMag);
+        } else {
+            turPID.setCoefficients(kPEnc, kIEnc, kDEnc, kFR, kFV);
+            turPID.target = angleToTicks(roboRelativeAngleToGoal);
+            turPID.update(turretCurTicks, robotVelo.angVel, orthogVelMag);
         }
 
         spinner.setPosition(0);
