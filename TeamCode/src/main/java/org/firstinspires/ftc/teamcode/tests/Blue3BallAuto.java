@@ -48,6 +48,7 @@ public class Blue3BallAuto extends OpMode {
     public static double curArtNum = 1;
     public static Pose2d START_POSE  = new Pose2d(-48,-48, Math.toRadians(140)); //Need to tune these values
     public static Pose2d SHOOT_POSE  = new Pose2d(-30, -30, Math.toRadians(-135));
+    public static Pose2d END_POSE = new Pose2d(-12, -34, Math.toRadians(-90));
     public static Pose2d INTAKE1_POSE = new Pose2d(-12, intArtOffset, Math.toRadians(-90));
     public static Pose2d INTAKE2_POSE = new Pose2d(12, intArtOffset, Math.toRadians(-90));
 
@@ -70,6 +71,7 @@ public class Blue3BallAuto extends OpMode {
     int inArtNum = 0;
     Pose2d driveTarget = SHOOT_POSE;
     Action strafeOut = null;
+    Action goEndPose = null;
     int initPointer = 0;
     String[] colorsString = {"white", "white", "white"};
     JSONObject jsonObject;
@@ -88,7 +90,7 @@ public class Blue3BallAuto extends OpMode {
     }
 
     private void loadMotifAndResetShots() {
-        //motif = drum.readMotif(); // Somehow read motif
+        //motif = somehow get motif
         if (!(motif.equals("GPP") || motif.equals("PGP") || motif.equals("PPG"))) {
             motif = "GPP";
         }
@@ -109,6 +111,7 @@ public class Blue3BallAuto extends OpMode {
         drum = new DrumIntakeTurretManager();
         drum.init(hardwareMap, DrumIntakeTurretManager.revMode.FIREIDLE);
 
+        drive.localizer.setPose(START_POSE);
 
         try (InputStream is = new FileInputStream(dataLog)) {
             InputStreamReader reader = new InputStreamReader(is, "UTF-8");
@@ -163,7 +166,10 @@ public class Blue3BallAuto extends OpMode {
         loadMotifAndResetShots();
         drive.localizer.setPose(START_POSE);
         strafeOut = drive.actionBuilder(START_POSE)
-                .splineToLinearHeading(new Pose2d(-24, -24,Math.toRadians(220)), Math.toRadians(140))
+                .splineToLinearHeading(new Pose2d(-24, -24,Math.toRadians(220)), Math.toRadians(135))
+                .build();
+        goEndPose = drive.actionBuilder(SHOOT_POSE)
+                .splineToLinearHeading(END_POSE, Math.toRadians(-90))
                 .build();
     }
     @Override
@@ -171,55 +177,56 @@ public class Blue3BallAuto extends OpMode {
         if (state != State.DONE) {
             drive.updatePoseEstimate();
 //            drum.update(drive.localizer.getPose(), drive.updatePoseEstimate());
-
-            if (state == State.DRIVE_TO_SHOT) {
-                Actions.runBlocking(strafeOut);
-                if ((Math.abs(drive.localizer.getPose().position.x + 24) < 2) && (Math.abs(drive.localizer.getPose().position.y + 24) < 2)) {
-                    state = State.SPINUP_AND_AIM;
-                }
-
-            } else if (state == State.SPINUP_AND_AIM) {
-
-                drum.curMode = DrumIntakeTurretManager.revMode.FIRESTANDBY;
-                boolean ready = drum.shooterSpunUp();
-                if (ready) {
-                    requestNextShotState();
-                }
-            }
-            else if (state == State.FIRE_PURPLE) {
-                if (state != lastState) {
-                    drum.firePurple();
-                }
-
-                if (shotFinished()) {
-                    motifIndex++;
-                    go(State.SPINUP_AND_AIM);
-                }
-            }
-            else if (state == State.FIRE_GREEN) {
-                if (state != lastState) {
-                    drum.fireGreen();
-                }
-
-                if (shotFinished()) {
-                    motifIndex++;
-                    go(State.SPINUP_AND_AIM);
-                }
-            }
-            else if (state == State.DONE) {
-                drum.curMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
-            }
-            TelemetryPacket packet = new TelemetryPacket();
-            packet.fieldOverlay().setStroke("#3F51B5");
-            Drawing.drawRobot(packet.fieldOverlay(), drive.localizer.getPose());
-            FtcDashboard.getInstance().sendTelemetryPacket(packet);
-            t2.addData("State", state);
-            t2.addData("Drum mode", drum.curMode);
-            t2.addData("Spun", drum.shooterSpunUp());
-            drum.updateTelemetry(t2);
-            t2.update();
-            lastState = state;
         }
+
+        if (state == State.DRIVE_TO_SHOT) {
+            Actions.runBlocking(strafeOut);
+            if ((Math.abs(drive.localizer.getPose().position.x + 24) < 2) && (Math.abs(drive.localizer.getPose().position.y + 24) < 2)) {
+                state = State.SPINUP_AND_AIM;
+            }
+
+        } else if (state == State.SPINUP_AND_AIM) {
+
+            drum.curMode = DrumIntakeTurretManager.revMode.FIRESTANDBY;
+            boolean ready = drum.shooterSpunUp();
+            if (ready) {
+                requestNextShotState();
+            }
+        }
+        else if (state == State.FIRE_PURPLE) {
+            if (state != lastState) {
+                drum.firePurple();
+            }
+
+            if (shotFinished()) {
+                motifIndex++;
+                go(State.SPINUP_AND_AIM);
+            }
+        }
+        else if (state == State.FIRE_GREEN) {
+            if (state != lastState) {
+                drum.fireGreen();
+            }
+
+            if (shotFinished()) {
+                motifIndex++;
+                go(State.SPINUP_AND_AIM);
+            }
+        }
+        else if (state == State.DONE) {
+            drum.curMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
+            Actions.runBlocking(goEndPose);
+        }
+        TelemetryPacket packet = new TelemetryPacket();
+        packet.fieldOverlay().setStroke("#3F51B5");
+        Drawing.drawRobot(packet.fieldOverlay(), drive.localizer.getPose());
+        FtcDashboard.getInstance().sendTelemetryPacket(packet);
+        t2.addData("State", state);
+        t2.addData("Drum mode", drum.curMode);
+        t2.addData("Spun", drum.shooterSpunUp());
+        drum.updateTelemetry(t2);
+        t2.update();
+        lastState = state;
     }
     @Override
     public void stop() {
