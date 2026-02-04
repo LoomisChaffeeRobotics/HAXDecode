@@ -314,7 +314,7 @@ public class Turret {
             // if there is too much lag, only calc velocities when firing
             innerTurret.setVelocity(innerRPM * RPMtoTicksPerSecond);
             outerTurret.setVelocity(outerRPM * RPMtoTicksPerSecond);
-            if (((Math.abs(innerRPM - (innerCurVel / RPMtoTicksPerSecond)) < 200) && ((Math.abs(outerRPM - (outerCurVel / RPMtoTicksPerSecond)) < 200)))) {
+            if (((Math.abs(innerRPM - (innerCurVel / RPMtoTicksPerSecond)) < 50) && ((Math.abs(outerRPM - (outerCurVel / RPMtoTicksPerSecond)) < 50)))) {
                 bothMotorsSpunUp = true;
             } else {
                 bothMotorsSpunUp = false;

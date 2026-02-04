@@ -1,11 +1,17 @@
-package org.firstinspires.ftc.teamcode.tests;
+package org.firstinspires.ftc.teamcode.opmodes;
+
+import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.PoseVelocity2d;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.Trajectory;
+import com.acmerobotics.roadrunner.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -16,7 +22,6 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import org.firstinspires.ftc.teamcode.Drawing;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
-import org.firstinspires.ftc.teamcode.subsystems.turret.Turret;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -70,8 +75,12 @@ public class Blue3BallAuto extends OpMode {
     int cycle = 0;
     int inArtNum = 0;
     Pose2d driveTarget = SHOOT_POSE;
+    PoseVelocity2d velo;
     Action strafeOut = null;
     Action goEndPose = null;
+    Action spinUp = null;
+    Action shoot = null;
+    boolean startedShotSequence = false;
     int initPointer = 0;
     String[] colorsString = {"white", "white", "white"};
     JSONObject jsonObject;
@@ -120,24 +129,7 @@ public class Blue3BallAuto extends OpMode {
             telemetry.addData("error", e.toString());
             telemetry.update();
         }
-        try {
-            pose = jsonObject.getJSONArray("pose");
-            colors = jsonObject.getJSONArray("colors");
-            alliance = jsonObject.get("alliance").toString();
-            mode = jsonObject.get("mode").toString();
-            colorsString = new String[] {
-                    colors.getString(0),
-                    colors.getString(1),
-                    colors.getString(2)
-            };
-            startPose = new Pose2d(
-                    pose.getDouble(0),
-                    pose.getDouble(1),
-                    pose.getDouble(2)
-            );
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
+
     }
     @Override
     public void init_loop () {
@@ -165,58 +157,100 @@ public class Blue3BallAuto extends OpMode {
         drum.setStartingColors(colorsString);
         loadMotifAndResetShots();
         drive.localizer.setPose(START_POSE);
+
+
         strafeOut = drive.actionBuilder(START_POSE)
                 .splineToLinearHeading(new Pose2d(-24, -24,Math.toRadians(220)), Math.toRadians(135))
                 .build();
         goEndPose = drive.actionBuilder(SHOOT_POSE)
                 .splineToLinearHeading(END_POSE, Math.toRadians(-90))
                 .build();
+
+
+        spinUp = new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                drum.curMode = DrumIntakeTurretManager.revMode.FIRESTANDBY;
+                if (drum.shooterSpunUp()) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        };
+
+        shoot = new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                // fire based on motif
+                if (!startedShotSequence) {
+                    drum.curMode = DrumIntakeTurretManager.revMode.CONTFIRE;
+                    startedShotSequence = true;
+                    return true;
+                } else {
+                    if (drum.isEmpty()) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                }
+            }
+        };
+
     }
     @Override
     public void loop () {
         if (state != State.DONE) {
             drive.updatePoseEstimate();
-//            drum.update(drive.localizer.getPose(), drive.updatePoseEstimate());
+            drum.update(drive.localizer.getPose(), drive.updatePoseEstimate());
         }
 
-        if (state == State.DRIVE_TO_SHOT) {
-            Actions.runBlocking(strafeOut);
-            if ((Math.abs(drive.localizer.getPose().position.x + 24) < 2) && (Math.abs(drive.localizer.getPose().position.y + 24) < 2)) {
-                state = State.SPINUP_AND_AIM;
-            }
+        Actions.runBlocking(new SequentialAction(
+                new ParallelAction(strafeOut,
+                spinUp),
+                shoot,
+                goEndPose
+        ));
 
-        } else if (state == State.SPINUP_AND_AIM) {
 
-            drum.curMode = DrumIntakeTurretManager.revMode.FIRESTANDBY;
-            boolean ready = drum.shooterSpunUp();
-            if (ready) {
-                requestNextShotState();
-            }
-        }
-        else if (state == State.FIRE_PURPLE) {
-            if (state != lastState) {
-                drum.firePurple();
-            }
-
-            if (shotFinished()) {
-                motifIndex++;
-                go(State.SPINUP_AND_AIM);
-            }
-        }
-        else if (state == State.FIRE_GREEN) {
-            if (state != lastState) {
-                drum.fireGreen();
-            }
-
-            if (shotFinished()) {
-                motifIndex++;
-                go(State.SPINUP_AND_AIM);
-            }
-        }
-        else if (state == State.DONE) {
-            drum.curMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
-            Actions.runBlocking(goEndPose);
-        }
+//        if (state == State.DRIVE_TO_SHOT) {
+//            Actions.runBlocking(strafeOut);
+//            if ((Math.abs(drive.localizer.getPose().position.x + 24) < 2) && (Math.abs(drive.localizer.getPose().position.y + 24) < 2)) {
+//                state = State.SPINUP_AND_AIM;
+//            }
+//
+//        } else if (state == State.SPINUP_AND_AIM) {
+//
+//            drum.curMode = DrumIntakeTurretManager.revMode.FIRESTANDBY;
+//            boolean ready = drum.shooterSpunUp();
+//            if (ready) {
+//                requestNextShotState();
+//            }
+//        }
+//        else if (state == State.FIRE_PURPLE) {
+//            if (state != lastState) {
+//                drum.firePurple();
+//            }
+//
+//            if (shotFinished()) {
+//                motifIndex++;
+//                go(State.SPINUP_AND_AIM);
+//            }
+//        }
+//        else if (state == State.FIRE_GREEN) {
+//            if (state != lastState) {
+//                drum.fireGreen();
+//            }
+//
+//            if (shotFinished()) {
+//                motifIndex++;
+//                go(State.SPINUP_AND_AIM);
+//            }
+//        }
+//        else if (state == State.DONE) {
+//            drum.curMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
+//            Actions.runBlocking(goEndPose);
+//        }
         TelemetryPacket packet = new TelemetryPacket();
         packet.fieldOverlay().setStroke("#3F51B5");
         Drawing.drawRobot(packet.fieldOverlay(), drive.localizer.getPose());
@@ -228,36 +262,5 @@ public class Blue3BallAuto extends OpMode {
         t2.update();
         lastState = state;
     }
-    @Override
-    public void stop() {
-        Pose2d pose = drive.localizer.getPose();
-        StringBuilder b = new StringBuilder();
-        String[] colors = drum.getColors();
-        // pose
-        b.append("{\n" + "    \"pose\": {\n" + "\"x\": ")
-                .append(pose.position.x).append(",\n")
-                .append("\"y\": ")
-                .append(pose.position.y)
-                .append(",\n")
-                .append("\"heading\": ")
-                .append(pose.heading.toDouble())
-                .append("\n },\n");
-        // colors
-        b.append("\"colors\": ")
-                .append(Arrays.toString(colors))
-                .append(",\n");
-        // alliance
-        b.append("\"alliance\": \"")
-                .append(alliance)
-                .append("\",\n")
-                .append("}");
-        // mode
-        b.append("\"mode\": \"")
-                .append(drum.curMode.name())
-                .append("\"\n");
-        String string = b.toString();
 
-        // update jsonObject with the endpoint information for next run
-        ReadWriteFile.writeFile(dataLog, string);
-    }
 }
