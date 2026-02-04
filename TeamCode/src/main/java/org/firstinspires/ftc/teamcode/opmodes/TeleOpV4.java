@@ -195,6 +195,8 @@ public class TeleOpV4 extends OpMode {
             drum.setCurrentGreen();
         } else if (gamepad2.leftBumperWasPressed()) {
             drum.setCurrentPurple();
+        } else if (gamepad2.backWasPressed()) {
+            drum.removeCurrentBall();
         }
         t2.addData("botheading", botHeading);
         lastTriggerVal = gamepad1.right_trigger;

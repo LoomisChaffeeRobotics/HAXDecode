@@ -16,6 +16,8 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystems.FancyPID;
 import org.firstinspires.ftc.teamcode.subsystems.turret.Turret;
 
+import java.util.Objects;
+
 @Config
 public class DrumIntakeTurretManager {
     ColorTracker colTrack = new ColorTracker();
@@ -64,13 +66,20 @@ public class DrumIntakeTurretManager {
     public revMode lastMode = revMode.INTAKEIDLE;
     public String alliance;
     // functions
-
+    public boolean readyToFire = false;
     public void setStartingColors(String[] colors){
         colTrack.setStartingColors(colors);
     }
     public void setGain(float gain){
         colTrack.setGain(gain);
     }
+    Servo light;
+    double outputPose = 0;
+    double offPose = 0;
+    double greenPose = .5;
+    double purplePose = 0.72;
+    double whitePose = 1;
+    ElapsedTime lightTimer = new ElapsedTime();
     public void nextSlot() {
         if (colTrack.pointer == 2) {
             colTrack.pointer = 0;
@@ -143,6 +152,7 @@ public class DrumIntakeTurretManager {
         revSpin = hardwareMap.get(CRServo.class, "drumServo");
         flicker = hardwareMap.get(Servo.class, "flicker");
         intake = hardwareMap.get(DcMotorEx.class, "intake");
+        light = hardwareMap.get(Servo.class, "light");
 
         revEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         revEnc.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -155,6 +165,7 @@ public class DrumIntakeTurretManager {
         flicker.setPosition(flickPosDown);
 
         curMode = mode;
+        lightTimer.reset();
     }
     public void init(HardwareMap hw) {
         init(hw, revMode.INTAKEIDLE);
@@ -176,6 +187,7 @@ public class DrumIntakeTurretManager {
     public void setCurrentGreen() {
         colTrack.addGreen(colTrack.pointer);
     }
+    public void removeCurrentBall() {colTrack.removeFiredBall(colTrack.pointer);}
     void fireSequenceAsync(){
         lastTickArrived = false;
 //        if (((turret.innerCurVel / RPMtoTicksPerSecond) < (0.80 * turret.innerRPM)) || (turret.outerCurVel / RPMtoTicksPerSecond) < (0.80 * turret.outerRPM)) {
@@ -344,7 +356,28 @@ public class DrumIntakeTurretManager {
             fireSequenceAsync();
         }
 
+        if (pid.arrived && turret.bothMotorsSpunUp) {
+            readyToFire = true;
+        } else {
+            readyToFire = false;
+        }
+        if (Objects.equals(colTrack.slotColor[colTrack.pointer], "green")) {
+            outputPose = greenPose;
+        } else if (Objects.equals(colTrack.slotColor[colTrack.pointer], "purple")) {
+            outputPose = purplePose;
+        } else {
+            outputPose = whitePose;
+        }
 
+        if (readyToFire) {
+            light.setPosition(outputPose);
+        } else {
+            if (Math.ceil(lightTimer.seconds()*2) % 2 == 0) {
+                light.setPosition(offPose);
+            } else {
+                light.setPosition(outputPose);
+            }
+        }
 
         //-----------------------loop actions-------------------------
         updateLastTickArrived();
