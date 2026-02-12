@@ -47,7 +47,7 @@ public class DrumIntakeTurretManager {
     double[] slotTarget = {0, FCV / 3, -FCV / 3};
     public String flickMode = "off";
     public boolean activateAsync = false;
-    public static double intakeOnVelocity = -0.5;
+    public static double intakeOnVelocity = -0.85;
     static double RPMtoTicksPerSecond = (double) 28 /60;
     public enum revMode {
         INTAKING,
@@ -235,9 +235,6 @@ public class DrumIntakeTurretManager {
             isDepressed = false;
             lastTickArrived = true;
         }
-    }
-    public void toggleAddedOffset() {
-        turret.toggleAddedOffset();
     }
     public void update(Pose2d pose, PoseVelocity2d velo) {
         pid.setCoefficients(kP, kI, kD);

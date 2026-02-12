@@ -22,7 +22,7 @@ public class LocalizationFuser {
     public static double kD = 0;
     double angVelPID;
     FancyPID rotPID = new FancyPID();
-    MecanumDrive drive;
+    public MecanumDrive drive;
     public Pose2d LLPose = new Pose2d(0,0,0);
     public Pose2d finalPose = new Pose2d(0,0,0);
 
@@ -51,6 +51,7 @@ public class LocalizationFuser {
     double heading;
     double latency = 0;
     double robotAngleToGoal = 0;
+    double obeliskID = 0;
     PoseVelocity2d velo;
     public void init(Pose2d startPose, HardwareMap hardwareMap) {
         imu = hardwareMap.get(IMU.class, "imu2");
@@ -88,6 +89,11 @@ public class LocalizationFuser {
             // if there's the right tag in sight, update turret PID to focus on tag
             // means you have to change coeffs to tag mode
             if (!result.getFiducialResults().isEmpty()) {
+                for (LLResultTypes.FiducialResult tag : result.getFiducialResults()) {
+                    if (tag.getFiducialId() != 20 && tag.getFiducialId() != 24) {
+                        obeliskID = tag.getFiducialId();
+                    }
+                }
                 curId = result.getFiducialResults().get(0).getFiducialId();
                 if (curId != 20 && curId != 24) {
                     usingLLForPose = false;
@@ -185,16 +191,20 @@ public class LocalizationFuser {
         return usingLLForPose;
     }
     public String getCurrentMotif(){
-        if (curId == 21){
+        if (obeliskID == 21){
             return "GPP";
         }
-        else if (curId == 22){
+        else if (obeliskID == 22){
             return "PGP";
         }
-        else if (curId == 23){
+        else if (obeliskID == 23){
             return "PPG";
         }
         return "null";
+    }
+    public void setPose(Pose2d pose) {
+        drive.localizer.setPose(pose);
+        finalPose = pose;
     }
     public void updateTelemetry(Telemetry t) {
         t.addData("Using LLPose?", usingLLForPose);

@@ -25,6 +25,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import org.firstinspires.ftc.teamcode.subsystems.FancyPID;
+import org.firstinspires.ftc.teamcode.subsystems.FlywheelPID;
 import org.firstinspires.ftc.teamcode.subsystems.TurretPID;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
 
@@ -33,7 +34,7 @@ import java.util.List;
 
 @Config
 public class Turret {
-    double[][] LUT1 = new double[][]{
+    double[][] LUT = new double[][]{
             {0.5, 1116.1, 1690.7, 0.6},
             {0.6, 1153.9, 1806.6, 0.7},
             {0.7, 1218.7, 1931.4, 0.8},
@@ -75,7 +76,7 @@ public class Turret {
             {3.6, 5360.2, 1031.2, 1.4}
     };
 
-    double[][] LUT = new double[][]{
+    double[][] LUT2 = new double[][]{
             {0.5206, 1.7931e+03, 969.3000, 0.5200},
             {0.6779, 2.0028e+03, 916.6700, 0.6300},
             {0.8223, 2.2191e+03, 869.3000, 0.7100},
@@ -104,14 +105,14 @@ public class Turret {
     public static double kPTag = 0.02;
     public static double kITag = 0;
     public static double kDTag = 0.001;
-    public static double kPInnerVelo = 180;
+    public static double kPInnerVelo = 0.000675;
     public static double kIInnerVelo = 0;
-    public static double kDInnerVelo = 40;
-    public static double kFVelo = 13;
-    public static double kPOuter = 90;
+    public static double kDInnerVelo = 0;
+    public static double kFVelo = 0.0004125;
+    public static double kPOuter = 0.00065;
     public static double kIOuter = 0;
     public static double kDOuter = 0;
-    public static double kFOuter = 13;
+    public static double kFOuter = 0.0004;
     public static double outerGain = 0.5;
     public static double innerGain = 0.5;
     double offset = 0;
@@ -127,6 +128,8 @@ public class Turret {
     File dataLog = AppUtil.getInstance().getSettingsFile(logFilePath);
     TurretPID turPID;
     FancyPID veloPID;
+    FlywheelPID innerPID;
+    FlywheelPID outerPID;
     public double innerRPM = 0;
     public double outerRPM = 0;
     public double veloGoalAngle = 0;
@@ -144,8 +147,8 @@ public class Turret {
     public double flightTime = 0;
     public double innerCurVel;
     public double outerCurVel;
-    double filteredInner = 0;
-    double filteredOuter = 0;
+    double innerOutput;
+    double outerOutput;
     public double turPower = 0;
     double turretCurTicks = 0;
     public enum turMode {
@@ -156,7 +159,6 @@ public class Turret {
     public turMode mode = turMode.IDLE;
     public boolean bothMotorsSpunUp = false;
     public boolean successfulShot = false;
-    public boolean addedOffset = false;
     public boolean usingLL = false;
     double getGyro(){
         return botpose.heading.toDouble();
@@ -247,8 +249,8 @@ public class Turret {
         outerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        innerTurret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        outerTurret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        innerTurret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        outerTurret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         turEnc.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         innerTurret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -266,6 +268,10 @@ public class Turret {
         turPID.init();
         veloPID = new FancyPID();
         veloPID.init();
+        innerPID = new FlywheelPID();
+        innerPID.init();
+        outerPID = new FlywheelPID();
+        outerPID.init();
     }
     public void setBlue(boolean isBlue){
         if (isBlue) {
@@ -274,24 +280,15 @@ public class Turret {
             goalPose = goalPoseRed;
         }
     }
-    public void updateUpperFilter(double velo) {
-        filteredOuter = (outerGain * velo) + ((1-outerGain) * filteredOuter);
-    }
-    public void updateLowerFilter(double velo) {
-        filteredInner = (innerGain * velo) + ((1-innerGain) * filteredInner);
-    }
     public void loop(Pose2d fusedPose, PoseVelocity2d finalVel){
         turretCurTicks = -turEnc.getCurrentPosition();
         botpose = fusedPose;
         robotVelo = finalVel;
         innerCurVel = innerTurret.getVelocity();
         outerCurVel = outerTurret.getVelocity();
-        updateLowerFilter(innerCurVel);
-        updateUpperFilter(outerCurVel); // feedback is filtered, output is not (doesn't need to be)
-        // we can change the pid coeffs first. if that doesn't work, we use the veloPID
 //
-        innerTurret.setVelocityPIDFCoefficients(kPInnerVelo, kIInnerVelo, kDInnerVelo, kFVelo);
-        outerTurret.setVelocityPIDFCoefficients(kPInnerVelo, kIInnerVelo, kDInnerVelo, kFVelo);
+        innerPID.setCoefficients(kPInnerVelo, kIInnerVelo, kDInnerVelo, kFVelo);
+        outerPID.setCoefficients(kPOuter, kIOuter, kDOuter, kFOuter);
         updateTheta();
 //        updateAngleToGoal();
         updateOrthogVelMag();
@@ -309,23 +306,27 @@ public class Turret {
 
         innerRPM = getLRPM(dGoalEstimate/39.37);
         outerRPM = getURPM(dGoalEstimate/39.37);
+        innerPID.target = innerRPM * RPMtoTicksPerSecond;
+        outerPID.target = outerRPM * RPMtoTicksPerSecond;
+        innerPID.update(innerCurVel);
+        outerPID.update(outerCurVel);
 
         if (mode == turMode.FIRING) {
             // if there is too much lag, only calc velocities when firing
-            innerTurret.setVelocity(innerRPM * RPMtoTicksPerSecond);
-            outerTurret.setVelocity(outerRPM * RPMtoTicksPerSecond);
-            if (((Math.abs(innerRPM - (innerCurVel / RPMtoTicksPerSecond)) < 50) && ((Math.abs(outerRPM - (outerCurVel / RPMtoTicksPerSecond)) < 50)))) {
+            innerTurret.setPower(innerPID.velo);
+            outerTurret.setPower(outerPID.velo);
+            if (((Math.abs(innerRPM - (innerCurVel / RPMtoTicksPerSecond)) < 70) && ((Math.abs(outerRPM - (outerCurVel / RPMtoTicksPerSecond)) < 70)))) {
                 bothMotorsSpunUp = true;
             } else {
                 bothMotorsSpunUp = false;
             }
         } else if (mode == turMode.INTAKING) {
-            innerTurret.setVelocity(-1500 * RPMtoTicksPerSecond);
-            outerTurret.setVelocity(-1500 * RPMtoTicksPerSecond);
+            innerTurret.setPower(-.25);
+            outerTurret.setPower(-.25);
             bothMotorsSpunUp = false;
         } else {
-            innerTurret.setVelocity(0);
-            outerTurret.setVelocity(0);
+            innerTurret.setPower(0);
+            outerTurret.setPower(0);
             bothMotorsSpunUp = false;
         }
 
@@ -384,29 +385,14 @@ public class Turret {
         return 0;
     }
     public void calcOffset(double distanceFinal) {
-        if (addedOffset) {
-            if (distanceFinal < 24) {
-                offset = 12;
-            } else if (distanceFinal < 60) {
-                offset = 11;
-            } else if (distanceFinal < 115) {
-                offset = 9;
-            } else {
-                offset = 9 - 0.0909090909 * (distanceFinal - 115);
-            }
+        if (distanceFinal < 24) {
+            offset = 4;
+        } else if (distanceFinal < 60) {
+            offset = 2;
+        } else if (distanceFinal < 115) {
+            offset = -2;
         } else {
-            if (distanceFinal < 24) {
-                offset = 10;
-            } else if (distanceFinal < 60) {
-                offset = 9;
-            } else if (distanceFinal < 115) {
-                offset = 9;
-            } else {
-                offset = 9 - 0.0909090909 * (distanceFinal - 115);
-            }
+            offset = -2;
         }
-    }
-    public void toggleAddedOffset() {
-        addedOffset = !addedOffset;
     }
 }

@@ -21,14 +21,14 @@ import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManage
 public class tunePIDForVeloTeleOp extends OpMode {
     FtcDashboard dash = FtcDashboard.getInstance();
     Telemetry t2 = dash.getTelemetry();
-    public static double kPInnerVelo = 180;
+    public static double kPInnerVelo = 0.000675;
     public static double kIInnerVelo = 0;
-    public static double kDInnerVelo = 40;
-    public static double kFVelo = 13;
-    public static double kPOuter = 90;
+    public static double kDInnerVelo = 0;
+    public static double kFVelo = 0.0004125;
+    public static double kPOuter = 0.00065;
     public static double kIOuter = 0;
     public static double kDOuter = 0;
-    public static double kFOuter = 13;
+    public static double kFOuter = 0.0004;
     public static double targVeloInner = 0;
     public static double targVeloOuter = 0;
     DcMotorEx inner;
@@ -53,18 +53,10 @@ public class tunePIDForVeloTeleOp extends OpMode {
     DcMotor revEnc;
     double innerCurVel = 0;
     double outerCurVel = 0;
-    public static double outerGain = 0.5;
-    public static double innerGain = 0.5;
     double filteredInner = 0;
     double filteredOuter = 0;
     FlywheelPID innerPID = new FlywheelPID();
     FlywheelPID outerPID = new FlywheelPID();
-    public void updateUpperFilter(double velo) {
-        filteredOuter = (outerGain * velo) + ((1-outerGain) * filteredOuter);
-    }
-    public void updateLowerFilter(double velo) {
-        filteredInner = (innerGain * velo) + ((1-innerGain) * filteredInner);
-    }
     @Override
     public void init() {
         inner = hardwareMap.get(DcMotorEx.class, "innerTurret");
@@ -109,15 +101,15 @@ public class tunePIDForVeloTeleOp extends OpMode {
     public void loop() {
         innerCurVel = inner.getVelocity();
         outerCurVel = outer.getVelocity();
-        updateLowerFilter(innerCurVel);
-        updateUpperFilter(outerCurVel);
+//        updateLowerFilter(innerCurVel);
+//        updateUpperFilter(outerCurVel);
 
         innerPID.setCoefficients(kPInnerVelo, kIInnerVelo, kDInnerVelo, kFVelo);
         outerPID.setCoefficients(kPOuter, kIOuter, kDOuter, kFOuter);
 
-        innerPID.update(filteredInner);
+        innerPID.update(innerCurVel);
         innerPID.target = targVeloInner * RPMtoTicksPerSecond;
-        outerPID.update(filteredOuter);
+        outerPID.update(outerCurVel);
         outerPID.target = targVeloOuter * RPMtoTicksPerSecond;
 
         inner.setPower(innerPID.velo);
@@ -146,9 +138,9 @@ public class tunePIDForVeloTeleOp extends OpMode {
         drum.setPower(pid.velo);
 
         t2.addData("Target Velocity Inner", targVeloInner);
-        t2.addData("Current Velocity Inner", curVeloInner);
+        t2.addData("Current Velocity Inner", inner.getVelocity() / RPMtoTicksPerSecond);
         t2.addData("Target Velocity Outer", targVeloOuter);
-        t2.addData("Current Velocity Outer", curVeloOuter);
+        t2.addData("Current Velocity Outer", outer.getVelocity() / RPMtoTicksPerSecond);
         t2.update();
     }
 }
