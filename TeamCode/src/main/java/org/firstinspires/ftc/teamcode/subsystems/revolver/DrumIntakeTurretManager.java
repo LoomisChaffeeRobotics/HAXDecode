@@ -352,11 +352,6 @@ public class DrumIntakeTurretManager {
             fireSequenceAsync();
         }
 
-        if (pid.arrived && turret.bothMotorsSpunUp) {
-            readyToFire = true;
-        } else {
-            readyToFire = false;
-        }
         if (Objects.equals(colTrack.slotColor[colTrack.pointer], "green")) {
             outputPose = greenPose;
         } else if (Objects.equals(colTrack.slotColor[colTrack.pointer], "purple")) {
@@ -365,10 +360,10 @@ public class DrumIntakeTurretManager {
             outputPose = whitePose;
         }
 
-        if (readyToFire) {
+        if (turret.bothMotorsSpunUp) {
             light.setPosition(outputPose);
         } else {
-            if (Math.ceil(lightTimer.seconds()*2) % 2 == 0) {
+            if (Math.ceil(lightTimer.seconds()*3) % 2 == 0) {
                 light.setPosition(offPose);
             } else {
                 light.setPosition(outputPose);

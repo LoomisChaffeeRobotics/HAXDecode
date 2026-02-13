@@ -40,7 +40,7 @@ public class TeleOpV4 extends OpMode {
     double lastTriggerVal;
     String[] colorsString = {"green", "purple", "purple"};
     int initPointer = 0;
-    boolean blue;
+    boolean blue = true;
     double offset = 0;
     Pose2d fusedPose = new Pose2d(0,0,0);
     int fcMultiplier = 1;

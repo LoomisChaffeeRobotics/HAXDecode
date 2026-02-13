@@ -2,35 +2,23 @@ package org.firstinspires.ftc.teamcode.subsystems.turret;
 
 import android.os.Environment;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ReadWriteFile;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.robotcore.external.navigation.Position;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import org.firstinspires.ftc.teamcode.subsystems.FancyPID;
 import org.firstinspires.ftc.teamcode.subsystems.FlywheelPID;
 import org.firstinspires.ftc.teamcode.subsystems.TurretPID;
-import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
 
 import java.io.File;
-import java.util.List;
 
 @Config
 public class Turret {
@@ -108,14 +96,14 @@ public class Turret {
     public static double kPInnerVelo = 0.000675;
     public static double kIInnerVelo = 0;
     public static double kDInnerVelo = 0;
-    public static double kFVelo = 0.0004125;
+    public static double kFVelo = 0.00045;
     public static double kPOuter = 0.00065;
     public static double kIOuter = 0;
     public static double kDOuter = 0;
-    public static double kFOuter = 0.0004;
+    public static double kFOuter = 0.000405;
     public static double outerGain = 0.5;
     public static double innerGain = 0.5;
-    double offset = 0;
+    public static double offset = 0;
     Pose2d botpose;
     Servo spinner;
     DcMotorEx turEnc;
@@ -385,14 +373,14 @@ public class Turret {
         return 0;
     }
     public void calcOffset(double distanceFinal) {
-        if (distanceFinal < 24) {
-            offset = 4;
+        if (distanceFinal < 36) {
+            offset = -3;
         } else if (distanceFinal < 60) {
-            offset = 2;
+            offset = -3;
         } else if (distanceFinal < 115) {
-            offset = -2;
+            offset = -6;
         } else {
-            offset = -2;
+            offset = -6;
         }
     }
 }
