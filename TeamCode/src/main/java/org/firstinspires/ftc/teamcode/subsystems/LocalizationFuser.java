@@ -29,6 +29,7 @@ public class LocalizationFuser {
     public IMU imu;
     public Pose2d PrevPose = new Pose2d(0,0,0);
     public double IMUOffsetRad;
+    double objectiveOffsetIMU;
     public boolean usingLLForPose = false;
     Limelight3A limelight;
     Pose2d goalPoseBlue = new Pose2d(-68, -53, Math.toRadians(-135));
@@ -82,6 +83,7 @@ public class LocalizationFuser {
     public void resetDrive() {
         imu.resetYaw();
         drive.localizer.setPose(new Pose2d(66,0,-Math.PI));
+        objectiveOffsetIMU = Math.toRadians(180);
     }
     public void updateLL() {
         LLResult result = limelight.getLatestResult();
@@ -129,10 +131,10 @@ public class LocalizationFuser {
     } //Need to fix
     public void loop(double turretYawRad) {
         double imuReadingRad = Math.toRadians(imu.getRobotYawPitchRollAngles().getYaw());
-        if (Math.signum(imuReadingRad) == -1) {
-            IMUOffsetRad = Math.toRadians(180);
+        if (Math.abs(objectiveOffsetIMU + imuReadingRad) < 180) {
+            IMUOffsetRad = objectiveOffsetIMU;
         } else {
-            IMUOffsetRad = -Math.toRadians(180);
+            IMUOffsetRad = -((2 * Math.PI) - objectiveOffsetIMU);
         }
         curImuYaw = Math.toRadians(imu.getRobotYawPitchRollAngles().getYaw()) + IMUOffsetRad;
 
@@ -204,6 +206,8 @@ public class LocalizationFuser {
     }
     public void setPose(Pose2d pose) {
         drive.localizer.setPose(pose);
+        imu.resetYaw();
+        objectiveOffsetIMU = pose.heading.toDouble();
         finalPose = pose;
     }
     public void updateTelemetry(Telemetry t) {

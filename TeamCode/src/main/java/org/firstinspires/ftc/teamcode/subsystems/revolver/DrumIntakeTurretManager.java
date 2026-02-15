@@ -100,11 +100,14 @@ public class DrumIntakeTurretManager {
             curMode = revMode.FIRESTANDBY;
         }
     }
-    public double optimizeTarg(double targ, double cur) {
+    public double optimizeTarg(double targ, double cur) { //
+        double prev = (Math.floor(cur / FCV) - 1) * FCV + (targ % FCV);
         double floor = Math.floor(cur / FCV) * FCV + (targ % FCV);
         double ceiling = Math.ceil(cur / FCV) * FCV + (targ % FCV);
-        if (Math.abs(floor-cur) > Math.abs(ceiling - cur)) {
+        if (Math.abs(floor-cur) > Math.abs(ceiling - cur) && Math.abs(prev - cur) > Math.abs(ceiling - cur)) {
             return ceiling;
+        } else if (Math.abs(ceiling - cur) > Math.abs(prev - cur) && Math.abs(floor - cur) > Math.abs(prev - cur)) {
+            return prev;
         } else {
             return floor;
         }
@@ -189,22 +192,22 @@ public class DrumIntakeTurretManager {
     }
     public void removeCurrentBall() {colTrack.removeFiredBall(colTrack.pointer);}
     void fireSequenceAsync(){
-        lastTickArrived = false;
 //        if (((turret.innerCurVel / RPMtoTicksPerSecond) < (0.80 * turret.innerRPM)) || (turret.outerCurVel / RPMtoTicksPerSecond) < (0.80 * turret.outerRPM)) {
 //            turret.successfulShot = true;
 //        }
 
-        if (fireSequenceTimer.seconds() < 0.4) {
+        if (fireSequenceTimer.seconds() < 0.5) {
             flickMode = "flick";
             flicker.setPosition(flickPosUp);
-        } else if (fireSequenceTimer.seconds() >= 0.4 && fireSequenceTimer.seconds() < 0.75) {
+        } else if (fireSequenceTimer.seconds() >= 0.5 && fireSequenceTimer.seconds() < 0.75) {
             flickMode = "retract";
             flicker.setPosition(flickPosDown);
         } else if (fireSequenceTimer.seconds() > 0.75) {
             flickMode = "off";
+            flicker.setPosition(flickPosDown);
             colTrack.removeFiredBall(colTrack.pointer);
-            isFiring = false;
             curMode = revMode.FIRESTANDBY;
+            isFiring = false;
         }
     }
     public void contFireAsync() {
@@ -246,6 +249,11 @@ public class DrumIntakeTurretManager {
         curPos = revEnc.getCurrentPosition();
         colTrack.loop(pid.arrived, (curMode == revMode.INTAKING || curMode == revMode.INTAKEIDLE));
         //-------------------------------set target---------------------
+
+        updateLastTickArrived();
+        turret.loop(pose, velo);
+        pid.update(curPos);
+        revSpin.setPower(pid.velo);
 
         if (curMode == revMode.INTAKING) {
             //intake code
@@ -303,7 +311,6 @@ public class DrumIntakeTurretManager {
                     turret.successfulShot = false;
                 } else if (isFiring) {
                     fireSequenceAsync();
-
                 }
             } else {
                 curMode = revMode.FIRESTANDBY;
@@ -370,12 +377,8 @@ public class DrumIntakeTurretManager {
             }
         }
 
-        //-----------------------loop actions-------------------------
-        updateLastTickArrived();
-        turret.loop(pose, velo);
-        pid.update(curPos);
-        revSpin.setPower(pid.velo);
         lastMode = curMode;
+        //-----------------------loop actions-------------------------
 
     }
     public boolean isFull() {

@@ -96,11 +96,11 @@ public class Turret {
     public static double kPInnerVelo = 0.000675;
     public static double kIInnerVelo = 0;
     public static double kDInnerVelo = 0;
-    public static double kFVelo = 0.00045;
+    public static double kFVelo = 0.00053;
     public static double kPOuter = 0.00065;
     public static double kIOuter = 0;
     public static double kDOuter = 0;
-    public static double kFOuter = 0.000405;
+    public static double kFOuter = 0.0004;
     public static double outerGain = 0.5;
     public static double innerGain = 0.5;
     public static double offset = 0;
@@ -218,10 +218,10 @@ public class Turret {
         telemetry.addData("spun up", bothMotorsSpunUp);
         telemetry.addData("offset", offset);
         telemetry.addData("SuccessShot?", successfulShot);
-        telemetry.addData("inner pids", innerTurret.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).toString());
-        telemetry.addData("inner algo", innerTurret.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).algorithm.toString());
-        telemetry.addData("outer pids", outerTurret.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).toString());
-        telemetry.addData("outer algo", outerTurret.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).algorithm.toString());
+//        telemetry.addData("inner pids", innerTurret.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).toString());
+//        telemetry.addData("inner algo", innerTurret.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).algorithm.toString());
+//        telemetry.addData("outer pids", outerTurret.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).toString());
+//        telemetry.addData("outer algo", outerTurret.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER).algorithm.toString());
     }
     public void init(HardwareMap hardwareMap){
 //        limelight = hardwareMap.get(Limelight3A.class, "limelight");
@@ -309,8 +309,8 @@ public class Turret {
                 bothMotorsSpunUp = false;
             }
         } else if (mode == turMode.INTAKING) {
-            innerTurret.setPower(-.25);
-            outerTurret.setPower(-.25);
+            innerTurret.setPower(-.45);
+            outerTurret.setPower(-.45);
             bothMotorsSpunUp = false;
         } else {
             innerTurret.setPower(0);
@@ -374,9 +374,9 @@ public class Turret {
     }
     public void calcOffset(double distanceFinal) {
         if (distanceFinal < 36) {
-            offset = -3;
+            offset = -4;
         } else if (distanceFinal < 60) {
-            offset = -3;
+            offset = -5;
         } else if (distanceFinal < 115) {
             offset = -6;
         } else {

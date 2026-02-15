@@ -6,53 +6,36 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.InstantFunction;
-import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.Trajectory;
-import com.acmerobotics.roadrunner.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.ReadWriteFile;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import org.firstinspires.ftc.teamcode.Drawing;
-import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystems.LocalizationFuser;
 import org.firstinspires.ftc.teamcode.subsystems.revolver.DrumIntakeTurretManager;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
 
 @Autonomous
 @Config
-public class Blue3BallAuto extends OpMode {
+public class Red3BallAuto extends OpMode {
     FtcDashboard dash = FtcDashboard.getInstance();
     Telemetry t2 = dash.getTelemetry();
     public static double intArt1 = -34;
     public static double intArtOffset = -34;
     public static double artGap = 3.5;
     public static double curArtNum = 1;
-    public static Pose2d START_POSE  = new Pose2d(-46,-46, Math.toRadians(140)); //Need to tune these values
-    public static Pose2d ATAG_POSE = new Pose2d(-20,-20, Math.toRadians(165));
-    public static Pose2d SHOOT_POSE  = new Pose2d(-20, -20, Math.toRadians(-135));
-    public static Pose2d END_POSE = new Pose2d(-40, -20, Math.toRadians(-90));
-    public static Pose2d INTAKE1_POSE = new Pose2d(-12, intArtOffset, Math.toRadians(-90));
-    public static Pose2d INTAKE2_POSE = new Pose2d(12, intArtOffset, Math.toRadians(-90));
+    public static Pose2d START_POSE  = new Pose2d(46,46, Math.toRadians(-140)); //Need to tune these values
+    public static Pose2d ATAG_POSE = new Pose2d(20,20, Math.toRadians(-165));
+    public static Pose2d SHOOT_POSE  = new Pose2d(20, 20, Math.toRadians(135));
+    public static Pose2d END_POSE = new Pose2d(40, 20, Math.toRadians(90));
+//    public static Pose2d INTAKE1_POSE = new Pose2d(12, intArtOffset, Math.toRadians(-90));
+//    public static Pose2d INTAKE2_POSE = new Pose2d(12, intArtOffset, Math.toRadians(-90));
 
     public static double GOAL_X = -68;
     public static double GOAL_Y = -53;
@@ -67,7 +50,6 @@ public class Blue3BallAuto extends OpMode {
     Action shoot = null;
     Action runLL = null;
     int initPointer = 0;
-    ElapsedTime shotTimer = new ElapsedTime();
     String motifString = "null";
     String[] colorsString = {"green", "purple", "purple"};
     String alliance;
@@ -151,6 +133,12 @@ public class Blue3BallAuto extends OpMode {
                 // fire based on motif
                 fuser.loop(0);
                 drum.update(fuser.getPose(), fuser.getVelo());
+                t2.addData("Drum mode", drum.curMode);
+                t2.addLine("motif: " + motifString);
+                t2.addData("Spun", drum.shooterSpunUp());
+                fuser.updateTelemetry(t2);
+                drum.updateTelemetry(t2);
+                t2.update();
 
                 for (String color : drum.getColors()) {
                     if (Objects.equals(color, "white")) {
@@ -158,34 +146,35 @@ public class Blue3BallAuto extends OpMode {
                     }
                 }
 
-                t2.addData("Drum mode", drum.curMode);
-                t2.addLine("motif: " + motifString);
-                t2.addData("Spun", drum.shooterSpunUp());
-                t2.addData("number empty", numberEmpty);
-                t2.addData("shot time", shotTimer.seconds());
-                fuser.updateTelemetry(t2);
-                drum.updateTelemetry(t2);
-                t2.update();
-
-
-
-                if (numberEmpty < 3) {
-                    char next = (motifString != null)
-                            ? Character.toUpperCase(motifString.charAt(Math.min(numberEmpty, 2)))
-                            : '\0';
-                    if (next == 'P') {
+                if (numberEmpty == 0) { // haven't started firing yet
+                    if (Objects.equals(motifString.split("")[0], "P")) {
                         drum.firePurple();
-                    } else if (next == 'G') {
+                    } else if (Objects.equals(motifString.split("")[0], "G")) {
                         drum.fireGreen();
                     } else {
                         drum.fireSingle();
                     }
                     return true;
-                } else if (shotTimer.seconds() > 10) {
-                    drum.curMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
-                    return false;
+                } else if (numberEmpty == 1) {
+                    if (Objects.equals(motifString.split("")[1], "P")) {
+                        drum.firePurple();
+                    } else if (Objects.equals(motifString.split("")[1], "G")) {
+                        drum.fireGreen();
+                    } else {
+                        drum.fireSingle();
+                    }
+                    return true;
+                } else if (numberEmpty == 2) {
+                    if (Objects.equals(motifString.split("")[2], "P")) {
+                        drum.firePurple();
+                    } else if (Objects.equals(motifString.split("")[2], "G")) {
+                        drum.fireGreen();
+                    } else {
+                        drum.fireSingle();
+                    }
+                    return true;
                 } else {
-                    drum.curMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
+                    drum.curMode = DrumIntakeTurretManager.revMode.FIREIDLE;
                     return false;
                 }
             }
@@ -201,7 +190,7 @@ public class Blue3BallAuto extends OpMode {
                 })
                 .build();
         strafeOut = fuser.drive.actionBuilder(ATAG_POSE)
-                .turn(Math.toRadians(70))
+                .turn(Math.toRadians(60))
                 .stopAndAdd(new InstantFunction() {
                     @Override
                     public void run() {
@@ -210,13 +199,7 @@ public class Blue3BallAuto extends OpMode {
                 })
                 .build();
         goEndPose = fuser.drive.actionBuilder(SHOOT_POSE)
-                .stopAndAdd(new InstantFunction() {
-                    @Override
-                    public void run() {
-                        fuser.setPose(SHOOT_POSE);
-                    }
-                })
-                .strafeToLinearHeading(END_POSE.position, END_POSE.heading)
+                .strafeTo(END_POSE.position)
                 .stopAndAdd(new InstantFunction() {
                     @Override
                     public void run() {
@@ -231,12 +214,6 @@ public class Blue3BallAuto extends OpMode {
         Actions.runBlocking(new SequentialAction(
                 goAprilTagPose,
                 strafeOut,
-                new InstantAction(new InstantFunction() {
-                    @Override
-                    public void run() {
-                        shotTimer.reset();
-                    }
-                }),
                 shoot,
                 goEndPose
         ));
@@ -248,11 +225,6 @@ public class Blue3BallAuto extends OpMode {
 
         drum.updateTelemetry(t2);
 
-    }
-    @Override
-    public void stop() {
-        drum.curMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
-        drum.update(fuser.getPose(), fuser.getVelo());
     }
 
 }
