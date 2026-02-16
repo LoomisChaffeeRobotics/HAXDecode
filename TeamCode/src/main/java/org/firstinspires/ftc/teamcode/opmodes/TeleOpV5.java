@@ -183,7 +183,7 @@ public class TeleOpV5 extends OpMode {
         t2.addData("botheading", botHeading);
         lastTriggerVal = gamepad1.right_trigger;
 
-        drum.update(fuser.getPose(), fuser.getVelo()); // degrees
+        drum.update(fuser.getPose(), fuser.getVelo(), fuser.getTagX()); // degrees
         drum.updateTelemetry(t2);
         fuser.updateTelemetry(t2);
 

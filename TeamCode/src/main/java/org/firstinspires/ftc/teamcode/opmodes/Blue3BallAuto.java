@@ -111,7 +111,7 @@ public class Blue3BallAuto extends OpMode {
             public boolean run(@NonNull TelemetryPacket telmetryPacket) {
                 motifString = fuser.getCurrentMotif();
                 fuser.loop(0);
-                drum.update(fuser.getPose(), fuser.getVelo());
+                drum.update(fuser.getPose(), fuser.getVelo(), fuser.getTagX());
                 t2.addData("Drum mode", drum.curMode);
                 t2.addLine("motif: " + motifString);
                 t2.addData("Spun", drum.shooterSpunUp());
@@ -130,7 +130,7 @@ public class Blue3BallAuto extends OpMode {
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 drum.curMode = DrumIntakeTurretManager.revMode.FIRESTANDBY;
                 fuser.loop(0);
-                drum.update(fuser.getPose(), fuser.getVelo());
+                drum.update(fuser.getPose(), fuser.getVelo(), fuser.getTagX());
                 t2.addData("Drum mode", drum.curMode);
                 t2.addLine("motif: " + motifString);
                 t2.addData("Spun", drum.shooterSpunUp());
@@ -150,7 +150,7 @@ public class Blue3BallAuto extends OpMode {
                 int numberEmpty = 0;
                 // fire based on motif
                 fuser.loop(0);
-                drum.update(fuser.getPose(), fuser.getVelo());
+                drum.update(fuser.getPose(), fuser.getVelo(), fuser.getTagX());
 
                 for (String color : drum.getColors()) {
                     if (Objects.equals(color, "white")) {
@@ -181,7 +181,7 @@ public class Blue3BallAuto extends OpMode {
                         drum.fireSingle();
                     }
                     return true;
-                } else if (shotTimer.seconds() > 10) {
+                } else if (shotTimer.seconds() > 7) {
                     drum.curMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
                     return false;
                 } else {
@@ -252,7 +252,7 @@ public class Blue3BallAuto extends OpMode {
     @Override
     public void stop() {
         drum.curMode = DrumIntakeTurretManager.revMode.INTAKEIDLE;
-        drum.update(fuser.getPose(), fuser.getVelo());
+        drum.update(fuser.getPose(), fuser.getVelo(), fuser.getTagX());
     }
 
 }

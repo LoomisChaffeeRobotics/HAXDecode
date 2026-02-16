@@ -239,7 +239,7 @@ public class DrumIntakeTurretManager {
             lastTickArrived = true;
         }
     }
-    public void update(Pose2d pose, PoseVelocity2d velo) {
+    public void update(Pose2d pose, PoseVelocity2d velo, double tx) {
         pid.setCoefficients(kP, kI, kD);
         pid.iMax = iMax;
         pid.iRange = iRange;
@@ -251,7 +251,7 @@ public class DrumIntakeTurretManager {
         //-------------------------------set target---------------------
 
         updateLastTickArrived();
-        turret.loop(pose, velo);
+        turret.loop(pose, velo, tx);
         pid.update(curPos);
         revSpin.setPower(pid.velo);
 

@@ -6,6 +6,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -86,12 +87,12 @@ public class Turret {
     public double ty;
     public double ta;
     public static double kPEnc = 0.005;
-    public static double kIEnc = 0;
+//    public static double kIEnc = 0;
     public static double kDEnc = 0.0001;
-    public static double kFR = 0.1;
+    public static double kFR = 0;
     public static double kFV = 0;
     public static double kPTag = 0.02;
-    public static double kITag = 0;
+//    public static double kITag = 0;
     public static double kDTag = 0.001;
     public static double kPInnerVelo = 0.000675;
     public static double kIInnerVelo = 0;
@@ -105,7 +106,7 @@ public class Turret {
     public static double innerGain = 0.5;
     public static double offset = 0;
     Pose2d botpose;
-    Servo spinner;
+    CRServo spinner;
     DcMotorEx turEnc;
     DcMotorEx innerTurret;
     DcMotorEx outerTurret;
@@ -123,6 +124,7 @@ public class Turret {
     public double veloGoalAngle = 0;
     public double roboRelativeAngleToGoal = 0;
     static double turretFullLoop = (double) 8192 * 75 / 15; // # ticks for loop
+    double ticksTurretTol = angleToTicks(Math.toRadians(1));
     static double RPMtoTicksPerSecond = (double) 28 / 60;
     public double speed = 0;
     public double vGoal = 0;
@@ -182,9 +184,9 @@ public class Turret {
         double magVelo = Math.sqrt(Math.pow(robotVelo.linearVel.x, 2) + Math.pow(robotVelo.linearVel.y, 2));
         double dotProduct = distVect[0] * robotVelo.linearVel.x + distVect[1] * robotVelo.linearVel.y;
         double magDist = Math.sqrt(Math.pow(distVect[0], 2) + Math.pow(distVect[1], 2));
-        double cosineTheta = dotProduct/(magVelo * magDist);
+        double cosineTheta = dotProduct/(magVelo * magDist + 0.000001);
 
-        double[] projectedVector = new double[] {magVelo * cosineTheta * (distVect[0]/magDist), magVelo * cosineTheta * (distVect[1]/magDist)};
+        double[] projectedVector = new double[] {magVelo * cosineTheta * (distVect[0]/magDist + 0.00000001), magVelo * cosineTheta * (distVect[1]/magDist + 0.0000000001)};
         double[] orthogVelVector = new double[] {robotVelo.linearVel.x - projectedVector[0], robotVelo.linearVel.y - projectedVector[1]};
         orthogVelMag = Math.sqrt(Math.pow(orthogVelVector[0], 2) + Math.pow(orthogVelVector[1], 2)) * Math.signum(dotProduct);
     }
@@ -230,8 +232,8 @@ public class Turret {
         innerTurret=hardwareMap.get(DcMotorEx.class, "innerTurret");
         outerTurret=hardwareMap.get(DcMotorEx.class, "outerTurret");
         turEnc = hardwareMap.get(DcMotorEx.class, "FL");
-//        spinner = hardwareMap.get(CRServo.class, "turret");
-        spinner = hardwareMap.get(Servo.class, "turret");
+        spinner = hardwareMap.get(CRServo.class, "turret");
+//        spinner = hardwareMap.get(Servo.class, "turret");
 
         innerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         outerTurret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -268,7 +270,7 @@ public class Turret {
             goalPose = goalPoseRed;
         }
     }
-    public void loop(Pose2d fusedPose, PoseVelocity2d finalVel){
+    public void loop(Pose2d fusedPose, PoseVelocity2d finalVel, double tx) {
         turretCurTicks = -turEnc.getCurrentPosition();
         botpose = fusedPose;
         robotVelo = finalVel;
@@ -319,16 +321,16 @@ public class Turret {
         }
 
         if (usingLL) {
-            turPID.setCoefficients(kPTag, kITag, kDTag, kFR, kFV);
+            turPID.setCoefficients(kPTag, 0, kDTag, kFR, kFV);
             turPID.target = 0;
             turPID.update(tx, robotVelo.angVel, orthogVelMag);
         } else {
-            turPID.setCoefficients(kPEnc, kIEnc, kDEnc, kFR, kFV);
+            turPID.setCoefficients(kPEnc, 0, kDEnc, kFR, kFV);
             turPID.target = angleToTicks(roboRelativeAngleToGoal);
             turPID.update(turretCurTicks, robotVelo.angVel, orthogVelMag);
         }
 
-        spinner.setPosition(0);
+        spinner.setPower(turPID.out);
     }
     double getLRPM(double dist) {
         for (int i = 0; i < LUT.length; i++) {
@@ -378,9 +380,9 @@ public class Turret {
         } else if (distanceFinal < 60) {
             offset = -5;
         } else if (distanceFinal < 115) {
-            offset = -6;
+            offset = -5;
         } else {
-            offset = -6;
+            offset = -5;
         }
     }
 }

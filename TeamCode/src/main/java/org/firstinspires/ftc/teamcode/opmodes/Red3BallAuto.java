@@ -93,7 +93,7 @@ public class Red3BallAuto extends OpMode {
             public boolean run(@NonNull TelemetryPacket telmetryPacket) {
                 motifString = fuser.getCurrentMotif();
                 fuser.loop(0);
-                drum.update(fuser.getPose(), fuser.getVelo());
+                drum.update(fuser.getPose(), fuser.getVelo(), fuser.getTagX());
                 t2.addData("Drum mode", drum.curMode);
                 t2.addLine("motif: " + motifString);
                 t2.addData("Spun", drum.shooterSpunUp());
@@ -112,7 +112,7 @@ public class Red3BallAuto extends OpMode {
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 drum.curMode = DrumIntakeTurretManager.revMode.FIRESTANDBY;
                 fuser.loop(0);
-                drum.update(fuser.getPose(), fuser.getVelo());
+                drum.update(fuser.getPose(), fuser.getVelo(), fuser.getTagX());
                 t2.addData("Drum mode", drum.curMode);
                 t2.addLine("motif: " + motifString);
                 t2.addData("Spun", drum.shooterSpunUp());
@@ -132,7 +132,7 @@ public class Red3BallAuto extends OpMode {
                 int numberEmpty = 0;
                 // fire based on motif
                 fuser.loop(0);
-                drum.update(fuser.getPose(), fuser.getVelo());
+                drum.update(fuser.getPose(), fuser.getVelo(), fuser.getTagX());
                 t2.addData("Drum mode", drum.curMode);
                 t2.addLine("motif: " + motifString);
                 t2.addData("Spun", drum.shooterSpunUp());
